@@ -1,0 +1,168 @@
+#Original Script created April, 2014 by Carl Webster with a lot of help from Michael B. Smith Exchange MVP
+#Carl Webster is a Sr. Solutions Architect with Choice Solutions, LLC
+#webster@carlwebster.com
+#@carlwebster on Twitter
+#http://www.CarlWebster.com
+
+#Version 2.14 released on 12-May-2017
+#	Add Certificate Authority Information section to Forest Information
+#		Check for the following CA related errors:
+#			Possible error: There are more than one Certification Authority Root(s)
+#			Error: Certification Authority Root(s) exist, but no Certification Authority Issuers(s) (also known as Enrollment Agents) exist
+#			Error: More Certification Authority Root(s) exist than there are Certification Authority Issuers(s) (also known as Enrollment Agents)
+#			Error: Certification Authority Issuers(s) (also known as Enrollment Agents) exist, but no Certification Authority Root(s) exist
+#	Change "Users with AdminCount=1 ($($AdminsCountStr) members):" to "Users with AdminCount=1 ($($AdminsCountStr) users):"
+#	Reorder the Forest Information section
+
+#Version 2.13 released on 13-Feb-2017
+#	Fixed French wording for Table of Contents 2
+
+#Version 2.12 released on 11-Nov-2016
+#	Add Chinese language support
+#	Add table for Time Server information if script is run from an elevated PowerShell session
+#	Remove "Appendix A" from DC DNS Info table
+
+#Version 2.11 released on 6-Nov-2016
+#	Fixed Domain Trust Attributes (thanks GT)
+#	Fixed several Write-Warning statements that had no message
+#	Fixed using -AddDateTime with -HTML
+#	Remove duplicate setting for $Script:Title
+#	Reworked the use of [gc]::Collect()
+
+#Version 2.10 released on 19-Oct-2016 (Happy Birthday Linz)
+#	Add a new parameter, IncludeUserInfo
+#		Add to the User Miscellaneous Data section, outputs a table with the SamAccountName
+#		and DistinguishedName of the users in the All Users counts
+#	Add to the Domain section, listing Fine Grained Password Policies
+#	Add to the Forest section, Tombstone Lifetime
+#	Changed the HTML header for AD Optional Features from a table header to a section header
+#	Changed "Site and Services" heading to "Sites and Services"
+#	Fixed formatting issues with HTML headings output
+#	The $AdminsCountStr variable was used, when it should not have been used, 
+#		when privileged groups had no members or members could not be retrieved
+#	Update Forest and Domain schema tables for the released Server 2016 product
+
+#Version 2.0 released on 26-Sep-2016
+#
+#	Added a parameter, GPOInheritance, to set whether to use the new GPOs by OU with linked and inherited GPOs
+#		By default, the script will use the original GPOs by OU with only directly linked GPOs
+#	Added a function, ElevatedSession, to test if the PowerShell session running the script is elevated
+#	Added a Section parameter to allow specific sections only to be in the report
+#	Added AD Database, logfile and SYSVOL locations along with AD Database size
+#	Added AD Optional Features
+#	Added an alias to the ComputerName parameter to ServerName
+#	Added checking the NIC's "Allow the computer to turn off this device to save power" setting
+#	Added requires line for the GroupPolicy module
+#	Added Text and HTML output
+#	Added Time Server information
+#	Change checking for both DA rights and an elevated session for the Time Server and AD file locations
+#		If the check fails, added a warning message as write-host with white foreground
+#	Change object created for DCDNSINFO to storing blank data for DNS properties
+#		HTML output would not display a row if any of the DNS values were blank or Null
+#	Fix test for domain admin rights for the user account
+#	Fix text and HTML output for the -Hardware parameter
+#	Fix the DC DNS Info table to handle two IP Addresses
+#	Fix the ProcessScriptSetup function
+#		Add checking for an elevated PowerShell session
+#		Add checking for DA rights and elevated session if using DCDNSINFO parameter
+#		Add checking for elevated session if using the Hardware and Services parameters
+#		Change the elevated session warning to write-host with a white foreground to make it stand out
+#		Fix where variables were not being set properly
+#	Fix the user name not being displayed in the warning message about not having domain admin rights
+#	If no ComputerName value is entered and $ComputerName –eq $Env:USERDNSDOMAIN then the script queries for 
+#		a domain controller that is also a global catalog server and will use that as the value for ComputerName
+#	Modified GPOs by OU to show if the GPO is Linked or Inherited
+#		This necessitated a change in the Word/PDF/HTML table format
+#	Modified GPOs by OU to use the Get-GPInheritance cmdlet to list all directly linked and inherited GPOs
+#	Organize script into functions and regions
+#	Replace Jeremy Saunder's Get-ComputerCountByOS function with his latest version
+#	The ADForest parameter is no longer mandatory. It will now default to the value in $Env:USERDNSDOMAIN
+#	The ComputerName parameter will also now default to the value in $Env:USERDNSDOMAIN
+#	Update forest and domain schema information for the latest updates for Exchange 2013/2016 and Server 2016 TP4/5
+#	Update help text
+#	Update Verbose messages for testing to see if -ComputerName is a domain controller
+#	Worked around Get-ADDomainController issue when run from a child domain
+
+#Version 1.21 25-Apr-2016
+#	Added -Dev parameter to create a text file of script errors
+#	Added -ScriptInfo (SI) parameter to create a text file of script information
+#	Added more script information to the console output when script starts
+#	Cleaned up some issues in the help text
+#	Fixed issues with using -Hardware that PoSH V5 complained about
+#
+#Version 1.20 22-Apr-2016
+#	Fixed numerous issues discovered with the latest update to PowerShell V5
+#	Color variables needed to be [long] and not [int] except for $wdColorBlack which is 0
+#	Changed from using arrays to populating data in tables to strings
+#	Fixed several incorrect variable names that kept PDFs from saving in Windows 10 and Office 2013
+#	Fixed the rest of the $Var -eq $Null to $Null -eq $Var
+#	Removed a couple of invalid $Table references
+#	Removed blocks of old commented out code
+#	Removed the 10 second pauses waiting for Word to save and close.
+#
+#Version 1.16 20-Apr-2016
+#	Replaced Function SaveandCloseDocumentandShutdownWord with same function all the other scripts use
+#
+#Version 1.15 8-Feb-2016
+#	Change to using a domain controllers FQDN when using Test-Connection, WMI and Services
+#		Those were not working in multiple domain forests when DNS Suffixes were not used
+#	For the DCDNSInfo table, added a Site column
+#		Sort by Site, domain controller name
+#		Change table font to 9 point to prevent wrapping of text
+#	For non-forest-root domains, do not print Enterprise Admin and Schema Admin <None>
+#		Those two groups do not exist in non-forest root domains
+#	Change tables for GPOs by OU to no lines
+#	Added specifying an optional output folder
+#	Added the option to email the output file
+#	Fixed several spacing and typo errors
+#	Fixed output to HTML not saving the file
+#
+#Version 1.14 26-Jan-2016
+#	Updated Exchange schema versions to include Exchange 2013 CU7/8/9 and Exchange 2016
+#		http://eightwone.com/references/schema-versions/
+#	Updated AD schema versions to include Server 2016 Technical Preview
+#		http://marc-lognoul.me/windows/windows-server-active-directory-schema-versions/
+#	Fixed typo in variable name that prevented the table for Site Links from being created
+#	Site Link table shows all possible site link options
+#		https://msdn.microsoft.com/en-us/library/cc223552.aspx
+#	GPOs by OU will now show the number of GPOs linked to an OU
+#	Added new parameter DCDNSInfo to gather each domain controller's IP address and DNS server settings
+#	Added Appendix A to show table of all domain controller's IP addresses and DNS server settings
+#	
+#Version 1.13 25-Nov-2015
+#	Updated help text and ReadMe for RSAT for Windows 10
+#	Updated help text with an additional example of running the script remotely
+#	Tested script on Windows 10 x64 and Word 2016 x64
+#Version 1.12 5-Oct-2015
+#	Add support for Word 2016
+#Version 1.11 8-Jul-2015
+#	Add in updated hardware inventory code
+#	Updated help text
+#Version 1.1 8-Aug-2014
+#	Cleanup the script's parameters section
+#	Code cleanup and standardization with the master template script
+#	Requires PowerShell V3 or later
+#	Removed support for Word 2007
+#	Word 2007 references in help text removed
+#	Cover page parameter now states only Word 2010 and 2013 are supported
+#	Most Word 2007 references in script removed:
+#		Function ValidateCoverPage
+#		Function SetupWord
+#		Function SaveandCloseDocumentandShutdownWord
+#	Function CheckWord2007SaveAsPDFInstalled removed
+#	If Word 2007 is detected, an error message is now given and the script is aborted
+#	Cleanup Word table code for the first row and background color
+#	Cleanup retrieving services and service startup type with Iain Brighton's optimization
+#	Add Iain Brighton's Word table functions
+#	Move Services table to new table functions
+#	Add numeric values for ForestMode and DomainMode
+#	Removed most of the [gc]::collect() as they are not needed
+#	Removed the CheckLoadedModule function
+#	Added a Requires activedirectory module statement#Version 1.02 5-Jun-2014
+#	Fixed the Enterprise Admins and Schema Admins privileged groups tables
+
+#Version 1.01 4-Jun-2014
+#	Added an AddDateTime parameter
+
+#Version 1.x script
+#originally released to the community on May 31, 2014
