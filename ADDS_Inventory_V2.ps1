@@ -63,6 +63,39 @@
 	Remote Server Administration Tools for Windows 10
 		http://www.microsoft.com/en-us/download/details.aspx?id=45520
 	
+.PARAMETER CompanyAddress
+	Company Address to use for the Cover Page, if the Cover Page has the Address field.
+	
+	The following Cover Pages have an Address field:
+		Banded (Word 2013/2016)
+		Contrast (Word 2010)
+		Exposure (Word 2010)
+		Filigree (Word 2013/2016)
+		Ion (Dark) (Word 2013/2016)
+		Retrospect (Word 2013/2016)
+		Semaphore (Word 2013/2016)
+		Tiles (Word 2010)
+		ViewMaster (Word 2013/2016)
+		
+	This parameter is only valid with the MSWORD and PDF output parameters.
+	This parameter has an alias of CA.
+.PARAMETER CompanyEmail
+	Company Email to use for the Cover Page, if the Cover Page has the Email field.  
+	
+	The following Cover Pages have an Email field:
+		Facet (Word 2013/2016)
+	
+	This parameter is only valid with the MSWORD and PDF output parameters.
+	This parameter has an alias of CE.
+.PARAMETER CompanyFax
+	Company Fax to use for the Cover Page, if the Cover Page has the Fax field.  
+	
+	The following Cover Pages have a Fax field:
+		Contrast (Word 2010)
+		Exposure (Word 2010)
+	
+	This parameter is only valid with the MSWORD and PDF output parameters.
+	This parameter has an alias of CF.
 .PARAMETER CompanyName
 	Company Name to use for the Cover Page.  
 	Default value is contained in HKCU:\Software\Microsoft\Office\Common\UserInfo\CompanyName or
@@ -72,6 +105,15 @@
 	If either registry key does not exist and this parameter is not specified, the report will
 	not contain a Company Name on the cover page.
 	This parameter is only valid with the MSWORD and PDF output parameters.
+.PARAMETER CompanyPhone
+	Company Phone to use for the Cover Page, if the Cover Page has the Phone field.  
+	
+	The following Cover Pages have a Phone field:
+		Contrast (Word 2010)
+		Exposure (Word 2010)
+	
+	This parameter is only valid with the MSWORD and PDF output parameters.
+	This parameter has an alias of CPh.
 .PARAMETER CoverPage
 	What Microsoft Word Cover Page to use.
 	Only Word 2010, 2013 and 2016 are supported.
@@ -81,8 +123,9 @@
 		Alphabet (Word 2010. Works)
 		Annual (Word 2010. Doesn't work well for this report)
 		Austere (Word 2010. Works)
-		Austin (Word 2010/2013/2016. Doesn't work in 2013 or 2016, mostly works in 2010 but 
-			Subtitle/Subject & Author fields need to be moved after title box is moved up)
+		Austin (Word 2010/2013/2016. Doesn't work in 2013 or 2016, mostly 
+		works in 2010 but Subtitle/Subject & Author fields need to be moved 
+		after title box is moved up)
 		Banded (Word 2013/2016. Works)
 		Conservative (Word 2010. Works)
 		Contrast (Word 2010. Works)
@@ -92,20 +135,22 @@
 		Filigree (Word 2013/2016. Works)
 		Grid (Word 2010/2013/2016. Works in 2010)
 		Integral (Word 2013/2016. Works)
-		Ion (Dark) (Word 2013/2016. Top date doesn't fit; box needs to be manually resized or font 
-			changed to 8 point)
-		Ion (Light) (Word 2013/2016. Top date doesn't fit; box needs to be manually resized or font 
-			changed to 8 point)
+		Ion (Dark) (Word 2013/2016. Top date doesn't fit; box needs to be 
+		manually resized or font changed to 8 point)
+		Ion (Light) (Word 2013/2016. Top date doesn't fit; box needs to be 
+		manually resized or font changed to 8 point)
 		Mod (Word 2010. Works)
-		Motion (Word 2010/2013/2016. Works if top date is manually changed to 36 point)
+		Motion (Word 2010/2013/2016. Works if top date is manually changed to 
+		36 point)
 		Newsprint (Word 2010. Works but date is not populated)
 		Perspective (Word 2010. Works)
 		Pinstripes (Word 2010. Works)
-		Puzzle (Word 2010. Top date doesn't fit; box needs to be manually resized or font 
-			changed to 14 point)
+		Puzzle (Word 2010. Top date doesn't fit; box needs to be manually 
+		resized or font changed to 14 point)
 		Retrospect (Word 2013/2016. Works)
 		Semaphore (Word 2013/2016. Works)
-		Sideline (Word 2010/2013/2016. Doesn't work in 2013 or 2016, works in 2010)
+		Sideline (Word 2010/2013/2016. Doesn't work in 2013 or 2016, works in 
+		2010)
 		Slice (Dark) (Word 2013/2016. Doesn't work)
 		Slice (Light) (Word 2013/2016. Doesn't work)
 		Stacks (Word 2010. Works)
@@ -122,6 +167,12 @@
 	Default value is contained in $env:username
 	This parameter has an alias of UN.
 	This parameter is only valid with the MSWORD and PDF output parameters.
+.PARAMETER HTML
+	Creates an HTML file with an .html extension.
+	This parameter is disabled by default.
+.PARAMETER MSWord
+	SaveAs DOCX file
+	This parameter is set True if no other output format is selected.
 .PARAMETER PDF
 	SaveAs PDF file instead of DOCX file.
 	This parameter is disabled by default.
@@ -131,11 +182,11 @@
 .PARAMETER Text
 	Creates a formatted text file with a .txt extension.
 	This parameter is disabled by default.
-.PARAMETER MSWord
-	SaveAs DOCX file
-	This parameter is set True if no other output format is selected.
-.PARAMETER HTML
-	Creates an HTML file with an .html extension.
+.PARAMETER AddDateTime
+	Adds a date time stamp to the end of the file name.
+	Time stamp is in the format of yyyy-MM-dd_HHmm.
+	June 1, 2016 at 6PM is 2016-06-01_1800.
+	Output filename will be ReportName_2016-06-01_1800.docx (or .pdf).
 	This parameter is disabled by default.
 .PARAMETER ADForest
 	Specifies an Active Directory forest object by providing one of the following attribute values. 
@@ -158,12 +209,59 @@
 	If entered as an IP address, an attempt is made to determine and use the actual computer name.
 	
 	This parameter has an alias of ServerName.
+.PARAMETER DCDNSInfo 
+	Use WMI to gather, for each domain controller, the IP Address and each DNS server configured.
+	This parameter requires the script be run from an elevated PowerShell session 
+	using an account with permission to retrieve hardware information (i.e. Domain Admin).
+	Selecting this parameter will add an extra section to the report.
+	This parameter is disabled by default.
+.PARAMETER Folder
+	Specifies the optional output folder to save the output report. 
+.PARAMETER GPOInheritance
+	In the Group Policies by OU section, adds Inherited GPOs in addition to the GPOs directly linked.
+	Adds a second column to the table GPO Type.
+	Text file is placed in the same folder from where the script is run.
+	
+	This parameter is disabled by default.
+	This parameter has an alias of GPO.
 .PARAMETER Hardware
 	Use WMI to gather hardware information on: Computer System, Disks, Processor and Network Interface Cards
 	This parameter requires the script be run from an elevated PowerShell session 
 	using an account with permission to retrieve hardware information (i.e. Domain Admin).
 	Selecting this parameter will add to both the time it takes to run the script and size of the report.
 	This parameter is disabled by default.
+.PARAMETER IncludeUserInfo
+	For the User Miscellaneous Data section, outputs a table with the SamAccountName
+	and DistinguishedName of the users in the All Users counts:
+	
+		Disabled users
+		Unknown users
+		Locked out users
+		All users with password expired
+		All users whose password never expires
+		All users with password not required
+		All users who cannot change password
+		All users with SID History
+	
+	The Text output option is limited to the first 25 characters of the SamAccountName
+	and the first 116 characters of the DistinguishedName.
+	
+	This parameter is disabled by default.
+	This parameter has an alias of IU.
+.PARAMETER MaxDetails
+	Adds maximum detail to the report.
+	
+	This is the same as using the following parameters:
+		DCDNSInfo
+		GPOInheritance
+		HardWare
+		IncludeUserInfo
+		Services
+	
+	WARNING: Using this parameter can create an extremely large report and 
+	can take a very long time to run.
+
+	This parameter has an alias of MAX.
 .PARAMETER Services
 	Gather information on all services running on domain controllers.
 	Servers that are configured to automatically start but are not running will be colored in red.
@@ -172,25 +270,6 @@
 	using an account with permission to retrieve service information (i.e. Domain Admin).
 	Selecting this parameter will add to both the time it takes to run the script and size of the report.
 	This parameter is disabled by default.
-.PARAMETER AddDateTime
-	Adds a date time stamp to the end of the file name.
-	Time stamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2016 at 6PM is 2016-06-01_1800.
-	Output filename will be ReportName_2016-06-01_1800.docx (or .pdf).
-	This parameter is disabled by default.
-.PARAMETER DCDNSInfo 
-	Use WMI to gather, for each domain controller, the IP Address and each DNS server configured.
-	This parameter requires the script be run from an elevated PowerShell session 
-	using an account with permission to retrieve hardware information (i.e. Domain Admin).
-	Selecting this parameter will add an extra section to the report.
-	This parameter is disabled by default.
-.PARAMETER GPOInheritance
-	In the Group Policies by OU section, adds Inherited GPOs in addition to the GPOs directly linked.
-	Adds a second column to the table GPO Type.
-	Text file is placed in the same folder from where the script is run.
-	
-	This parameter is disabled by default.
-	This parameter has an alias of GPO.
 .PARAMETER Section
 	Processes one or more sections of the report.
 	Valid options are:
@@ -207,8 +286,6 @@
 	
 	Multiple sections are separated with a comma. -Section forest,domains
 	
-.PARAMETER Folder
-	Specifies the optional output folder to save the output report. 
 .PARAMETER SmtpServer
 	Specifies the optional email server to send the output report. 
 .PARAMETER SmtpPort
@@ -237,24 +314,6 @@
 	
 	This parameter is disabled by default.
 	This parameter has an alias of SI.
-.PARAMETER IncludeUserInfo
-	For the User Miscellaneous Data section, outputs a table with the SamAccountName
-	and DistinguishedName of the users in the All Users counts:
-	
-		Disabled users
-		Unknown users
-		Locked out users
-		All users with password expired
-		All users whose password never expires
-		All users with password not required
-		All users who cannot change password
-		All users with SID History
-	
-	The Text output option is limited to the first 25 characters of the SamAccountName
-	and the first 116 characters of the DistinguishedName.
-	
-	This parameter is disabled by default.
-	This parameter has an alias of IU.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1
 	
@@ -424,6 +483,42 @@
 	a domain controller that is also a global catalog server and will use that as the 
 	value for ComputerName.
 .EXAMPLE
+	PS C:\PSScript .\ADDS_Inventory_V2.ps1 -CompanyName "Sherlock Holmes Consulting"
+	-CoverPage Exposure -UserName "Dr. Watson"
+	-CompanyAddress "221B Baker Street, London, England"
+	-CompanyFax "+44 1753 276600"
+	-CompanyPhone "+44 1753 276200"
+	
+	Will use:
+		Sherlock Holmes Consulting for the Company Name.
+		Exposure for the Cover Page format.
+		Dr. Watson for the User Name.
+		221B Baker Street, London, England for the Company Address.
+		+44 1753 276600 for the Company Fax.
+		+44 1753 276200 for the Compnay Phone.
+
+	ADForest defaults to the value in $Env:USERDNSDOMAIN.
+
+	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	a domain controller that is also a global catalog server and will use that as the 
+	value for ComputerName.
+.EXAMPLE
+	PS C:\PSScript .\ADDS_Inventory_V2.ps1 -CompanyName "Sherlock Holmes Consulting"
+	-CoverPage Facet -UserName "Dr. Watson"
+	-CompanyEmail SuperSleuth@SherlockHolmes.com
+
+	Will use:
+		Sherlock Holmes Consulting for the Company Name.
+		Facet for the Cover Page format.
+		Dr. Watson for the User Name.
+		SuperSleuth@SherlockHolmes.com for the Compnay Email.
+
+	ADForest defaults to the value in $Env:USERDNSDOMAIN.
+
+	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	a domain controller that is also a global catalog server and will use that as the 
+	value for ComputerName.
+.EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -ADForest company.tld -AddDateTime
 	
 	Will use all default values.
@@ -543,7 +638,8 @@
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -Section groups,misc -ADForest WebstersLab.com -ServerName PrimaryDC.websterslab.com
 
 	Will use all default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -554,15 +650,36 @@
 	PrimaryDC.websterslab.com for ComputerName.
 	
 	Report will include only the Groups and Miscellaneous sections.
+.EXAMPLE
+	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -MaxDetails
+	
+	Will use all Default values.
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
+	$env:username = Administrator
+
+	Carl Webster for the Company Name.
+	Sideline for the Cover Page format.
+	Administrator for the User Name.
+	
+	Set the following parameter values:
+		DCDNSInfo       = True
+		GPOInheritance  = True
+		HardWare        = True
+		IncludeUserInfo = True
+		Services        = True
+		
+		Section         = "All"
 .INPUTS
 	None.  You cannot pipe objects to this script.
 .OUTPUTS
 	No objects are output from this script.  This script creates a Word or PDF document.
 .NOTES
 	NAME: ADDS_Inventory_V2.ps1
-	VERSION: 2.14
+	VERSION: 2.15
 	AUTHOR: Carl Webster, Sr. Solutions Architect, Choice Solutions, LLC
-	LASTEDIT: May 12, 2017
+	LASTEDIT: June 24, 2017
 #>
 
 
@@ -571,55 +688,39 @@
 
 Param(
 	[parameter(ParameterSetName="Word",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Switch]$MSWord=$False,
-
 	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
 	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Switch]$PDF=$False,
-
-	[parameter(ParameterSetName="Text",Mandatory=$False)] 
+	[Alias("CA")]
+	[ValidateNotNullOrEmpty()]
+	[string]$CompanyAddress="",
+    
+	[parameter(ParameterSetName="Word",Mandatory=$False)] 
+	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
 	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Switch]$Text=$False,
-
-	[parameter(ParameterSetName="HTML",Mandatory=$False)] 
+	[Alias("CE")]
+	[ValidateNotNullOrEmpty()]
+	[string]$CompanyEmail="",
+    
+	[parameter(ParameterSetName="Word",Mandatory=$False)] 
+	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
 	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Switch]$HTML=$False,
-
-	[parameter(Mandatory=$False)] 
-	[Switch]$Hardware=$False, 
-
-	[parameter(Mandatory=$False)] 
-	[string]$ADForest=$Env:USERDNSDOMAIN, 
-
-	[parameter(Mandatory=$False)] 
-	[Alias("ServerName")]
-	[string]$ComputerName=$Env:USERDNSDOMAIN,
-	
-	[parameter(Mandatory=$False )] 
-	[Switch]$Services=$False,
-	
-	[parameter(Mandatory=$False)] 
-	[Switch]$AddDateTime=$False,
-	
-	[parameter(Mandatory=$False)] 
-	[Switch]$DCDNSInfo=$False, 
-
-	[parameter(Mandatory=$False)] 
-	[Switch]$GPOInheritance=$False, 
-
-	[parameter(Mandatory=$False)] 
-	[array]$Section="All",
-	
-	[parameter(Mandatory=$False)] 
-	[string]$Folder="",
-	
+	[Alias("CF")]
+	[ValidateNotNullOrEmpty()]
+	[string]$CompanyFax="",
+    
 	[parameter(ParameterSetName="Word",Mandatory=$False)] 
 	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
 	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
 	[Alias("CN")]
 	[ValidateNotNullOrEmpty()]
 	[string]$CompanyName="",
+    
+	[parameter(ParameterSetName="Word",Mandatory=$False)] 
+	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Alias("CPh")]
+	[ValidateNotNullOrEmpty()]
+	[string]$CompanyPhone="",
     
 	[parameter(ParameterSetName="Word",Mandatory=$False)] 
 	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
@@ -635,6 +736,58 @@ Param(
 	[ValidateNotNullOrEmpty()]
 	[string]$UserName=$env:username,
 
+	[parameter(ParameterSetName="HTML",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Switch]$HTML=$False,
+
+	[parameter(ParameterSetName="Word",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Switch]$MSWord=$False,
+
+	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Switch]$PDF=$False,
+
+	[parameter(ParameterSetName="Text",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Switch]$Text=$False,
+
+	[parameter(Mandatory=$False)] 
+	[Switch]$AddDateTime=$False,
+	
+	[parameter(Mandatory=$False)] 
+	[string]$ADForest=$Env:USERDNSDOMAIN, 
+
+	[parameter(Mandatory=$False)] 
+	[Alias("ServerName")]
+	[string]$ComputerName=$Env:USERDNSDOMAIN,
+	
+	[parameter(Mandatory=$False)] 
+	[Switch]$DCDNSInfo=$False, 
+
+	[parameter(Mandatory=$False)] 
+	[string]$Folder="",
+	
+	[parameter(Mandatory=$False)] 
+	[Switch]$GPOInheritance=$False, 
+
+	[parameter(Mandatory=$False)] 
+	[Switch]$Hardware=$False, 
+
+	[parameter(Mandatory=$False)] 
+	[Alias("IU")]
+	[Switch]$IncludeUserInfo=$False,
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("MAX")]
+	[Switch]$MaxDetails=$False,
+
+	[parameter(Mandatory=$False )] 
+	[Switch]$Services=$False,
+	
+	[parameter(Mandatory=$False)] 
+	[array]$Section="All",
+	
 	[parameter(ParameterSetName="SMTP",Mandatory=$True)] 
 	[string]$SmtpServer="",
 
@@ -655,11 +808,7 @@ Param(
 	
 	[parameter(Mandatory=$False)] 
 	[Alias("SI")]
-	[Switch]$ScriptInfo=$False,
-	
-	[parameter(Mandatory=$False)] 
-	[Alias("IU")]
-	[Switch]$IncludeUserInfo=$False
+	[Switch]$ScriptInfo=$False
 	
 	)
 
@@ -760,7 +909,23 @@ Param(
 #			Error: Certification Authority Issuers(s) (also known as Enrollment Agents) exist, but no Certification Authority Root(s) exist
 #	Change "Users with AdminCount=1 ($($AdminsCountStr) members):" to "Users with AdminCount=1 ($($AdminsCountStr) users):"
 #	Reorder the Forest Information section
-
+#
+#Version 2.15
+#	Added new parameter MaxDetails:
+#		This is the same as using the following parameters:
+#			DCDNSInfo
+#			GPOInheritance
+#			HardWare
+#			IncludeUserInfo
+#			Services
+#	Fixed wrong loop variable for CA
+#	Removed code that made sure all Parameters were set to default values if for some reason they did exist or values were $Null
+#	Reordered the parameters in the help text and parameter list so they match and are grouped better
+#	Replaced _SetDocumentProperty function with Jim Moyle's Set-DocumentProperty function
+#	Updated Function ProcessScriptEnd for the new Cover Page properties and Parameters
+#	Updated Function ShowScriptOptions for the new Cover Page properties and Parameters
+#	Updated Function UpdateDocumentProperties for the new Cover Page properties and Parameters
+#	Updated help text
 
 Set-StrictMode -Version 2
 
@@ -768,176 +933,6 @@ Set-StrictMode -Version 2
 $PSDefaultParameterValues = @{"*:Verbose"=$True}
 $SaveEAPreference = $ErrorActionPreference
 $ErrorActionPreference = 'SilentlyContinue'
-
-If($Null -eq $PDF)
-{
-	$PDF = $False
-}
-If($Null -eq $Text)
-{
-	$Text = $False
-}
-If($Null -eq $MSWord)
-{
-	$MSWord = $False
-}
-If($Null -eq $HTML)
-{
-	$HTML = $False
-}
-If($Null -eq $Services)
-{
-	$Services = $False
-}
-If($Null -eq $AddDateTime)
-{
-	$AddDateTime = $False
-}
-If($Null -eq $Hardware)
-{
-	$Hardware = $False
-}
-If($Null -eq $DCDNSInfo)
-{
-	$DCDNSInfo = $False
-}
-If($Null -eq $GPOInheritance)
-{
-	$GPOInheritance = $False
-}
-If($Null -eq $ComputerName)
-{
-	$ComputerName = $Env:USERDNSDOMAIN
-}
-If($Null -eq $ADForest)
-{
-	$ADForest = $Env:USERDNSDOMAIN
-}
-If($Null -eq $Section)
-{
-	$Section = "All"
-}
-If($Null -eq $Folder)
-{
-	$Folder = ""
-}
-If($Null -eq $SmtpServer)
-{
-	$SmtpServer = ""
-}
-If($Null -eq $SmtpPort)
-{
-	$SmtpPort = 25
-}
-If($Null -eq $UseSSL)
-{
-	$UseSSL = $False
-}
-If($Null -eq $From)
-{
-	$From = ""
-}
-If($Null -eq $To)
-{
-	$To = ""
-}
-If($Null -eq $Dev)
-{
-	$Dev = $False
-}
-If($Null -eq $ScriptInfo)
-{
-	$ScriptInfo = $False
-}
-If($Null -eq $IncludeUserInfo)
-{
-	$IncludeUserInfo = $False
-}
-
-If(!(Test-Path Variable:PDF))
-{
-	$PDF = $False
-}
-If(!(Test-Path Variable:Text))
-{
-	$Text = $False
-}
-If(!(Test-Path Variable:MSWord))
-{
-	$MSWord = $False
-}
-If(!(Test-Path Variable:HTML))
-{
-	$HTML = $False
-}
-If(!(Test-Path Variable:Services))
-{
-	$Services = $False
-}
-If(!(Test-Path Variable:AddDateTime))
-{
-	$AddDateTime = $False
-}
-If(!(Test-Path Variable:Hardware))
-{
-	$Hardware = $False
-}
-If(!(Test-Path Variable:DCDNSInfo))
-{
-	$DCDNSInfo = $False
-}
-If(!(Test-Path Variable:GPOInheritance))
-{
-	$GPOInheritance = $False
-}
-If(!(Test-Path Variable:ComputerName))
-{
-	$ComputerName = $Env:USERDNSDOMAIN
-}
-If(!(Test-Path Variable:ADForest))
-{
-	$ADForest = $Env:USERDNSDOMAIN
-}
-If(!(Test-Path Variable:Section))
-{
-	$Section = "All"
-}
-If(!(Test-Path Variable:Folder))
-{
-	$Folder = ""
-}
-If(!(Test-Path Variable:SmtpServer))
-{
-	$SmtpServer = ""
-}
-If(!(Test-Path Variable:SmtpPort))
-{
-	$SmtpPort = 25
-}
-If(!(Test-Path Variable:UseSSL))
-{
-	$UseSSL = $False
-}
-If(!(Test-Path Variable:From))
-{
-	$From = ""
-}
-If(!(Test-Path Variable:To))
-{
-	$To = ""
-}
-If(!(Test-Path Variable:Dev))
-{
-	$Dev = $False
-}
-If(!(Test-Path Variable:ScriptInfo))
-{
-	$ScriptInfo = $False
-}
-If(!(Test-Path Variable:IncludeUserInfo))
-{
-	$IncludeUserInfo = $False
-}
 
 If($Dev)
 {
@@ -1009,6 +1004,18 @@ Else
 	}
 	Write-Error "Unable to determine output parameter.  Script cannot continue"
 	Exit
+}
+
+#If the MaxDetails parameter is used, set a bunch of stuff true and some stuff false
+If($MaxDetails)
+{
+	$DCDNSInfo       	= $True
+	$GPOInheritance  	= $True
+	$HardWare        	= $True
+	$IncludeUserInfo	= $True
+	$Services        	= $True
+	
+	$Section			= "All"
 }
 
 $ValidSection = $False
@@ -3178,21 +3185,44 @@ Function ValidateCompanyName
 	}
 }
 
-Function _SetDocumentProperty 
-{
-	#jeff hicks
-	Param([object]$Properties,[string]$Name,[string]$Value)
-	#get the property object
-	$prop = $properties | ForEach { 
-		$propname=$_.GetType().InvokeMember("Name","GetProperty",$Null,$_,$Null)
-		If($propname -eq $Name) 
-		{
-			Return $_
-		}
-	} #ForEach
-
-	#set the value
-	$Prop.GetType().InvokeMember("Value","SetProperty",$Null,$prop,$Value)
+Function Set-DocumentProperty {
+    <#
+	.SYNOPSIS
+	Function to set the Title Page document properties in MS Word
+	.DESCRIPTION
+	Long description
+	.PARAMETER Document
+	Current Document Object
+	.PARAMETER DocProperty
+	Parameter description
+	.PARAMETER Value
+	Parameter description
+	.EXAMPLE
+	Set-DocumentProperty -Document $Script:Doc -DocProperty Title -Value 'MyTitle'
+	.EXAMPLE
+	Set-DocumentProperty -Document $Script:Doc -DocProperty Company -Value 'MyCompany'
+	.EXAMPLE
+	Set-DocumentProperty -Document $Script:Doc -DocProperty Author -Value 'Jim Moyle'
+	.EXAMPLE
+	Set-DocumentProperty -Document $Script:Doc -DocProperty Subject -Value 'MySubjectTitle'
+	.NOTES
+	Function Created by Jim Moyle June 2017
+	Twitter : @JimMoyle
+	#>
+    param (
+        [object]$Document,
+        [String]$DocProperty,
+        [string]$Value
+    )
+    try {
+        $binding = "System.Reflection.BindingFlags" -as [type]
+        $builtInProperties = $Document.BuiltInDocumentProperties
+        $property = [System.__ComObject].invokemember("item", $binding::GetProperty, $null, $BuiltinProperties, $DocProperty)
+        [System.__ComObject].invokemember("value", $binding::SetProperty, $null, $property, $Value)
+    }
+    catch {
+        Write-Warning "Failed to set $DocProperty to $Value"
+    }
 }
 
 Function FindWordDocumentEnd
@@ -3555,24 +3585,24 @@ Function SetupWord
 Function UpdateDocumentProperties
 {
 	Param([string]$AbstractTitle, [string]$SubjectTitle)
+	#updated 8-Jun-2017 with additional cover page fields
 	#Update document properties
 	If($MSWORD -or $PDF)
 	{
 		If($Script:CoverPagesExist)
 		{
 			Write-Verbose "$(Get-Date): Set Cover Page Properties"
-			_SetDocumentProperty $Script:Doc.BuiltInDocumentProperties "Company" $Script:CoName
-			_SetDocumentProperty $Script:Doc.BuiltInDocumentProperties "Title" $Script:title
-			_SetDocumentProperty $Script:Doc.BuiltInDocumentProperties "Author" $username
-
-			_SetDocumentProperty $Script:Doc.BuiltInDocumentProperties "Subject" $SubjectTitle
+			#8-Jun-2017 put these 4 items in alpha order
+            Set-DocumentProperty -Document $Script:Doc -DocProperty Author -Value $UserName
+            Set-DocumentProperty -Document $Script:Doc -DocProperty Company -Value $Script:CoName
+            Set-DocumentProperty -Document $Script:Doc -DocProperty Subject -Value $SubjectTitle
+            Set-DocumentProperty -Document $Script:Doc -DocProperty Title -Value $Script:title
 
 			#Get the Coverpage XML part
 			$cp = $Script:Doc.CustomXMLParts | Where {$_.NamespaceURI -match "coverPageProps$"}
 
 			#get the abstract XML part
 			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "Abstract"}
-
 			#set the text
 			If([String]::IsNullOrEmpty($Script:CoName))
 			{
@@ -3582,7 +3612,30 @@ Function UpdateDocumentProperties
 			{
 				[string]$abstract = "$($AbstractTitle) for $($Script:CoName)"
 			}
+			$ab.Text = $abstract
 
+			#added 8-Jun-2017
+			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "CompanyAddress"}
+			#set the text
+			[string]$abstract = $CompanyAddress
+			$ab.Text = $abstract
+
+			#added 8-Jun-2017
+			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "CompanyEmail"}
+			#set the text
+			[string]$abstract = $CompanyEmail
+			$ab.Text = $abstract
+
+			#added 8-Jun-2017
+			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "CompanyFax"}
+			#set the text
+			[string]$abstract = $CompanyFax
+			$ab.Text = $abstract
+
+			#added 8-Jun-2017
+			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "CompanyPhone"}
+			#set the text
+			[string]$abstract = $CompanyPhone
 			$ab.Text = $abstract
 
 			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "PublishDate"}
@@ -5723,6 +5776,10 @@ Function ShowScriptOptions
 	Write-Verbose "$(Get-Date): ComputerName    : $($ComputerName)"
 	If($MSWORD -or $PDF)
 	{
+		Write-Verbose "$(Get-Date): Company Address : $($CompanyAddress)"
+		Write-Verbose "$(Get-Date): Company Email   : $($CompanyEmail)"
+		Write-Verbose "$(Get-Date): Company Fax     : $($CompanyFax)"
+		Write-Verbose "$(Get-Date): Company Phone   : $($CompanyPhone)"
 		Write-Verbose "$(Get-Date): Cover Page      : $($CoverPage)"
 	}
 	Write-Verbose "$(Get-Date): DCDNSInfo       : $($DCDNSInfo)"
@@ -5743,6 +5800,7 @@ Function ShowScriptOptions
 	Write-Verbose "$(Get-Date): GPOInheritance  : $($GPOInheritance)"
 	Write-Verbose "$(Get-Date): HW Inventory    : $($Hardware)"
 	Write-Verbose "$(Get-Date): IncludeUserInfo : $($IncludeUserInfo)"
+	Write-Verbose "$(Get-Date): MaxDetail       : $($MaxDetails)"
 	Write-Verbose "$(Get-Date): Save As HTML    : $($HTML)"
 	Write-Verbose "$(Get-Date): Save As PDF     : $($PDF)"
 	Write-Verbose "$(Get-Date): Save As TEXT    : $($TEXT)"
@@ -6085,6 +6143,13 @@ Function ProcessScriptSetup
 			Write-Host "Warning: To obtain DCDNSINFO data, please run the script from an elevated PowerShell session." -Foreground White
 			Write-Host "Warning: " -Foreground White
 			$Script:DCDNSINFO = $False
+		}
+
+		If(!$Script:DARights -and !$Script:Elevated)
+		{
+			Write-Host "Warning: " -Foreground White
+			Write-Host "Warning: To obtain Time Server and AD file location data, please run the script from an elevated PowerShell session using an account with Domain Admin rights." -Foreground White
+			Write-Host "Warning: " -Foreground White
 		}
 	}
 
@@ -7207,7 +7272,7 @@ Function ProcessCAInformation
 	ElseIf(!([string]::isnullorempty($allObj.psbase.children)) -and !([string]::isnullorempty($rootObj.psbase.children)))
 	{
 		$AllCnt = 0
-		ForEach($obj in $allObj)
+		ForEach($obj in $allObj.psbase.children)
 		{
 			$AllCnt++
 			If($MSWORD -or $PDF)
@@ -10436,12 +10501,6 @@ Function ProcessDomainControllers
 			OutputTimeServerRegistryKeys $DC.HostName
 		
 			OutputADFileLocations $DC.HostName
-		}
-		Else
-		{
-			Write-Host "Warning: " -Foreground White
-			Write-Host "Warning: To obtain Time Server and AD file location data, please run the script from an elevated PowerShell session." -Foreground White
-			Write-Host "Warning: " -Foreground White
 		}
 		
 		If($Hardware -or $Services -or $DCDNSInfo)
@@ -15097,6 +15156,10 @@ Function ProcessScriptEnd
 		Out-File -FilePath $SIFile -Append -InputObject "ComputerName   : $($ComputerName)" 4>$Null
 		If($MSWORD -or $PDF)
 		{
+			Out-File -FilePath $SIFile -Append -InputObject "Company Address: $($CompanyAddress)" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Email  : $($CompanyEmail)" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Fax    : $($CompanyFax)" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Phone  : $($CompanyPhone)" 4>$Null		
 			Out-File -FilePath $SIFile -Append -InputObject "Cover Page     : $($CoverPage)" 4>$Null
 		}
 		Out-File -FilePath $SIFile -Append -InputObject "DCDNSInfo      : $($DCDNSInfo)" 4>$Null
@@ -15116,6 +15179,7 @@ Function ProcessScriptEnd
 		Out-File -FilePath $SIFile -Append -InputObject "GPOInheritance : $($GPOInheritance)" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "HW Inventory   : $($Hardware)" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "IncludeUserInfo: $($IncludeUserInfo)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "MaxDetails     : $($MaxDetails)" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "Save As HTML   : $($HTML)" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "Save As PDF    : $($PDF)" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "Save As TEXT   : $($TEXT)" 4>$Null
