@@ -4,6 +4,23 @@
 #@carlwebster on Twitter
 #http://www.CarlWebster.com
 
+#Version 2.15 26-Jun-2017
+#	Added new parameter MaxDetails:
+#		This is the same as using the following parameters:
+#			DCDNSInfo
+#			GPOInheritance
+#			HardWare
+#			IncludeUserInfo
+#			Services
+#	Fixed wrong loop variable for CA
+#	Removed code that made sure all Parameters were set to default values if for some reason they did exist or values were $Null
+#	Reordered the parameters in the help text and parameter list so they match and are grouped better
+#	Replaced _SetDocumentProperty function with Jim Moyle's Set-DocumentProperty function
+#	Updated Function ProcessScriptEnd for the new Cover Page properties and Parameters
+#	Updated Function ShowScriptOptions for the new Cover Page properties and Parameters
+#	Updated Function UpdateDocumentProperties for the new Cover Page properties and Parameters
+#	Updated help text
+
 #Version 2.14 released on 12-May-2017
 #	Add Certificate Authority Information section to Forest Information
 #		Check for the following CA related errors:
