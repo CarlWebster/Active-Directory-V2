@@ -679,7 +679,7 @@
 	NAME: ADDS_Inventory_V2.ps1
 	VERSION: 2.15
 	AUTHOR: Carl Webster, Sr. Solutions Architect, Choice Solutions, LLC
-	LASTEDIT: June 24, 2017
+	LASTEDIT: June 26, 2017
 #>
 
 
