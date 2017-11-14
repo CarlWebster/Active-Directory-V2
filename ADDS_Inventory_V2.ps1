@@ -193,14 +193,43 @@
 	The identifier in parentheses is the LDAP display name for the attribute.
 
 	Fully qualified domain name
-		Example: corp.contoso.com
+		Example: labaddomain.com
 	GUID (objectGUID)
-		Example: 599c3d2e-f72d-4d20-8a88-030d99495f20
+		Example: 599c3d2e-e61e-4d20-7b77-030d99495e19
 	DNS host name
-		Example: dnsServer.corp.contoso.com
+		Example: labaddomain.com
 	NetBIOS name
-		Example: corp
-		
+		Example: labaddomain
+	
+	Default value is $Env:USERDNSDOMAIN	
+	
+	If both ADForest and ADDomain are specified, ADDomain takes precedence.
+.PARAMETER ADDomain
+	Specifies an Active Directory domain object by providing one of the following property values. The identifier
+	in parentheses is the LDAP display name for the attribute. All values are for the domainDNS object that 
+	represents the domain.
+
+	Distinguished Name
+
+	Example: DC=tullahoma,DC=corp,DC=labaddomain,DC=com
+
+	GUID (objectGUID)
+
+	Example: b9fa5fbd-4334-4a98-85f1-3a3a44069fc6
+
+	Security Identifier (objectSid)
+
+	Example: S-1-5-21-3643273344-1505409314-3732760578
+
+	DNS domain name
+
+	Example: tullahoma.corp.labaddomain.com
+
+	NetBIOS domain name
+
+	Example: tullahoma
+
+	If both ADForest and ADDomain are specified, ADDomain takes precedence.
 .PARAMETER ComputerName
 	Specifies which domain controller to use to run the script against.
 	If ADForest is a trusted forest, then ComputerName is required to detect the existence of ADForest.
@@ -209,6 +238,7 @@
 	If entered as an IP address, an attempt is made to determine and use the actual computer name.
 	
 	This parameter has an alias of ServerName.
+	Default value is $Env:USERDNSDOMAIN	
 .PARAMETER DCDNSInfo 
 	Use WMI to gather, for each domain controller, the IP Address and each DNS server configured.
 	This parameter requires the script be run from an elevated PowerShell session 
@@ -677,9 +707,9 @@
 	No objects are output from this script.  This script creates a Word or PDF document.
 .NOTES
 	NAME: ADDS_Inventory_V2.ps1
-	VERSION: 2.15
+	VERSION: 2.16
 	AUTHOR: Carl Webster, Sr. Solutions Architect, Choice Solutions, LLC
-	LASTEDIT: June 26, 2017
+	LASTEDIT: November 14, 2017
 #>
 
 
@@ -757,6 +787,9 @@ Param(
 	
 	[parameter(Mandatory=$False)] 
 	[string]$ADForest=$Env:USERDNSDOMAIN, 
+
+	[parameter(Mandatory=$False)] 
+	[string]$ADDomain="", 
 
 	[parameter(Mandatory=$False)] 
 	[Alias("ServerName")]
@@ -926,7 +959,10 @@ Param(
 #	Updated Function ShowScriptOptions for the new Cover Page properties and Parameters
 #	Updated Function UpdateDocumentProperties for the new Cover Page properties and Parameters
 #	Updated help text
-
+#
+#Version 2.16
+#	Add new parameter ADDomain to restrict report to a single domain
+#
 Set-StrictMode -Version 2
 
 #force  on
@@ -1006,7 +1042,13 @@ Else
 	Exit
 }
 
-#If the MaxDetails parameter is used, set a bunch of stuff true and some stuff false
+If($ADForest -ne "" -and $ADDomain -ne "")
+{
+	#Make ADForest equal to ADDomain so no code has to change in the script
+	$ADForest = $ADDomain
+}
+
+#If the MaxDetails parameter is used, set a bunch of stuff true
 If($MaxDetails)
 {
 	$DCDNSInfo       	= $True
@@ -1014,7 +1056,6 @@ If($MaxDetails)
 	$HardWare        	= $True
 	$IncludeUserInfo	= $True
 	$Services        	= $True
-	
 	$Section			= "All"
 }
 
@@ -5063,6 +5104,7 @@ Function UserIsaDomainAdmin
 		If($ID.CompareTo($domainAdminsSID) -eq 0)
 		{
 			$IsDA = $True
+			Break
 		}     
 	}
 
@@ -5768,67 +5810,68 @@ Function ShowScriptOptions
 {
 	Write-Verbose "$(Get-Date): "
 	Write-Verbose "$(Get-Date): "
-	Write-Verbose "$(Get-Date): AddDateTime     : $($AddDateTime)"
+	Write-Verbose "$(Get-Date): AddDateTime     : $AddDateTime"
 	If($MSWORD -or $PDF)
 	{
-		Write-Verbose "$(Get-Date): Company Name    : $($Script:CoName)"
+		Write-Verbose "$(Get-Date): Company Name    : $Script:CoName"
 	}
-	Write-Verbose "$(Get-Date): ComputerName    : $($ComputerName)"
+	Write-Verbose "$(Get-Date): ComputerName    : $ComputerName"
 	If($MSWORD -or $PDF)
 	{
-		Write-Verbose "$(Get-Date): Company Address : $($CompanyAddress)"
-		Write-Verbose "$(Get-Date): Company Email   : $($CompanyEmail)"
-		Write-Verbose "$(Get-Date): Company Fax     : $($CompanyFax)"
-		Write-Verbose "$(Get-Date): Company Phone   : $($CompanyPhone)"
-		Write-Verbose "$(Get-Date): Cover Page      : $($CoverPage)"
+		Write-Verbose "$(Get-Date): Company Address : $CompanyAddress"
+		Write-Verbose "$(Get-Date): Company Email   : $CompanyEmail"
+		Write-Verbose "$(Get-Date): Company Fax     : $CompanyFax"
+		Write-Verbose "$(Get-Date): Company Phone   : $CompanyPhone"
+		Write-Verbose "$(Get-Date): Cover Page      : $CoverPage"
 	}
-	Write-Verbose "$(Get-Date): DCDNSInfo       : $($DCDNSInfo)"
-	Write-Verbose "$(Get-Date): Dev             : $($Dev)"
+	Write-Verbose "$(Get-Date): DCDNSInfo       : $DCDNSInfo"
+	Write-Verbose "$(Get-Date): Dev             : $Dev"
 	If($Dev)
 	{
-		Write-Verbose "$(Get-Date): DevErrorFile    : $($Script:DevErrorFile)"
+		Write-Verbose "$(Get-Date): DevErrorFile    : $Script:DevErrorFile"
 	}
-	Write-Verbose "$(Get-Date): Elevated        : $($Script:Elevated)"
-	Write-Verbose "$(Get-Date): Filename1       : $($Script:filename1)"
+	Write-Verbose "$(Get-Date): Domain Name     : $ADDomain"
+	Write-Verbose "$(Get-Date): Elevated        : $Script:Elevated"
+	Write-Verbose "$(Get-Date): Filename1       : $Script:filename1"
 	If($PDF)
 	{
-		Write-Verbose "$(Get-Date): Filename2       : $($Script:filename2)"
+		Write-Verbose "$(Get-Date): Filename2       : $Script:filename2"
 	}
-	Write-Verbose "$(Get-Date): Folder          : $($Folder)"
-	Write-Verbose "$(Get-Date): Forest Name     : $($ADForest)"
-	Write-Verbose "$(Get-Date): From            : $($From)"
-	Write-Verbose "$(Get-Date): GPOInheritance  : $($GPOInheritance)"
-	Write-Verbose "$(Get-Date): HW Inventory    : $($Hardware)"
-	Write-Verbose "$(Get-Date): IncludeUserInfo : $($IncludeUserInfo)"
-	Write-Verbose "$(Get-Date): MaxDetail       : $($MaxDetails)"
-	Write-Verbose "$(Get-Date): Save As HTML    : $($HTML)"
-	Write-Verbose "$(Get-Date): Save As PDF     : $($PDF)"
-	Write-Verbose "$(Get-Date): Save As TEXT    : $($TEXT)"
-	Write-Verbose "$(Get-Date): Save As WORD    : $($MSWORD)"
-	Write-Verbose "$(Get-Date): ScriptInfo      : $($ScriptInfo)"
-	Write-Verbose "$(Get-Date): Section         : $($Section)"
-	Write-Verbose "$(Get-Date): Services        : $($Services)"
-	Write-Verbose "$(Get-Date): Smtp Port       : $($SmtpPort)"
-	Write-Verbose "$(Get-Date): Smtp Server     : $($SmtpServer)"
-	Write-Verbose "$(Get-Date): Title           : $($Script:Title)"
-	Write-Verbose "$(Get-Date): To              : $($To)"
-	Write-Verbose "$(Get-Date): Use SSL         : $($UseSSL)"
+	Write-Verbose "$(Get-Date): Folder          : $Folder"
+	Write-Verbose "$(Get-Date): Forest Name     : $ADForest"
+	Write-Verbose "$(Get-Date): From            : $From"
+	Write-Verbose "$(Get-Date): GPOInheritance  : $GPOInheritance"
+	Write-Verbose "$(Get-Date): HW Inventory    : $Hardware"
+	Write-Verbose "$(Get-Date): IncludeUserInfo : $IncludeUserInfo"
+	Write-Verbose "$(Get-Date): MaxDetail       : $MaxDetails"
+	Write-Verbose "$(Get-Date): Save As HTML    : $HTML"
+	Write-Verbose "$(Get-Date): Save As PDF     : $PDF"
+	Write-Verbose "$(Get-Date): Save As TEXT    : $TEXT"
+	Write-Verbose "$(Get-Date): Save As WORD    : $MSWORD"
+	Write-Verbose "$(Get-Date): ScriptInfo      : $ScriptInfo"
+	Write-Verbose "$(Get-Date): Section         : $Section"
+	Write-Verbose "$(Get-Date): Services        : $Services"
+	Write-Verbose "$(Get-Date): Smtp Port       : $SmtpPort"
+	Write-Verbose "$(Get-Date): Smtp Server     : $SmtpServer"
+	Write-Verbose "$(Get-Date): Title           : $Script:Title"
+	Write-Verbose "$(Get-Date): To              : $To"
+	Write-Verbose "$(Get-Date): Use SSL         : $UseSSL"
 	If($MSWORD -or $PDF)
 	{
-		Write-Verbose "$(Get-Date): User Name       : $($UserName)"
+		Write-Verbose "$(Get-Date): User Name       : $UserName"
 	}
 	Write-Verbose "$(Get-Date): "
-	Write-Verbose "$(Get-Date): OS Detected     : $($Script:RunningOS)"
+	Write-Verbose "$(Get-Date): OS Detected     : $Script:RunningOS"
 	Write-Verbose "$(Get-Date): PoSH version    : $($Host.Version)"
-	Write-Verbose "$(Get-Date): PSCulture       : $($PSCulture)"
-	Write-Verbose "$(Get-Date): PSUICulture     : $($PSUICulture)"
+	Write-Verbose "$(Get-Date): PSCulture       : $PSCulture"
+	Write-Verbose "$(Get-Date): PSUICulture     : $PSUICulture"
 	If($MSWORD -or $PDF)
 	{
-		Write-Verbose "$(Get-Date): Word language   : $($Script:WordLanguageValue)"
-		Write-Verbose "$(Get-Date): Word version    : $($Script:WordProduct)"
+		Write-Verbose "$(Get-Date): Word language   : $Script:WordLanguageValue"
+		Write-Verbose "$(Get-Date): Word version    : $Script:WordProduct"
 	}
 	Write-Verbose "$(Get-Date): "
-	Write-Verbose "$(Get-Date): Script start    : $($Script:StartTime)"
+	Write-Verbose "$(Get-Date): Script start    : $Script:StartTime"
 	Write-Verbose "$(Get-Date): "
 	Write-Verbose "$(Get-Date): "
 }
@@ -6050,7 +6093,7 @@ Function ProcessScriptSetup
 	}
 
 	#If hardware inventory or services are requested, make sure user is running the script with Domain Admin rights
-	Write-Verbose "$(Get-Date): `tTesting to see if $($env:username) has Domain Admin rights"
+	Write-Verbose "$(Get-Date): `tTesting to see if $env:username has Domain Admin rights"
 	$Script:DARights = $False
 	$Script:Elevated = $False
 	
@@ -6058,13 +6101,27 @@ Function ProcessScriptSetup
 	If($AmIReallyDA -eq $True)
 	{
 		#user has Domain Admin rights
-		Write-Verbose "$(Get-Date): $($env:username) has Domain Admin rights in the $($ADForest) Forest"
+		If($ADDomain -ne "")
+		{
+			Write-Verbose "$(Get-Date): $env:username has Domain Admin rights in the $ADDomain Domain"
+		}
+		Else
+		{
+			Write-Verbose "$(Get-Date): $env:username has Domain Admin rights in the $ADForest Forest"
+		}
 		$Script:DARights = $True
 	}
 	Else
 	{
 		#user does nto have Domain Admin rights
-		Write-Verbose "$(Get-Date): $($env:username) does not have Domain Admin rights in the $($ADForest) Forest"
+		If($ADDomain -ne "")
+		{
+			Write-Verbose "$(Get-Date): $env:username does not have Domain Admin rights in the $ADDomain Domain"
+		}
+		Else
+		{
+			Write-Verbose "$(Get-Date): $env:username does not have Domain Admin rights in the $ADForest Forest"
+		}
 	}
 	
 	$Script:Elevated = ElevatedSession
@@ -6169,9 +6226,10 @@ Function ProcessScriptSetup
 		If($? -and $Null -ne $Results)
 		{
 			$Script:ComputerName = $Results
-			Write-Verbose "$(Get-Date): Server name has been renamed from $($Env:USERDNSDOMAIN) to $($ComputerName)"
+			Write-Verbose "$(Get-Date): Server name has been renamed from $Env:USERDNSDOMAIN to $ComputerName"
 		}
-		ElseIf(!$? -and $Null -eq $Results)
+		#ElseIf(!$? -and $Null -eq $Results)
+		ElseIf(!$?) #changed for 2.16
 		{
 			#may be in a child domain where -Service GlobalCatalog doesn't work. Try PrimaryDC
 			$Results = (Get-ADDomainController -DomainName $ADForest -Discover -Service PrimaryDC -EA 0).Name
@@ -6179,7 +6237,7 @@ Function ProcessScriptSetup
 			If($? -and $Null -ne $Results)
 			{
 				$Script:ComputerName = $Results
-				Write-Verbose "$(Get-Date): Server name has been renamed from $($Env:USERDNSDOMAIN) to $($ComputerName)"
+				Write-Verbose "$(Get-Date): Server name has been renamed from $Env:USERDNSDOMAIN to $ComputerName"
 			}
 		}
 	}
@@ -6195,11 +6253,11 @@ Function ProcessScriptSetup
 		If($? -and $Null -ne $Result)
 		{
 			$Script:ComputerName = $Result.HostName
-			Write-Verbose "$(Get-Date): Server name has been renamed from $($ip) to $($ComputerName)"
+			Write-Verbose "$(Get-Date): Server name has been renamed from $ip to $ComputerName"
 		}
 		Else
 		{
-			Write-Warning "Unable to resolve $($ComputerName) to a hostname"
+			Write-Warning "Unable to resolve $ComputerName to a hostname"
 		}
 	}
 	Else
@@ -6211,11 +6269,11 @@ Function ProcessScriptSetup
 	{
 		#get server name
 		#first test to make sure the server is reachable
-		Write-Verbose "$(Get-Date): Testing to see if $($ComputerName) is online and reachable"
+		Write-Verbose "$(Get-Date): Testing to see if $ComputerName is online and reachable"
 		If(Test-Connection -ComputerName $ComputerName -quiet -EA 0)
 		{
-			Write-Verbose "$(Get-Date): Server $($ComputerName) is online."
-			Write-Verbose "$(Get-Date): `tTest #1 to see if $($ComputerName) is a Domain Controller."
+			Write-Verbose "$(Get-Date): Server $ComputerName is online."
+			Write-Verbose "$(Get-Date): `tTest #1 to see if $ComputerName is a Domain Controller."
 			#the server may be online but is it really a domain controller?
 
 			#is the ComputerName in the current domain
@@ -6224,67 +6282,129 @@ Function ProcessScriptSetup
 			If(!$? -or $Null -eq $Results)
 			{
 				#try using the Forest name
-				Write-Verbose "$(Get-Date): `tTest #2 to see if $($ComputerName) is a Domain Controller."
+				Write-Verbose "$(Get-Date): `tTest #2 to see if $ComputerName is a Domain Controller."
 				$Results = Get-ADDomainController $ComputerName -Server $ADForest -EA 0
 				If(!$?)
 				{
 					$ErrorActionPreference = $SaveEAPreference
-					Write-Error "`n`n`t`t$($ComputerName) is not a domain controller for $($ADForest).`n`t`tScript cannot continue.`n`n"
+					Write-Error "`n`n`t`t$ComputerName is not a domain controller for $ADForest.`n`t`tScript cannot continue.`n`n"
 					Exit
 				}
 				Else
 				{
-					Write-Verbose "$(Get-Date): `tTest #2 succeeded. $($ComputerName) is a Domain Controller."
+					Write-Verbose "$(Get-Date): `tTest #2 succeeded. $ComputerName is a Domain Controller."
 				}
 			}
 			Else
 			{
-				Write-Verbose "$(Get-Date): `tTest #1 succeeded. $($ComputerName) is a Domain Controller."
+				Write-Verbose "$(Get-Date): `tTest #1 succeeded. $ComputerName is a Domain Controller."
 			}
 			
 			$Results = $Null
 		}
 		Else
 		{
-			Write-Verbose "$(Get-Date): Computer $($ComputerName) is offline"
+			Write-Verbose "$(Get-Date): Computer $ComputerName is offline"
 			$ErrorActionPreference = $SaveEAPreference
-			Write-Error "`n`n`t`tComputer $($ComputerName) is offline.`nScript cannot continue.`n`n"
+			Write-Error "`n`n`t`tComputer $ComputerName is offline.`nScript cannot continue.`n`n"
 			Exit
 		}
 	}
 
-	#get forest information so output filename can be generated
-	Write-Verbose "$(Get-Date): Testing to see if $($ADForest) is a valid forest name"
-	If([String]::IsNullOrEmpty($ComputerName))
+	If($ADForest -ne $ADDomain)
 	{
-		$Script:Forest = Get-ADForest -Identity $ADForest -EA 0
+		#get forest information so output filename can be generated
+		Write-Verbose "$(Get-Date): Testing to see if $($ADForest) is a valid forest name"
+		If([String]::IsNullOrEmpty($ComputerName))
+		{
+			$Script:Forest = Get-ADForest -Identity $ADForest -EA 0
+			
+			If(!$?)
+			{
+				$ErrorActionPreference = $SaveEAPreference
+				Write-Error "`n`n`t`tCould not find a forest identified by: $ADForest.`nScript cannot continue.`n`n"
+				Exit
+			}
+		}
+		Else
+		{
+			$Script:Forest = Get-ADForest -Identity $ADForest -Server $ComputerName -EA 0
+
+			If(!$?)
+			{
+				$ErrorActionPreference = $SaveEAPreference
+				Write-Error "`n`n`t`tCould not find a forest with the name of $ADForest.`n`n`t`tScript cannot continue.`n`n`t`tIs $ComputerName running Active Directory Web Services?"
+				Exit
+			}
+		}
+		Write-Verbose "$(Get-Date): $ADForest is a valid forest name"
+		[string]$Script:Title = "AD Inventory Report for the $Script:ForestName Forest"
+		$Script:Domains       = $Script:Forest.Domains | Sort
+		$Script:ConfigNC      = (Get-ADRootDSE -Server $ADForest -EA 0).ConfigurationNamingContext
+	}
+	
+	If($ADDomain -ne "")
+	{
+		If([String]::IsNullOrEmpty($ComputerName))
+		{
+			$results = Get-ADDomain -Identity $ADDomain -EA 0
+			
+			If(!$?)
+			{
+				$ErrorActionPreference = $SaveEAPreference
+				Write-Error "`n`n`t`tCould not find a domain identified by: $ADDomain.`nScript cannot continue.`n`n"
+				Exit
+			}
+		}
+		Else
+		{
+			$results = Get-ADDomain -Identity $ADDomain -Server $ComputerName -EA 0
+
+			If(!$?)
+			{
+				$ErrorActionPreference = $SaveEAPreference
+				Write-Error "`n`n`t`tCould not find a domain with the name of $ADDomain.`n`n`t`tScript cannot continue.`n`n`t`tIs $ComputerName running Active Directory Web Services?"
+				Exit
+			}
+		}
+		Write-Verbose "$(Get-Date): $ADDomain is a valid domain name"
+		$Script:Domains       = $results.DNSRoot
+		$Script:DomainDNSRoot = $results.DNSRoot
+		[string]$Script:Title = "AD Inventory Report for the $Script:Domains Domain"
 		
-		If(!$?)
+		$tmp = $results.Forest
+		#get forest info 
+		Write-Verbose "$(Get-Date): Retrieving forest information"
+		If([String]::IsNullOrEmpty($ComputerName))
 		{
-			$ErrorActionPreference = $SaveEAPreference
-			Write-Error "`n`n`t`tCould not find a forest identified by: $($ADForest).`nScript cannot continue.`n`n"
-			Exit
+			$Script:Forest = Get-ADForest -Identity $tmp -EA 0
+			
+			If(!$?)
+			{
+				$ErrorActionPreference = $SaveEAPreference
+				Write-Error "`n`n`t`tCould not find a forest identified by: $tmp.`nScript cannot continue.`n`n"
+				Exit
+			}
 		}
-	}
-	Else
-	{
-		$Script:Forest = Get-ADForest -Identity $ADForest -Server $ComputerName -EA 0
+		Else
+		{
+			$Script:Forest = Get-ADForest -Identity $tmp -Server $ComputerName -EA 0
 
-		If(!$?)
-		{
-			$ErrorActionPreference = $SaveEAPreference
-			Write-Error "`n`n`t`tCould not find a forest with the name of $($ADForest).`n`n`t`tScript cannot continue.`n`n`t`tIs $($ComputerName) running Active Directory Web Services?"
-			Exit
+			If(!$?)
+			{
+				$ErrorActionPreference = $SaveEAPreference
+				Write-Error "`n`n`t`tCould not find a forest with the name of $tmp.`n`n`t`tScript cannot continue.`n`n`t`tIs $ComputerName running Active Directory Web Services?"
+				Exit
+			}
 		}
+		Write-Verbose "$(Get-Date): Found forest information for $tmp"
+		$Script:ConfigNC = (Get-ADRootDSE -Server $tmp -EA 0).ConfigurationNamingContext
 	}
-	Write-Verbose "$(Get-Date): $($ADForest) is a valid forest name"
+	
 	#store root domain so it only has to be accessed once
 	[string]$Script:ForestRootDomain = $Script:Forest.RootDomain
 	[string]$Script:ForestName       = $Script:Forest.Name
-	[string]$Script:Title            = "Inventory Report V2.14 for the $($Script:ForestName) Forest"
-	$Script:Domains                  = $Script:Forest.Domains | Sort
 	#set naming context
-	$Script:ConfigNC                 = (Get-ADRootDSE -Server $ADForest -EA 0).ConfigurationNamingContext
 }
 #endregion
 
@@ -6480,20 +6600,43 @@ Function ProcessForestInformation
 		}
 		Else
 		{
-			#redo list of domains so forest root domain is listed first
-			[array]$tmpDomains = "$Script:ForestRootDomain"
-			[array]$tmpDomains2 = "$($Script:ForestRootDomain)"
-			ForEach($Domain in $Script:Domains)
+			If($ADDomain -ne "")
 			{
-				If($Domain -ne $Script:ForestRootDomain)
+				#2.16 don't mess with the $Script:Domains variable
+				#redo list of domains so forest root domain is listed first
+				[array]$tmpDomains = "$Script:ForestRootDomain"
+				[array]$tmpDomains2 = "$($Script:ForestRootDomain)"
+				ForEach($Domain in $Forest.Domains)
 				{
-					$tmpDomains += "$($Domain.ToString())"
-					$tmpDomains2 += "$($Domain.ToString())"
+					If($Domain -ne $Script:ForestRootDomain)
+					{
+						$tmpDomains += "$($Domain.ToString())"
+						$tmpDomains2 += "$($Domain.ToString())"
+					}
 				}
+				
+				
+				#$Script:Domains = $tmpDomains
+				$tmp = $tmpDomains2
 			}
-			
-			$Script:Domains = $tmpDomains
-			$tmp = $tmpDomains2
+			Else
+			{
+				#redo list of domains so forest root domain is listed first
+				[array]$tmpDomains = "$Script:ForestRootDomain"
+				[array]$tmpDomains2 = "$($Script:ForestRootDomain)"
+				ForEach($Domain in $Script:Domains)
+				{
+					If($Domain -ne $Script:ForestRootDomain)
+					{
+						$tmpDomains += "$($Domain.ToString())"
+						$tmpDomains2 += "$($Domain.ToString())"
+					}
+				}
+				
+				
+				$Script:Domains = $tmpDomains
+				$tmp = $tmpDomains2
+			}
 			
 			$cnt = 0
 			ForEach($Domain in $tmpDomains2)
@@ -6677,19 +6820,43 @@ Function ProcessForestInformation
 		}
 		Else
 		{
-			#redo list of domains so forest root domain is listed first
-			[array]$tmpDomains = "$Script:ForestRootDomain"
-			[array]$tmpDomains2 = "$($Script:ForestRootDomain)"
-			ForEach($Domain in $Script:Domains)
+			If($ADDomain -ne "")
 			{
-				If($Domain -ne $Script:ForestRootDomain)
+				#2.16 don't mess with the $Script:Domains variable
+				#redo list of domains so forest root domain is listed first
+				[array]$tmpDomains = "$Script:ForestRootDomain"
+				[array]$tmpDomains2 = "$($Script:ForestRootDomain)"
+				ForEach($Domain in $Forest.Domains)
 				{
-					$tmpDomains += "$($Domain.ToString())"
-					$tmpDomains2 += "$($Domain.ToString())"
+					If($Domain -ne $Script:ForestRootDomain)
+					{
+						$tmpDomains += "$($Domain.ToString())"
+						$tmpDomains2 += "$($Domain.ToString())"
+					}
 				}
+				
+				
+				#$Script:Domains = $tmpDomains
+				$tmp = $tmpDomains2
 			}
-			
-			$Script:Domains = $tmpDomains
+			Else
+			{
+				#redo list of domains so forest root domain is listed first
+				[array]$tmpDomains = "$Script:ForestRootDomain"
+				[array]$tmpDomains2 = "$($Script:ForestRootDomain)"
+				ForEach($Domain in $Script:Domains)
+				{
+					If($Domain -ne $Script:ForestRootDomain)
+					{
+						$tmpDomains += "$($Domain.ToString())"
+						$tmpDomains2 += "$($Domain.ToString())"
+					}
+				}
+				
+				
+				$Script:Domains = $tmpDomains
+				$tmp = $tmpDomains2
+			}
 			
 			Line 0 "Domains in forest`t: " -NoNewLine
 			$cnt = 0
@@ -6869,20 +7036,43 @@ Function ProcessForestInformation
 		}
 		Else
 		{
-			#redo list of domains so forest root domain is listed first
-			[array]$tmpDomains = "$Script:ForestRootDomain"
-			[array]$tmpDomains2 = "$($Script:ForestRootDomain)"
-			ForEach($Domain in $Script:Domains)
+			If($ADDomain -ne "")
 			{
-				If($Domain -ne $Script:ForestRootDomain)
+				#2.16 don't mess with the $Script:Domains variable
+				#redo list of domains so forest root domain is listed first
+				[array]$tmpDomains = "$Script:ForestRootDomain"
+				[array]$tmpDomains2 = "$($Script:ForestRootDomain)"
+				ForEach($Domain in $Forest.Domains)
 				{
-					$tmpDomains += "$($Domain.ToString())"
-					$tmpDomains2 += "$($Domain.ToString())"
+					If($Domain -ne $Script:ForestRootDomain)
+					{
+						$tmpDomains += "$($Domain.ToString())"
+						$tmpDomains2 += "$($Domain.ToString())"
+					}
 				}
+				
+				
+				#$Script:Domains = $tmpDomains
+				$tmp = $tmpDomains2
 			}
-			
-			$Script:Domains = $tmpDomains
-			$tmp = $tmpDomains2
+			Else
+			{
+				#redo list of domains so forest root domain is listed first
+				[array]$tmpDomains = "$Script:ForestRootDomain"
+				[array]$tmpDomains2 = "$($Script:ForestRootDomain)"
+				ForEach($Domain in $Script:Domains)
+				{
+					If($Domain -ne $Script:ForestRootDomain)
+					{
+						$tmpDomains += "$($Domain.ToString())"
+						$tmpDomains2 += "$($Domain.ToString())"
+					}
+				}
+				
+				
+				$Script:Domains = $tmpDomains
+				$tmp = $tmpDomains2
+			}
 			
 			$cnt = 0
 			ForEach($Domain in $tmpDomains2)
@@ -6960,7 +7150,9 @@ Function ProcessAllDCsInTheForest
 
 	#http://www.superedge.net/2012/09/how-to-get-ad-forest-in-powershell.html
 	#http://msdn.microsoft.com/en-us/library/vstudio/system.directoryservices.activedirectory.forest.getforest%28v=vs.90%29
-	$ADContext = New-Object System.DirectoryServices.ActiveDirectory.DirectoryContext("forest", $ADForest) 
+	#$ADContext = New-Object System.DirectoryServices.ActiveDirectory.DirectoryContext("forest", $ADForest) 
+	#2.16 change
+	$ADContext = New-Object System.DirectoryServices.ActiveDirectory.DirectoryContext("forest", $Script:Forest.Name)
 	$Forest2 = [system.directoryservices.activedirectory.Forest]::GetForest($ADContext)
 	$AllDCs = $Forest2.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
 	$AllDCs = $AllDCs | Sort
@@ -15148,66 +15340,68 @@ Function ProcessScriptEnd
 	{
 		$SIFile = "$($pwd.Path)\ADInventoryScriptInfo_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
 		Out-File -FilePath $SIFile -InputObject "" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Add DateTime   : $($AddDateTime)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Add DateTime   : $AddDateTime" 4>$Null
 		If($MSWORD -or $PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "Company Name   : $($Script:CoName)" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Name   : $Script:CoName" 4>$Null		
 		}
-		Out-File -FilePath $SIFile -Append -InputObject "ComputerName   : $($ComputerName)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "ComputerName   : $ComputerName" 4>$Null
 		If($MSWORD -or $PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "Company Address: $($CompanyAddress)" 4>$Null		
-			Out-File -FilePath $SIFile -Append -InputObject "Company Email  : $($CompanyEmail)" 4>$Null		
-			Out-File -FilePath $SIFile -Append -InputObject "Company Fax    : $($CompanyFax)" 4>$Null		
-			Out-File -FilePath $SIFile -Append -InputObject "Company Phone  : $($CompanyPhone)" 4>$Null		
-			Out-File -FilePath $SIFile -Append -InputObject "Cover Page     : $($CoverPage)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "Company Address: $CompanyAddress" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Email  : $CompanyEmail" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Fax    : $CompanyFax" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Phone  : $CompanyPhone" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Cover Page     : $CoverPage" 4>$Null
 		}
-		Out-File -FilePath $SIFile -Append -InputObject "DCDNSInfo      : $($DCDNSInfo)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Dev            : $($Dev)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "DCDNSInfo      : $DCDNSInfo" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Dev            : $Dev" 4>$Null
 		If($Dev)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "DevErrorFile   : $($Script:DevErrorFile)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "DevErrorFile   : $Script:DevErrorFile" 4>$Null
 		}
-		Out-File -FilePath $SIFile -Append -InputObject "Elevated       : $($Script:Elevated)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Filename1      : $($Script:FileName1)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Domain name    : $ADDomain" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Elevated       : $Script:Elevated" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Filename1      : $Script:FileName1" 4>$Null
 		If($PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "Filename2      : $($Script:FileName2)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "Filename2      : $Script:FileName2" 4>$Null
 		}
-		Out-File -FilePath $SIFile -Append -InputObject "Folder         : $($Folder)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "From           : $($From)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "GPOInheritance : $($GPOInheritance)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "HW Inventory   : $($Hardware)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "IncludeUserInfo: $($IncludeUserInfo)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "MaxDetails     : $($MaxDetails)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Save As HTML   : $($HTML)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Save As PDF    : $($PDF)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Save As TEXT   : $($TEXT)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Save As WORD   : $($MSWORD)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Script Info    : $($ScriptInfo)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Services       : $($Services)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Smtp Port      : $($SmtpPort)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Smtp Server    : $($SmtpServer)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Title          : $($Script:Title)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "To             : $($To)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Use SSL        : $($UseSSL)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Folder         : $Folder" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Forest name    : $ADForest" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "From           : $From" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "GPOInheritance : $GPOInheritance" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "HW Inventory   : $Hardware" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "IncludeUserInfo: $IncludeUserInfo" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "MaxDetails     : $MaxDetails" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As HTML   : $HTML" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As PDF    : $PDF" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As TEXT   : $TEXT" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As WORD   : $MSWORD" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Script Info    : $ScriptInfo" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Services       : $Services" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Smtp Port      : $SmtpPort" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Smtp Server    : $SmtpServer" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Title          : $Script:Title" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "To             : $To" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Use SSL        : $UseSSL" 4>$Null
 		If($MSWORD -or $PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "User Name      : $($UserName)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "User Name      : $UserName" 4>$Null
 		}
 		Out-File -FilePath $SIFile -Append -InputObject "" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "OS Detected    : $($Script:RunningOS)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "OS Detected    : $Script:RunningOS" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "PoSH version   : $($Host.Version)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "PSCulture      : $($PSCulture)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "PSUICulture    : $($PSUICulture)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "PSCulture      : $PSCulture" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "PSUICulture    : $PSUICulture" 4>$Null
 		If($MSWORD -or $PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "Word language  : $($Script:WordLanguageValue)" 4>$Null
-			Out-File -FilePath $SIFile -Append -InputObject "Word version   : $($Script:WordProduct)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "Word language  : $Script:WordLanguageValue" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "Word version   : $Script:WordProduct" 4>$Null
 		}
 		Out-File -FilePath $SIFile -Append -InputObject "" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Script start   : $($Script:StartTime)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Elapsed time   : $($Str)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Script start   : $Script:StartTime" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Elapsed time   : $Str" 4>$Null
 	}
 
 	$ErrorActionPreference = $SaveEAPreference
@@ -15221,7 +15415,14 @@ ProcessScriptStart
 
 ProcessScriptSetup
 
-SetFilename1andFilename2 "$($Script:ForestRootDomain)"
+If($ADDomain -ne "")
+{
+	SetFilename1andFilename2 "$Script:DomainDNSRoot"
+}
+Else
+{
+	SetFilename1andFilename2 "$Script:ForestRootDomain"
+}
 
 If($Section -eq "All" -or $Section -eq "Forest")
 {
@@ -15299,8 +15500,8 @@ If($Script:Elevated -and ($Section -eq "All" -or $Section -eq "Domains"))
 Write-Verbose "$(Get-Date): Finishing up document"
 #end of document processing
 
-$AbstractTitle = "Microsoft Active Directory Inventory Report V2.14"
-$SubjectTitle = "Active Directory Inventory Report V2.14"
+$AbstractTitle = "Microsoft Active Directory Inventory Report V2.16"
+$SubjectTitle = "Active Directory Inventory Report V2.16"
 UpdateDocumentProperties $AbstractTitle $SubjectTitle
 
 ProcessDocumentOutput
