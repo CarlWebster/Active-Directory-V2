@@ -709,7 +709,7 @@
 	NAME: ADDS_Inventory_V2.ps1
 	VERSION: 2.16
 	AUTHOR: Carl Webster, Sr. Solutions Architect, Choice Solutions, LLC
-	LASTEDIT: November 14, 2017
+	LASTEDIT: November 24, 2017
 #>
 
 
@@ -961,8 +961,25 @@ Param(
 #	Updated help text
 #
 #Version 2.16
-#	Add new parameter ADDomain to restrict report to a single domain
+#	Add new parameter ADDomain to restrict report to a single domain in a multi-domain Forest
+#	Add schema extension checking for the following items and add to Forest section:
+#		'User-Account-Control', #Flags that control the behavior of a user account
+#		'msNPAllowDialin', #RAS Server
+#		'ms-Mcs-AdmPwd', #LAPS
+#		'ms-Mcs-AdmPwdExpirationTime', #LAPS
+#		'mS-SMS-Assignment-Site-Code', #SCCM
+#		'mS-SMS-Capabilities', #SCCM
+#		'msRTCSIP-UserRoutingGroupId', #Lync
+#		'msRTCSIP-MirrorBackEndServer' #Lync
+#	Remove several large blocks of code that has been commented out
+#	Revise how $LinkedGPOs and $InheritedGPOs variables are set to work around invalid property name DisplayName when collection is empty
+#	Updated Exchange schema versions
+#	When run for a single domain in a multi-domain forest
+#		Revise gathering list of domains
+#		Revise testing for $ComputerName 
+#		Revise variable $ADContext in Function ProcessAllDCsInTheForest
 #
+
 Set-StrictMode -Version 2
 
 #force  on
@@ -1044,6 +1061,7 @@ Else
 
 If($ADForest -ne "" -and $ADDomain -ne "")
 {
+	#2.16
 	#Make ADForest equal to ADDomain so no code has to change in the script
 	$ADForest = $ADDomain
 }
@@ -6448,7 +6466,7 @@ Function ProcessForestInformation
 		"WindowsThresholdForest"   {$ForestMode = "Windows Server 2016 TP4"; Break}
 		"Windows2016Forest"		   {$ForestMode = "Windows Server 2016"; Break}
 		"UnknownForest"            {$ForestMode = "Unknown Forest Mode"; Break}
-		Default                    {$ForestMode = "Unable to determine Forest Mode: $($Forest.ForestMode)"; Break}
+		Default                    {$ForestMode = "Unable to determine Forest Mode: $($Script:Forest.ForestMode)"; Break}
 	}
 
 	$AppPartitions         = $Script:Forest.ApplicationPartitions | Sort
@@ -6466,6 +6484,42 @@ Function ProcessForestInformation
 	If($TombstoneLifetime -eq $Null -or $TombstoneLifetime -eq 0)
 	{
 		$TombstoneLifetime = 60
+	}
+
+	#2.16
+	#move this duplicated block of code outside the output format test
+	If($ADDomain -ne "")
+	{
+		#2.16 don't mess with the $Script:Domains variable
+		#redo list of domains so forest root domain is listed first
+		[array]$tmpDomains = "$Script:ForestRootDomain"
+		[array]$tmpDomains2 = "$($Script:ForestRootDomain)"
+		ForEach($Domain in $Forest.Domains)
+		{
+			If($Domain -ne $Script:ForestRootDomain)
+			{
+				$tmpDomains += "$($Domain.ToString())"
+				$tmpDomains2 += "$($Domain.ToString())"
+			}
+		}
+		
+		#$Script:Domains = $tmpDomains
+	}
+	Else
+	{
+		#redo list of domains so forest root domain is listed first
+		[array]$tmpDomains = "$Script:ForestRootDomain"
+		[array]$tmpDomains2 = "$($Script:ForestRootDomain)"
+		ForEach($Domain in $Script:Domains)
+		{
+			If($Domain -ne $Script:ForestRootDomain)
+			{
+				$tmpDomains += "$($Domain.ToString())"
+				$tmpDomains2 += "$($Domain.ToString())"
+			}
+		}
+		
+		$Script:Domains = $tmpDomains
 	}
 
 	If($MSWORD -or $PDF)
@@ -6600,44 +6654,6 @@ Function ProcessForestInformation
 		}
 		Else
 		{
-			If($ADDomain -ne "")
-			{
-				#2.16 don't mess with the $Script:Domains variable
-				#redo list of domains so forest root domain is listed first
-				[array]$tmpDomains = "$Script:ForestRootDomain"
-				[array]$tmpDomains2 = "$($Script:ForestRootDomain)"
-				ForEach($Domain in $Forest.Domains)
-				{
-					If($Domain -ne $Script:ForestRootDomain)
-					{
-						$tmpDomains += "$($Domain.ToString())"
-						$tmpDomains2 += "$($Domain.ToString())"
-					}
-				}
-				
-				
-				#$Script:Domains = $tmpDomains
-				$tmp = $tmpDomains2
-			}
-			Else
-			{
-				#redo list of domains so forest root domain is listed first
-				[array]$tmpDomains = "$Script:ForestRootDomain"
-				[array]$tmpDomains2 = "$($Script:ForestRootDomain)"
-				ForEach($Domain in $Script:Domains)
-				{
-					If($Domain -ne $Script:ForestRootDomain)
-					{
-						$tmpDomains += "$($Domain.ToString())"
-						$tmpDomains2 += "$($Domain.ToString())"
-					}
-				}
-				
-				
-				$Script:Domains = $tmpDomains
-				$tmp = $tmpDomains2
-			}
-			
 			$cnt = 0
 			ForEach($Domain in $tmpDomains2)
 			{
@@ -6820,44 +6836,6 @@ Function ProcessForestInformation
 		}
 		Else
 		{
-			If($ADDomain -ne "")
-			{
-				#2.16 don't mess with the $Script:Domains variable
-				#redo list of domains so forest root domain is listed first
-				[array]$tmpDomains = "$Script:ForestRootDomain"
-				[array]$tmpDomains2 = "$($Script:ForestRootDomain)"
-				ForEach($Domain in $Forest.Domains)
-				{
-					If($Domain -ne $Script:ForestRootDomain)
-					{
-						$tmpDomains += "$($Domain.ToString())"
-						$tmpDomains2 += "$($Domain.ToString())"
-					}
-				}
-				
-				
-				#$Script:Domains = $tmpDomains
-				$tmp = $tmpDomains2
-			}
-			Else
-			{
-				#redo list of domains so forest root domain is listed first
-				[array]$tmpDomains = "$Script:ForestRootDomain"
-				[array]$tmpDomains2 = "$($Script:ForestRootDomain)"
-				ForEach($Domain in $Script:Domains)
-				{
-					If($Domain -ne $Script:ForestRootDomain)
-					{
-						$tmpDomains += "$($Domain.ToString())"
-						$tmpDomains2 += "$($Domain.ToString())"
-					}
-				}
-				
-				
-				$Script:Domains = $tmpDomains
-				$tmp = $tmpDomains2
-			}
-			
 			Line 0 "Domains in forest`t: " -NoNewLine
 			$cnt = 0
 			
@@ -7036,44 +7014,6 @@ Function ProcessForestInformation
 		}
 		Else
 		{
-			If($ADDomain -ne "")
-			{
-				#2.16 don't mess with the $Script:Domains variable
-				#redo list of domains so forest root domain is listed first
-				[array]$tmpDomains = "$Script:ForestRootDomain"
-				[array]$tmpDomains2 = "$($Script:ForestRootDomain)"
-				ForEach($Domain in $Forest.Domains)
-				{
-					If($Domain -ne $Script:ForestRootDomain)
-					{
-						$tmpDomains += "$($Domain.ToString())"
-						$tmpDomains2 += "$($Domain.ToString())"
-					}
-				}
-				
-				
-				#$Script:Domains = $tmpDomains
-				$tmp = $tmpDomains2
-			}
-			Else
-			{
-				#redo list of domains so forest root domain is listed first
-				[array]$tmpDomains = "$Script:ForestRootDomain"
-				[array]$tmpDomains2 = "$($Script:ForestRootDomain)"
-				ForEach($Domain in $Script:Domains)
-				{
-					If($Domain -ne $Script:ForestRootDomain)
-					{
-						$tmpDomains += "$($Domain.ToString())"
-						$tmpDomains2 += "$($Domain.ToString())"
-					}
-				}
-				
-				
-				$Script:Domains = $tmpDomains
-				$tmp = $tmpDomains2
-			}
-			
 			$cnt = 0
 			ForEach($Domain in $tmpDomains2)
 			{
@@ -7154,7 +7094,9 @@ Function ProcessAllDCsInTheForest
 	#2.16 change
 	$ADContext = New-Object System.DirectoryServices.ActiveDirectory.DirectoryContext("forest", $Script:Forest.Name)
 	$Forest2 = [system.directoryservices.activedirectory.Forest]::GetForest($ADContext)
+	Write-Verbose "$(Get-Date): `t`tBuild list of Domain controllers in the Forest"
 	$AllDCs = $Forest2.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
+	Write-Verbose "$(Get-Date): `t`tSort list of all Domain controllers"
 	$AllDCs = $AllDCs | Sort
 	$ADContext = $Null
 	$Forest2 = $Null
@@ -7181,6 +7123,7 @@ Function ProcessAllDCsInTheForest
 			[System.Collections.Hashtable[]] $WordTableRowHash = @();
 			ForEach($DC in $AllDCs)
 			{
+				Write-Verbose "$(Get-Date): `t`t`t$DC"
 				$DCName = $DC.SubString(0,$DC.IndexOf("."))
 				$SrvName = $DC.SubString($DC.IndexOf(".")+1)
 				
@@ -7210,6 +7153,7 @@ Function ProcessAllDCsInTheForest
 		{
 			ForEach($DC in $AllDCs)
 			{
+				Write-Verbose "$(Get-Date): `t`t`t$DC"
 				$DCName = $DC.SubString(0,$DC.IndexOf("."))
 				$SrvName = $DC.SubString($DC.IndexOf(".")+1)
 				Line 1 "Name`t`t: " $DC
@@ -7236,6 +7180,7 @@ Function ProcessAllDCsInTheForest
 			
 			ForEach($DC in $AllDCs)
 			{
+				Write-Verbose "$(Get-Date): `t`t`t$DC"
 				$DCName = $DC.SubString(0,$DC.IndexOf("."))
 				$SrvName = $DC.SubString($DC.IndexOf(".")+1)
 				
@@ -7336,6 +7281,7 @@ Function ProcessCAInformation
 	$rootCA = 'CN=Certification Authorities,CN=Public Key Services,CN=Services,' + $configNC
 	$rootObj = [ADSI] ( 'LDAP://' + $rootCA )
 	$RootCnt = 0
+	$AllCnt = 0
 	
 	If($Null -ne $rootObj)
 	{
@@ -7746,6 +7692,206 @@ Function ProcessADOptionalFeatures
 			WriteHTMLLine 0 0 " "
 		}
 	}
+}
+#endregion
+
+#region process ad schema items
+
+#new for 2.16
+Function ProcessADSchemaItems
+{
+	Param(
+		[String []] $Name = @( 
+		'User-Account-Control', #Flags that control the behavior of a user account
+		'msNPAllowDialin', #RAS Server
+		'ms-Mcs-AdmPwd', #LAPS
+		'ms-Mcs-AdmPwdExpirationTime', #LAPS
+		'mS-SMS-Assignment-Site-Code', #SCCM
+		'mS-SMS-Capabilities', #SCCM
+		'msRTCSIP-UserRoutingGroupId', #Lync
+		'msRTCSIP-MirrorBackEndServer' #Lync
+		)
+	)
+
+	Write-Verbose "$(Get-Date): `tAD Schema Items"
+	
+	$txt = "AD Schema Items"
+	$txt1 = "Just because a schema extension is Present does not mean it is in use."
+	If($MSWORD -or $PDF)
+	{
+		WriteWordLine 3 0 $txt
+		WriteWordLine 0 0 $txt1 "" $Null 8 $False $True	
+	}
+	ElseIf($Text)
+	{
+		Line 0 $txt
+		Line 0 $txt1
+		Line 0 ""
+	}
+	ElseIf($HTML)
+	{
+		WriteHTMLLine 3 0 $txt
+		WriteHTMLLine 0 0 $txt1 "" "Calibri" 1
+	}
+
+	$rootDS   = [ADSI] 'LDAP://RootDSE'
+	$schemaNC = $rootDS.schemaNamingContext.Item( 0 )
+
+	$SchemaItems = @()
+	ForEach( $item in $Name )
+	{
+		Write-Verbose "$(Get-Date): `t`tChecking for $item declared in schema"
+
+		$objDN = 'LDAP://' + 'CN=' + $item + ',' + $schemaNC
+
+		$obj = [ADSI] $objDN
+		$mem = Get-Member -Name name -InputObject $obj
+
+		$Itemobj = New-Object -TypeName PSObject
+
+		Switch ($item)
+		{
+			'User-Account-Control'			{$tmp = "Flags that control the behavior of a user account"}
+			'msNPAllowDialin'				{$tmp = "RAS Server"}
+			'ms-Mcs-AdmPwd'					{$tmp = "LAPS"}
+			'ms-Mcs-AdmPwdExpirationTime'	{$tmp = "LAPS"}
+			'mS-SMS-Assignment-Site-Code'	{$tmp = "SCCM"}
+			'mS-SMS-Capabilities'			{$tmp = "SCCM"}
+			'msRTCSIP-UserRoutingGroupId'	{$tmp = "Lync"}
+			'msRTCSIP-MirrorBackEndServer'	{$tmp = "Lync"}
+			Default							{$tmp = "Unknown"}
+		}
+		
+		If( $mem )
+		{
+			$Itemobj | Add-Member -MemberType NoteProperty -Name ItemName	-Value $item
+			$Itemobj | Add-Member -MemberType NoteProperty -Name ItemState	-Value "Present"
+			$Itemobj | Add-Member -MemberType NoteProperty -Name ItemDesc	-Value $tmp
+			$SchemaItems += $Itemobj
+		}
+		Else
+		{
+			$Itemobj | Add-Member -MemberType NoteProperty -Name ItemName	-Value $item
+			$Itemobj | Add-Member -MemberType NoteProperty -Name ItemState	-Value "Not Present"
+			$Itemobj | Add-Member -MemberType NoteProperty -Name ItemDesc	-Value $tmp
+			$SchemaItems += $Itemobj
+		}
+		$mem = $null
+		$obj = $null
+	}
+
+	If($MSWORD -or $PDF)
+	{
+		$TableRange = $doc.Application.Selection.Range
+		[int]$Columns = 3
+		If($SchemaItems -is [array])
+		{
+			[int]$Rows = $SchemaItems.Count + 1
+		}
+		Else
+		{
+			[int]$Rows = 2
+		}
+		[int]$xRow = 1
+
+		$Table = $doc.Tables.Add($TableRange, $Rows, $Columns)
+		$Table.AutoFitBehavior($wdAutoFitFixed)
+		$Table.Style = $Script:MyHash.Word_TableGrid
+	
+		$Table.rows.first.headingformat = $wdHeadingFormatTrue
+		$Table.Borders.InsideLineStyle = $wdLineStyleSingle
+		$Table.Borders.OutsideLineStyle = $wdLineStyleSingle
+
+		$Table.Rows.First.Shading.BackgroundPatternColor = $wdColorGray15
+		$Table.Cell($xRow,1).Range.Font.Bold = $True
+		$Table.Cell($xRow,1).Range.Text = "Schema item name"
+		
+		$Table.Cell($xRow,2).Range.Font.Bold = $True
+		$Table.Cell($xRow,2).Range.Text = "Present"
+		
+		$Table.Cell($xRow,3).Range.Font.Bold = $True
+		$Table.Cell($xRow,3).Range.Text = "Used for"
+		
+	}
+	ElseIf($HTML)
+	{
+		$rowdata = @()
+	}
+	
+	ForEach($item in $SchemaItems)
+	{
+		If($MSWORD -or $PDF)
+		{
+			$xRow++
+			If($xRow % 2 -eq 0)
+			{
+				$Table.Cell($xRow,1).Shading.BackgroundPatternColor = $wdColorGray05
+				$Table.Cell($xRow,2).Shading.BackgroundPatternColor = $wdColorGray05
+				$Table.Cell($xRow,3).Shading.BackgroundPatternColor = $wdColorGray05
+			}
+			$Table.Cell($xRow,1).Range.Text = $Item.ItemName
+			$Table.Cell($xRow,2).Range.Text = $Item.ItemState
+			$Table.Cell($xRow,3).Range.Text = $Item.ItemDesc
+		}
+		ElseIf($Text)
+		{
+			Line 1 "Schema item name: " $Item.ItemName
+			Line 1 "Present`t`t: " $Item.ItemState
+			Line 1 "Used for`t: " $Item.ItemDesc
+			Line 0 ""
+		}
+		ElseIf($HTML)
+		{
+			$rowdata += @(,(
+			$Item.ItemName,$htmlwhite,
+			$Item.ItemState,$htmlwhite,
+			$Item.ItemDesc,$htmlwhite))
+		}
+	}
+
+	If($MSWORD -or $PDF)
+	{
+		#set column widths
+		$xcols = $table.columns
+
+		ForEach($xcol in $xcols)
+		{
+			switch ($xcol.Index)
+			{
+			  1 {$xcol.width = 200; Break}
+			  2 {$xcol.width = 75; Break}
+			  3 {$xcol.width = 200; Break}
+			}
+		}
+		
+		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustNone)
+		$Table.AutoFitBehavior($wdAutoFitFixed)
+
+		#return focus back to document
+		$doc.ActiveWindow.ActivePane.view.SeekView = $wdSeekMainDocument
+
+		#move to the end of the current document
+		$selection.EndKey($wdStory,$wdMove) | Out-Null
+		WriteWordLine 0 0 ""
+		$TableRange = $Null
+		$Table = $Null
+	}
+	ElseIf($HTML)
+	{
+		$columnHeaders = @('Schema item name',($htmlsilver -bor $htmlbold),
+							'Present',($htmlsilver -bor $htmlbold),
+							'Used for',($htmlsilver -bor $htmlbold)
+							)
+		$msg = ""
+		$columnWidths = @("200","75","200")
+		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "475"
+		WriteHTMLLine 0 0 " "
+	}
+	
+	$rootDS      = $null
+	$schemaNC    = $null
+	$objDN       = $null
+	$SchemaItems = $null
 }
 #endregion
 
@@ -8655,7 +8801,11 @@ Function ProcessDomains
 	"15303" = "Exchange 2013 CU6";
 	"15312" = "Exchange 2013 CU7/CU8/CU9/CU10/CU11/CU12/CU13";
 	"15317" = "Exchange 2016";
-	"15323" = "Exchange 2016 CU1"
+	"15323" = "Exchange 2016 CU1";
+	"15325" = "Exchange 2016 CU2";
+	"15326" = "Exchange 2016 CU3/CU4/CU5"; #added in 2.16
+	"15330" = "Exchange 2016 CU6"; #added in 2.16
+	"15332" = "Exchange 2016 CU7" #added in 2.16
 	}
 
 	ForEach($Domain in $Script:Domains)
@@ -8963,79 +9113,6 @@ Function ProcessDomains
 						
 						$ScriptInformation += @{ Data = "Created"; Value = $Trust.Created; }
 						$ScriptInformation += @{ Data = "Modified"; Value = $Trust.Modified; }
-<#
-						$TrustDirectionNumber = $Trust.TrustDirection
-						$TrustTypeNumber = $Trust.TrustType
-						$TrustAttributesNumber = $Trust.TrustAttributes
-
-						#http://msdn.microsoft.com/en-us/library/cc234293.aspx
-						Switch ($TrustTypeNumber) 
-						{ 
-							1 { $TrustType = "Trust with a Windows domain not running Active Directory"; Break} 
-							2 { $TrustType = "Trust with a Windows domain running Active Directory"; Break} 
-							3 { $TrustType = "Trust with a non-Windows-compliant Kerberos distribution"; Break} 
-							4 { $TrustType = "Trust with a DCE realm (not used)"; Break} 
-							Default { $TrustType = "Invalid Trust Type of $($TrustTypeNumber)" ; Break}
-						} 
-						$ScriptInformation += @{ Data = "Type"; Value = $TrustType; }
-
-						#http://msdn.microsoft.com/en-us/library/cc223779.aspx
-						#thanks to former CTP Jeremy Saunders for the following switch statement for trustAttributes
-						#I adapted his code
-						$attributes = @()
-						#$hextrustAttributesValue = '{0:X}' -f $trustAttributesNumber
-						Switch ($trustAttributesNumber)
-						{
-							{($trustAttributesNumber -bor 0x00000001) -eq $trustAttributesNumber} 
-								{$attributes += "Non-Transitive"}
-							
-							{($trustAttributesNumber -bor 0x00000002) -eq $trustAttributesNumber} 
-								{$attributes += "Uplevel clients only"}
-							
-							{($trustAttributesNumber -bor 0x00000004) -eq $trustAttributesNumber} 
-								{$attributes += "Quarantined Domain (External, SID Filtering)"}
-							
-							{($trustAttributesNumber -bor 0x00000008) -eq $trustAttributesNumber} 
-								{$attributes += "Cross-Organizational Trust (Selective Authentication)"}
-							
-							{($trustAttributesNumber -bor 0x00000010) -eq $trustAttributesNumber} 
-								{$attributes += "Intra-Forest Trust"}
-							
-							{($trustAttributesNumber -bor 0x00000020) -eq $trustAttributesNumber} 
-								{$attributes += "Inter-Forest Trust"}
-							
-							{($trustAttributesNumber -bor 0x00000040) -eq $trustAttributesNumber} 
-								{$attributes += "MIT Trust using RC4 Encryption"}
-							
-							{($trustAttributesNumber -bor 0x00000200) -eq $trustAttributesNumber} 
-								{$attributes += "Cross organization Trust no TGT delegation"}
-						}
-
-						$cnt = 0
-						ForEach($attribute in $attributes)
-						{
-							$cnt++
-							
-							If($cnt -eq 1)
-							{
-								$ScriptInformation += @{ Data = "Attributes"; Value = $attribute.ToString(); }
-							}
-							Else
-							{
-								$ScriptInformation += @{ Data = ""; Value = "$($attribute.ToString())"; }
-							}
-						}
-
-						#http://msdn.microsoft.com/en-us/library/cc223768.aspx
-						Switch ($TrustDirectionNumber) 
-						{ 
-							0 { $TrustDirection = "Disabled"; Break} 
-							1 { $TrustDirection = "Inbound"; Break} 
-							2 { $TrustDirection = "Outbound"; Break} 
-							3 { $TrustDirection = "Bidirectional"; Break} 
-							Default { $TrustDirection = $TrustDirectionNumber ; Break}
-						}
-#>
 
 						$TrustExtendedAttributes = Get-ADTrustInfo $Trust
 						
@@ -9170,7 +9247,7 @@ Function ProcessDomains
 							
 							If($FGPP.ComplexityEnabled -eq $True)
 							{
-								$ScriptInformation += @{ Data = "Password must meet complexity requirements"; Value = Enabled; }
+								$ScriptInformation += @{ Data = "Password must meet complexity requirements"; Value = "Enabled"; }
 							}
 							Else
 							{
@@ -9476,85 +9553,10 @@ Function ProcessDomains
 						
 						Line 1 "Created`t`t: " $Trust.Created
 						Line 1 "Modified`t: " $Trust.Modified
-<#
-						$TrustDirectionNumber = $Trust.TrustDirection
-						$TrustTypeNumber = $Trust.TrustType
-						$TrustAttributesNumber = $Trust.TrustAttributes
 
-						#http://msdn.microsoft.com/en-us/library/cc234293.aspx
-						Switch ($TrustTypeNumber) 
-						{ 
-							1 { $TrustType = "Trust with a Windows domain not running Active Directory"; Break} 
-							2 { $TrustType = "Trust with a Windows domain running Active Directory"; Break} 
-							3 { $TrustType = "Trust with a non-Windows-compliant Kerberos distribution"; Break} 
-							4 { $TrustType = "Trust with a DCE realm (not used)"; Break} 
-							Default { $TrustType = "Invalid Trust Type of $($TrustTypeNumber)" ; Break}
-						} 
-						Line 1 "Type`t`t: " $TrustType
-
-						#http://msdn.microsoft.com/en-us/library/cc223779.aspx
-						#thanks to former CTP Jeremy Saunders for the following switch statement for trustAttributes
-						#I adapted his code
-						$attributes = @()
-						$hextrustAttributesValue = '{0:X}' -f $trustAttributesNumber
-						Switch ($hextrustAttributesValue)
-						{
-							{($hextrustAttributesValue -bor 0x00000001) -eq $hextrustAttributesValue} 
-								{$attributes += "Non-Transitive"; break}
-							
-							{($hextrustAttributesValue -bor 0x00000002) -eq $hextrustAttributesValue} 
-								{$attributes += "Uplevel clients only"; break}
-							
-							{($hextrustAttributesValue -bor 0x00000004) -eq $hextrustAttributesValue} 
-								{$attributes += "Quarantined Domain (External, SID Filtering)"; break}
-							
-							{($hextrustAttributesValue -bor 0x00000008) -eq $hextrustAttributesValue} 
-								{$attributes += "Cross-Organizational Trust (Selective Authentication)"; break}
-							
-							{($hextrustAttributesValue -bor 0x00000010) -eq $hextrustAttributesValue} 
-								{$attributes += "Intra-Forest Trust"; break}
-							
-							{($hextrustAttributesValue -bor 0x00000020) -eq $hextrustAttributesValue} 
-								{$attributes += "Inter-Forest Trust"; break}
-							
-							{($hextrustAttributesValue -bor 0x00000040) -eq $hextrustAttributesValue} 
-								{$attributes += "MIT Trust using RC4 Encryption"; break}
-							
-							{($hextrustAttributesValue -bor 0x00000200) -eq $hextrustAttributesValue} 
-								{$attributes += "Cross organization Trust no TGT delegation"; break}
-						}
-
-						Line 1 "Attributes`t: " -NoNewLine
-						$cnt = 0
-						ForEach($attribute in $attributes)
-						{
-							$cnt++
-							
-							If($cnt -eq 1)
-							{
-								Line 0 $attribute.ToString()
-							}
-							Else
-							{
-								Line 3 "  $($attribute.ToString())"
-							}
-						}
-
-						#http://msdn.microsoft.com/en-us/library/cc223768.aspx
-						Switch ($TrustDirectionNumber) 
-						{ 
-							0 { $TrustDirection = "Disabled"; Break} 
-							1 { $TrustDirection = "Inbound"; Break} 
-							2 { $TrustDirection = "Outbound"; Break} 
-							3 { $TrustDirection = "Bidirectional"; Break} 
-							Default { $TrustDirection = $TrustDirectionNumber ; Break}
-						}
-#>
 						$TrustExtendedAttributes = Get-ADTrustInfo $Trust
 						
 						Line 1 "Type`t`t: " $TrustExtendedAttributes.TrustType
-
-						
 						Line 1 "Attributes`t: " -NoNewLine
 						$cnt = 0
 						ForEach($attribute in $TrustExtendedAttributes.Trustattribute)
@@ -9951,79 +9953,6 @@ Function ProcessDomains
 						
 						$rowdata += @(,('Created',($htmlsilver -bor $htmlbold),$Trust.Created,$htmlwhite))
 						$rowdata += @(,('Modified',($htmlsilver -bor $htmlbold),$Trust.Modified,$htmlwhite))
-<#
-						$TrustDirectionNumber = $Trust.TrustDirection
-						$TrustTypeNumber = $Trust.TrustType
-						$TrustAttributesNumber = $Trust.TrustAttributes
-
-						#http://msdn.microsoft.com/en-us/library/cc234293.aspx
-						Switch ($TrustTypeNumber) 
-						{ 
-							1 { $TrustType = "Trust with a Windows domain not running Active Directory"; Break} 
-							2 { $TrustType = "Trust with a Windows domain running Active Directory"; Break} 
-							3 { $TrustType = "Trust with a non-Windows-compliant Kerberos distribution"; Break} 
-							4 { $TrustType = "Trust with a DCE realm (not used)"; Break} 
-							Default { $TrustType = "Invalid Trust Type of $($TrustTypeNumber)" ; Break}
-						} 
-						$rowdata += @(,('Type',($htmlsilver -bor $htmlbold),$TrustType,$htmlwhite))
-
-						#http://msdn.microsoft.com/en-us/library/cc223779.aspx
-						#thanks to former CTP Jeremy Saunders for the following switch statement for trustAttributes
-						#I adapted his code
-						$attributes = @()
-						$hextrustAttributesValue = '{0:X}' -f $trustAttributesNumber
-						Switch ($hextrustAttributesValue)
-						{
-							{($hextrustAttributesValue -bor 0x00000001) -eq $hextrustAttributesValue} 
-								{$attributes += "Non-Transitive"; break}
-							
-							{($hextrustAttributesValue -bor 0x00000002) -eq $hextrustAttributesValue} 
-								{$attributes += "Uplevel clients only"; break}
-							
-							{($hextrustAttributesValue -bor 0x00000004) -eq $hextrustAttributesValue} 
-								{$attributes += "Quarantined Domain (External, SID Filtering)"; break}
-							
-							{($hextrustAttributesValue -bor 0x00000008) -eq $hextrustAttributesValue} 
-								{$attributes += "Cross-Organizational Trust (Selective Authentication)"; break}
-							
-							{($hextrustAttributesValue -bor 0x00000010) -eq $hextrustAttributesValue} 
-								{$attributes += "Intra-Forest Trust"; break}
-							
-							{($hextrustAttributesValue -bor 0x00000020) -eq $hextrustAttributesValue} 
-								{$attributes += "Inter-Forest Trust"; break}
-							
-							{($hextrustAttributesValue -bor 0x00000040) -eq $hextrustAttributesValue} 
-								{$attributes += "MIT Trust using RC4 Encryption"; break}
-							
-							{($hextrustAttributesValue -bor 0x00000200) -eq $hextrustAttributesValue} 
-								{$attributes += "Cross organization Trust no TGT delegation"; break}
-						}
-
-						$cnt = 0
-						ForEach($attribute in $attributes)
-						{
-							$cnt++
-							
-							If($cnt -eq 1)
-							{
-								$rowdata += @(,('Attributes',($htmlsilver -bor $htmlbold),$attribute.ToString(),$htmlwhite))
-							}
-							Else
-							{
-								$rowdata += @(,('',($htmlsilver -bor $htmlbold),$attribute.ToString(),$htmlwhite))
-							}
-						}
-
-						#http://msdn.microsoft.com/en-us/library/cc223768.aspx
-						Switch ($TrustDirectionNumber) 
-						{ 
-							0 { $TrustDirection = "Disabled"; Break} 
-							1 { $TrustDirection = "Inbound"; Break} 
-							2 { $TrustDirection = "Outbound"; Break} 
-							3 { $TrustDirection = "Bidirectional"; Break} 
-							Default { $TrustDirection = $TrustDirectionNumber ; Break}
-						}
-#>
 	
 						$TrustExtendedAttributes = Get-ADTrustInfo $Trust
 						 
@@ -10315,7 +10244,6 @@ Function ProcessDomainControllers
 		WriteHTMLLine 1 0 "Domain Controllers in $($Script:ForestName)"
 	}
 
-	#$Script:DCDNSIPInfo = @()
 	$Script:DCDNSIPInfo = New-Object System.Collections.ArrayList
 	$Script:TimeServerInfo = New-Object System.Collections.ArrayList
 	$Script:AllDomainControllers = $Script:AllDomainControllers | Sort Name
@@ -13701,8 +13629,6 @@ Function ProcessgGPOsByOUOld
 							$Table = $Script:doc.Tables.Add($TableRange, $Rows, $Columns)
 							$Table.Style = $Script:MyHash.Word_TableGrid
 			
-							#$Table.Borders.InsideLineStyle = $wdLineStyleSingle
-							#$Table.Borders.OutsideLineStyle = $wdLineStyleSingle
 							$Table.Borders.InsideLineStyle = $wdLineStyleNone
 							$Table.Borders.OutsideLineStyle = $wdLineStyleNone
 							
@@ -13905,8 +13831,32 @@ Function ProcessgGPOsByOUNew
 				If($? -and $Null -ne $OUInfo)
 				{
 					Write-Verbose "$(Get-Date): `t`t`tGetting linked and inherited GPOs"
-					$LinkedGPOs = (Get-GPInheritance -target $OU.DistinguishedName -EA 0).gpolinks.DisplayName
-					$InheritedGPOs = (Get-GPInheritance -target $OU.DistinguishedName -EA 0).inheritedgpolinks.DisplayName
+					
+					#change for 2.16
+					#work around invalid property DisplayName when the gpolinks and inheritedgpolinks collections are empty
+					#$LinkedGPOs = (Get-GPInheritance -target $OU.DistinguishedName -EA 0).gpolinks.DisplayName
+					#$InheritedGPOs = (Get-GPInheritance -target $OU.DistinguishedName -EA 0).inheritedgpolinks.DisplayName
+					
+					$Results = Get-GPInheritance -target $OU.DistinguishedName -EA 0
+					
+					If(($Results.gpoLinks).Count -gt 0)
+					{
+						$LinkedGPOs = $Results.gpolinks.DisplayName
+					}
+					Else
+					{
+						$LinkedGPOs = $Null
+					}
+					
+					If(($Results.inheritedgpoLinks).Count -gt 0)
+					{
+						$InheritedGPOs = $Results.inheritedgpolinks.DisplayName
+					}
+					Else
+					{
+						$InheritedGPOs = $Null
+					}
+					
 					If($Null -eq $LinkedGPOs -and $Null -eq $InheritedGPOs)
 					{
 						# do nothing
@@ -14160,7 +14110,7 @@ Function ProcessMiscDataByDomain
 			
 			$Users = Get-ADUser -Filter * -Server $Domain `
 			-Properties CannotChangePassword, Enabled, LockedOut, PasswordExpired, PasswordNeverExpires, `
-			PasswordNotRequired, lastLogonTimestamp, DistinguishedName -EA 0 
+			PasswordNotRequired, lastLogonTimestamp, DistinguishedName, SamAccountName, UserPrincipalName -EA 0 
 			
 			If($? -and $Null -ne $Users)
 			{
@@ -14658,7 +14608,6 @@ Function ProcessMiscDataByDomain
 				$pctstr = "{0,5:N2}" -f $pct
 				Line 1 "With SID History`t: $($UsersWithSIDHistoryStr)`t$($pctstr)% of Total Users"
 
-
 				Line 1 "*Unknown users are user accounts with no Enabled property"
 				If($Script:DARights -eq $False)
 				{
@@ -14898,8 +14847,6 @@ Function OutputUserInfo
 	
 	If($MSWORD -or $PDF)
 	{
-		WriteWordLine 0 1 "Services ($NumServices Services found)"
-
 		[System.Collections.Hashtable[]] $UsersWordTable = @();
 		[int] $CurrentServiceIndex = 2;
 
@@ -15433,6 +15380,8 @@ If($Section -eq "All" -or $Section -eq "Forest")
 	ProcessCAInformation
 	
 	ProcessADOptionalFeatures
+	
+	ProcessADSchemaItems
 	[gc]::collect()
 }
 
