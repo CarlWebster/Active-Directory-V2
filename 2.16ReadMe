@@ -1,4 +1,18 @@
 #Version 2.16
-#	Working on adding support for running in one domain in a multi-domain Forest
-#	Working on detecting if the Schema change for LAPS is present
-
+#	Add new parameter ADDomain to restrict report to a single domain in a multi-domain Forest
+#	Add schema extension checking for the following items and add to Forest section:
+#		'User-Account-Control', #Flags that control the behavior of a user account
+#		'msNPAllowDialin', #RAS Server
+#		'ms-Mcs-AdmPwd', #LAPS
+#		'ms-Mcs-AdmPwdExpirationTime', #LAPS
+#		'mS-SMS-Assignment-Site-Code', #SCCM
+#		'mS-SMS-Capabilities', #SCCM
+#		'msRTCSIP-UserRoutingGroupId', #Lync
+#		'msRTCSIP-MirrorBackEndServer' #Lync
+#	Remove several large blocks of code that has been commented out
+#	Revise how $LinkedGPOs and $InheritedGPOs variables are set to work around invalid property name DisplayName when collection is empty
+#	Updated Exchange schema versions
+#	When run for a single domain in a multi-domain forest
+#		Revise gathering list of domains
+#		Revise testing for $ComputerName 
+#		Revise variable $ADContext in Function ProcessAllDCsInTheForest
