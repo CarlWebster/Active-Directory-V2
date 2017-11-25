@@ -1,4 +1,11 @@
 #Version 2.16
+#	Adding checking for users with home drive set in Active Directory Users and Computers (ADUC)
+#		Added function OutputSHDUserInfo
+#	Adding checking for users with RDS home drive set in ADUC
+#		Added function from Jeff Hicks Get-RDUserSetting
+#		Added function OutputRDSHDUserInfo
+#	Adding checking for users whose Primary Group isw not Domain Users
+#		Added function OutputPGUserInfo
 #	Add new parameter ADDomain to restrict report to a single domain in a multi-domain Forest
 #	Add schema extension checking for the following items and add to Forest section:
 #		'User-Account-Control', #Flags that control the behavior of a user account
@@ -9,6 +16,7 @@
 #		'mS-SMS-Capabilities', #SCCM
 #		'msRTCSIP-UserRoutingGroupId', #Lync
 #		'msRTCSIP-MirrorBackEndServer' #Lync
+#		'ms-exch-schema-version-pt' #Exchange
 #	Remove several large blocks of code that has been commented out
 #	Revise how $LinkedGPOs and $InheritedGPOs variables are set to work around invalid property name DisplayName when collection is empty
 #	Updated Exchange schema versions

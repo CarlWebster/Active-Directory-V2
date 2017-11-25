@@ -709,7 +709,7 @@
 	NAME: ADDS_Inventory_V2.ps1
 	VERSION: 2.16
 	AUTHOR: Carl Webster, Sr. Solutions Architect, Choice Solutions, LLC
-	LASTEDIT: November 24, 2017
+	LASTEDIT: November 25, 2017
 #>
 
 
@@ -961,6 +961,13 @@ Param(
 #	Updated help text
 #
 #Version 2.16
+#	Adding checking for users with home drive set in Active Directory Users and Computers (ADUC)
+#		Added function OutputSHDUserInfo
+#	Adding checking for users with RDS home drive set in ADUC
+#		Added function from Jeff Hicks Get-RDUserSetting
+#		Added function OutputRDSHDUserInfo
+#	Adding checking for users whose Primary Group isw not Domain Users
+#		Added function OutputPGUserInfo
 #	Add new parameter ADDomain to restrict report to a single domain in a multi-domain Forest
 #	Add schema extension checking for the following items and add to Forest section:
 #		'User-Account-Control', #Flags that control the behavior of a user account
@@ -971,6 +978,7 @@ Param(
 #		'mS-SMS-Capabilities', #SCCM
 #		'msRTCSIP-UserRoutingGroupId', #Lync
 #		'msRTCSIP-MirrorBackEndServer' #Lync
+#		'ms-exch-schema-version-pt' #Exchange
 #	Remove several large blocks of code that has been commented out
 #	Revise how $LinkedGPOs and $InheritedGPOs variables are set to work around invalid property name DisplayName when collection is empty
 #	Updated Exchange schema versions
@@ -4053,13 +4061,6 @@ Function WriteHTMLLine
 		} 
 	}
 	
-	#added by webster 12-oct-2016
-	#if a heading, don't add the <br />
-	#If($HTMLStyle1 -eq "")
-	#{
-	#	$HTMLBody += "<br />"
-	#}
-
 	out-file -FilePath $Script:FileName1 -Append -InputObject $HTMLBody 4>$Null
 }
 #endregion
@@ -7708,8 +7709,9 @@ Function ProcessADSchemaItems
 		'ms-Mcs-AdmPwdExpirationTime', #LAPS
 		'mS-SMS-Assignment-Site-Code', #SCCM
 		'mS-SMS-Capabilities', #SCCM
-		'msRTCSIP-UserRoutingGroupId', #Lync
-		'msRTCSIP-MirrorBackEndServer' #Lync
+		'msRTCSIP-UserRoutingGroupId', #Lync/SfB
+		'msRTCSIP-MirrorBackEndServer', #Lync/SfB
+		'ms-exch-schema-version-pt' #Exchange
 		)
 	)
 
@@ -7757,8 +7759,9 @@ Function ProcessADSchemaItems
 			'ms-Mcs-AdmPwdExpirationTime'	{$tmp = "LAPS"}
 			'mS-SMS-Assignment-Site-Code'	{$tmp = "SCCM"}
 			'mS-SMS-Capabilities'			{$tmp = "SCCM"}
-			'msRTCSIP-UserRoutingGroupId'	{$tmp = "Lync"}
-			'msRTCSIP-MirrorBackEndServer'	{$tmp = "Lync"}
+			'msRTCSIP-UserRoutingGroupId'	{$tmp = "Lync/Skype for Business"}
+			'msRTCSIP-MirrorBackEndServer'	{$tmp = "Lync/Skype for Business"}
+			'ms-exch-schema-version-pt' 	{$tmp = "Exchange"}
 			Default							{$tmp = "Unknown"}
 		}
 		
@@ -14039,6 +14042,123 @@ Function ProcessgGPOsByOUNew
 #endregion
 
 #region misc info by domain
+#From Jeff Hicks
+#modified from his original
+#https://www.petri.com/powershell-problem-solver-active-directory-remote-desktop-settings
+#added for 2.16
+Function Get-RDUserSetting 
+{
+	[cmdletbinding(DefaultParameterSetName="SAM")]
+	 
+	Param(
+	[Parameter(Position=0,Mandatory,HelpMessage="Enter a user's sAMAccountName",
+	ValueFromPipeline,ParameterSetName="SAM")]
+	[ValidateNotNullorEmpty()]
+	[Alias("Name")]
+	[string]$SAMAccountname,
+	[Parameter(ParameterSetName="SAM")]
+	[string]$SearchRoot,
+	 
+	[Parameter(Mandatory,HelpMessage="Enter a user's distingished name",
+	ValueFromPipelineByPropertyName,ParameterSetName="DN")]
+	[ValidateNotNullorEmpty()]
+	[Alias("DN")]
+	[string]$DistinguishedName,
+	 
+	[string]$Server
+	 
+	)
+	 
+	Begin 
+	{
+		#Write-Verbose "Starting $($MyInvocation.MyCommand)"
+		#Write-Verbose ($PSBoundParameters | Out-String)
+		#remote desktop properties
+		$TSSettings = @("TerminalServicesProfilePath","TerminalServicesHomeDirectory","TerminalServicesHomeDrive")
+	}
+	 
+	Process 
+	{
+		#Write-Verbose "Using parameter set $($PSCmdlet.ParameterSetName)"
+		Switch ($PSCmdlet.ParameterSetName) 
+		{
+			"SAM" 
+			{
+				#Write-Verbose "Retrieving distinguishedname for $samAccountname"
+				$searcher = New-Object DirectoryServices.DirectorySearcher
+				$searcher.Filter = "(&(objectcategory=person)(objectclass=user)(samAccountname=$sAMAccountname))"
+				#Write-Verbose $searcher.filter
+				If($SearchRoot) 
+				{
+					#Write-Verbose "Searching from $SearchRoot"
+					If($Server) 
+					{
+						$searchPath = "LDAP://$server/$SearchRoot"
+					}
+					Else 
+					{
+						$searchPath = "LDAP://$SearchRoot"
+					}
+					$r = New-Object System.DirectoryServices.DirectoryEntry $SearchPath
+
+					$searcher.SearchRoot = $r
+				}
+				$user = $searcher.FindOne().GetDirectoryEntry()
+			} 
+			"DN" 
+			{
+				#Write-Verbose "Processing $DistinguishedName"
+				If($server) 
+				{
+					#Write-Verbose "Connecting to $Server"
+					[ADSI]$User = "LDAP://$Server/$DistinguishedName"
+				}
+				Else 
+				{
+					[ADSI]$User = "LDAP://$DistinguishedName"
+				}
+			}
+		} #close Switch
+	 
+		If($user.path) 
+		{
+			#initialize a hashtable
+			Try 
+			{
+				$hash=[ordered]@{
+					DistinguishedName = $User.DistinguishedName.Value
+					Name = $user.name.Value
+					samAccountName = $user.samAccountName.value
+					AllowLogon = $user.psbase.InvokeGet("AllowLogon") -as [Boolean]
+				}
+
+				ForEach($property in $TSSettings) 
+				{
+					$hash.Add($property,$user.psbase.invokeGet($property))
+				} #foreach
+
+				#create an object
+				New-Object -TypeName PSObject -Property $hash
+			}
+			Catch 
+			{
+				#Write-Warning "Failed to retrieve remote desktop settings for $Distinguishedname. $($_.exception.message)"
+			}
+		} #if user found
+		Else 
+		{
+			#Write-Warning "Failed to find user $DistinguishedName. $($_.exception.message)"
+		}
+	 
+	} #Process
+	 
+	End 
+	{
+		#Write-Verbose "Ending $($MyInvocation.MyCommand)"
+	} #End
+ 
+} #end function
+
 Function ProcessMiscDataByDomain
 {
 	Write-Verbose "$(Get-Date): Writing miscellaneous data by domain"
@@ -14108,9 +14228,11 @@ Function ProcessMiscDataByDomain
 
 			Write-Verbose "$(Get-Date): `t`tGathering user misc data"
 			
+			#added for 2.16 HomeDrive, HomeDirectory, ProfilePath, ScriptPath, PrimaryGroup
 			$Users = Get-ADUser -Filter * -Server $Domain `
 			-Properties CannotChangePassword, Enabled, LockedOut, PasswordExpired, PasswordNeverExpires, `
-			PasswordNotRequired, lastLogonTimestamp, DistinguishedName, SamAccountName, UserPrincipalName -EA 0 
+			PasswordNotRequired, lastLogonTimestamp, DistinguishedName, SamAccountName, UserPrincipalName, `
+			HomeDrive, HomeDirectory, ProfilePath, ScriptPath, PrimaryGroup -EA 0 
 			
 			If($? -and $Null -ne $Users)
 			{
@@ -14348,6 +14470,57 @@ Function ProcessMiscDataByDomain
 				{
 					[int]$ActiveUserslastLogonTimestamp = 1
 				}
+
+				#2.16
+				Write-Verbose "$(Get-Date): `t`t`tHomeDrive users"
+				$HomeDriveUsers = $Users | Where {$_.HomeDrive -ne $Null}
+			
+				If($Null -eq $HomeDriveUsers)
+				{
+					[int]$UsersHomeDrivecnt = 0
+				}
+				ElseIf($HomeDriveUsers -is [array])
+				{
+					[int]$UsersHomeDrivecnt = $HomeDriveUsers.Count
+				}
+				Else
+				{
+					[int]$UsersHomeDrivecnt = 1
+				}
+				
+				#2.16
+				Write-Verbose "$(Get-Date): `t`t`tPrimaryGroup users"
+				$PrimaryGroupUsers = $Users | Where {$_.SamAccountName -ne 'Guest' -and $_.PrimaryGroup -notmatch 'Domain Users'}
+			
+				If($Null -eq $PrimaryGroupUsers)
+				{
+					[int]$UsersPrimaryGroupcnt = 0
+				}
+				ElseIf($PrimaryGroupUsers -is [array])
+				{
+					[int]$UsersPrimaryGroupcnt = $PrimaryGroupUsers.Count
+				}
+				Else
+				{
+					[int]$UsersPrimaryGroupcnt = 1
+				}
+
+				#2.16
+				Write-Verbose "$(Get-Date): `t`t`tRDS HomeDrive users"
+				$RDSHomeDriveUsers = $users | Get-RDUserSetting | Where {$_.TerminalServicesHomeDrive -gt 0}
+			
+				If($Null -eq $RDSHomeDriveUsers)
+				{
+					[int]$UsersRDSHomeDrivecnt = 0
+				}
+				ElseIf($RDSHomeDriveUsers -is [array])
+				{
+					[int]$UsersRDSHomeDrivecnt = $RDSHomeDriveUsers.Count
+				}
+				Else
+				{
+					[int]$UsersRDSHomeDrivecnt = 1
+				}
 			}
 			Else
 			{
@@ -14359,6 +14532,9 @@ Function ProcessMiscDataByDomain
 				[int]$UsersPasswordNotRequiredcnt = 0
 				[int]$UsersCannotChangePasswordcnt = 0
 				[int]$UsersWithSIDHistorycnt = 0
+				[int]$UsersHomeDrivecnt = 0
+				[int]$UsersPrimaryGroupcnt = 0
+				[int]$UsersRDSHomeDrivecnt = 0
 				[int]$ActiveUsersCountcnt = 0
 				[int]$ActiveUsersPasswordExpiredcnt = 0
 				[int]$ActiveUsersPasswordNeverExpirescnt = 0
@@ -14377,6 +14553,9 @@ Function ProcessMiscDataByDomain
 			[string]$UsersPasswordNotRequiredStr = "{0,7:N0}" -f $UsersPasswordNotRequiredcnt
 			[string]$UsersCannotChangePasswordStr = "{0,7:N0}" -f $UsersCannotChangePasswordcnt
 			[string]$UsersWithSIDHistoryStr = "{0,7:N0}" -f $UsersWithSIDHistorycnt
+			[string]$UsersHomeDriveStr = "{0,7:N0}" -f $UsersHomeDrivecnt
+			[string]$UsersPrimaryGroupStr = "{0,7:N0}" -f $UsersPrimaryGroupcnt
+			[string]$UsersRDSHomeDriveStr = "{0,7:N0}" -f $UsersRDSHomeDrivecnt
 			[string]$ActiveUsersCountStr = "{0,7:N0}" -f $ActiveUsersCount
 			[string]$ActiveUsersPasswordExpiredStr = "{0,7:N0}" -f $ActiveUsersPasswordExpired
 			[string]$ActiveUsersPasswordNeverExpiresStr = "{0,7:N0}" -f $ActiveUsersPasswordNeverExpires
@@ -14390,7 +14569,7 @@ Function ProcessMiscDataByDomain
 				WriteWordLine 3 0 "All Users"
 				$TableRange   = $Script:doc.Application.Selection.Range
 				[int]$Columns = 3
-				[int]$Rows = 9
+				[int]$Rows = 12
 				$Table = $Script:doc.Tables.Add($TableRange, $Rows, $Columns)
 				$Table.Style = $Script:MyHash.Word_TableGrid
 			
@@ -14473,6 +14652,33 @@ Function ProcessMiscDataByDomain
 				$pctstr = "{0,5:N2}" -f $pct
 				$Table.Cell(9,3).Range.ParagraphFormat.Alignment = $wdAlignParagraphRight
 				$Table.Cell(9,3).Range.Text = "$($pctstr)% of Total Users"
+				$Table.Cell(10,1).Shading.BackgroundPatternColor = $wdColorGray15
+				$Table.Cell(10,1).Range.Font.Bold = $True
+				$Table.Cell(10,1).Range.Text = "HomeDrive users"
+				$Table.Cell(10,2).Range.ParagraphFormat.Alignment = $wdAlignParagraphRight
+				$Table.Cell(10,2).Range.Text = $UsersHomeDriveStr
+				[single]$pct = (($UsersHomeDrivecnt / $UsersCount)*100)
+				$pctstr = "{0,5:N2}" -f $pct
+				$Table.Cell(10,3).Range.ParagraphFormat.Alignment = $wdAlignParagraphRight
+				$Table.Cell(10,3).Range.Text = "$($pctstr)% of Total Users"
+				$Table.Cell(11,1).Shading.BackgroundPatternColor = $wdColorGray15
+				$Table.Cell(11,1).Range.Font.Bold = $True
+				$Table.Cell(11,1).Range.Text = "PrimaryGroup users"
+				$Table.Cell(11,2).Range.ParagraphFormat.Alignment = $wdAlignParagraphRight
+				$Table.Cell(11,2).Range.Text = $UsersPrimaryGroupStr
+				[single]$pct = (($UsersPrimaryGroupcnt / $UsersCount)*100)
+				$pctstr = "{0,5:N2}" -f $pct
+				$Table.Cell(11,3).Range.ParagraphFormat.Alignment = $wdAlignParagraphRight
+				$Table.Cell(11,3).Range.Text = "$($pctstr)% of Total Users"
+				$Table.Cell(12,1).Shading.BackgroundPatternColor = $wdColorGray15
+				$Table.Cell(12,1).Range.Font.Bold = $True
+				$Table.Cell(12,1).Range.Text = "RDS HomeDrive users"
+				$Table.Cell(12,2).Range.ParagraphFormat.Alignment = $wdAlignParagraphRight
+				$Table.Cell(12,2).Range.Text = $UsersRDSHomeDriveStr
+				[single]$pct = (($UsersRDSHomeDrivecnt / $UsersCount)*100)
+				$pctstr = "{0,5:N2}" -f $pct
+				$Table.Cell(12,3).Range.ParagraphFormat.Alignment = $wdAlignParagraphRight
+				$Table.Cell(12,3).Range.Text = "$($pctstr)% of Total Users"
 
 				$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustNone)
 				$Table.AutoFitBehavior($wdAutoFitContent)
@@ -14608,6 +14814,18 @@ Function ProcessMiscDataByDomain
 				$pctstr = "{0,5:N2}" -f $pct
 				Line 1 "With SID History`t: $($UsersWithSIDHistoryStr)`t$($pctstr)% of Total Users"
 
+				[single]$pct = (($UsersHomeDrivecnt / $UsersCount)*100)
+				$pctstr = "{0,5:N2}" -f $pct
+				Line 1 "With HomeDrive`t: $($UsersHomeDriveStr)`t$($pctstr)% of Total Users"
+
+				[single]$pct = (($UsersPrimaryGroupcnt / $UsersCount)*100)
+				$pctstr = "{0,5:N2}" -f $pct
+				Line 1 "With Primary Group`t: $($UsersPrimaryGroupStr)`t$($pctstr)% of Total Users"
+
+				[single]$pct = (($UsersRDSHomeDrivecnt / $UsersCount)*100)
+				$pctstr = "{0,5:N2}" -f $pct
+				Line 1 "With RDS HomeDrive`t: $($UsersRDSHomeDriveStr)`t$($pctstr)% of Total Users"
+
 				Line 1 "*Unknown users are user accounts with no Enabled property"
 				If($Script:DARights -eq $False)
 				{
@@ -14702,6 +14920,24 @@ Function ProcessMiscDataByDomain
 				$UsersWithSIDHistoryStr,($htmlwhite),
 				"$($pctstr)% of Total Users",($htmlwhite)))
 				
+				[single]$pct = (($UsersHomeDrivecnt / $UsersCount)*100)
+				$pctstr = "{0,5:N2}" -f $pct
+				$rowdata += @(,('With HomeDrive',($htmlsilver -bor $htmlbold),
+				$UsersHomeDriveStr,($htmlwhite),
+				"$($pctstr)% of Total Users",($htmlwhite)))
+				
+				[single]$pct = (($UsersPrimaryGroupcnt / $UsersCount)*100)
+				$pctstr = "{0,5:N2}" -f $pct
+				$rowdata += @(,('With PrimaryGroup',($htmlsilver -bor $htmlbold),
+				$UsersPrimaryGroupStr,($htmlwhite),
+				"$($pctstr)% of Total Users",($htmlwhite)))
+				
+				[single]$pct = (($UsersRDSHomeDrivecnt / $UsersCount)*100)
+				$pctstr = "{0,5:N2}" -f $pct
+				$rowdata += @(,('With RDS HomeDrive',($htmlsilver -bor $htmlbold),
+				$UsersRDSHomeDriveStr,($htmlwhite),
+				"$($pctstr)% of Total Users",($htmlwhite)))
+				
 				$msg = ""
 				$columnWidths = @("150","50","150")
 				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "350"
@@ -14718,6 +14954,8 @@ Function ProcessMiscDataByDomain
 				
 				Write-Verbose "$(Get-Date): `t`tBuild table for Active Users"
 				WriteHTMLLine 3 0 "Active Users"
+
+				$rowdata = @()
 				$rowdata += @(,('Total Active Users',($htmlsilver -bor $htmlbold),
 				$ActiveUsersCountStr,($htmlwhite),
 				"",($htmlwhite)))
@@ -14796,6 +15034,21 @@ Function ProcessMiscDataByDomain
 			If($UsersWithSIDHistorycnt -gt 0 -and $IncludeUserInfo -eq $True)
 			{
 				OutputUserInfo $AllUsersWithSIDHistory "All users with SID History"
+			}
+
+			If($UsersHomeDrivecnt -gt 0 -and $IncludeUserInfo -eq $True)
+			{
+				OutputHDUserInfo $HomeDriveUsers "All users with HomeDrive set in ADUC"
+			}
+
+			If($UsersPrimaryGroupcnt -gt 0 -and $IncludeUserInfo -eq $True)
+			{
+				OutputPGUserInfo $PrimaryGroupUsers "All users with Primary Group not Domain Users"
+			}
+
+			If($UsersRDSHomeDrivecnt -gt 0 -and $IncludeUserInfo -eq $True)
+			{
+				OutputRDSHDUserInfo $RDSHomeDriveUsers "All users with RDS HomeDrive set in ADUC"
 			}
 
 			Get-ComputerCountByOS $Domain
@@ -14910,6 +15163,291 @@ Function OutputUserInfo
 		
 		$columnHeaders = @('SamAccountName',($htmlsilver -bor $htmlbold),'DistinguishedName',($htmlsilver -bor $htmlbold))
 		$columnWidths = @("150px","350px")
+		$msg = ""
+		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "500"
+		WriteHTMLLine 0 0 " "
+	}
+}
+
+Function OutputHDUserInfo
+{
+	#new for 2.16
+	Param([object] $Users, [string] $title)
+	
+	Write-Verbose "$(Get-Date): `t`t`t`tOutput $($title)"
+	$Users = $Users | Sort samAccountName
+	
+	If($MSWORD -or $PDF)
+	{
+		[System.Collections.Hashtable[]] $UsersWordTable = @();
+		[int] $CurrentServiceIndex = 2;
+
+		WriteWordLine 4 0 $title
+
+		ForEach($User in $Users)
+		{
+			$WordTableRowHash = @{ 
+			SamAccountName = $User.SamAccountName; 
+			DN = $User.DistinguishedName;
+			HomeDrive = $User.HomeDrive;
+			HomeDir = $User.HomeDirectory;
+			ProfilePath = $User.ProfilePath;
+			ScriptPath = $User.ScriptPath
+			}
+
+			## Add the hash to the array
+			$UsersWordTable += $WordTableRowHash;
+
+			$CurrentServiceIndex++;
+		}
+		
+		## Add the table to the document, using the hashtable (-Alt is short for -AlternateBackgroundColor!)
+		$Table = AddWordTable -Hashtable $UsersWordTable `
+		-Columns SamAccountName, DN, HomeDrive, HomeDir, ProfilePath, ScriptPath `
+		-Headers "SamAccountName", "DistinguishedName", "Home drive", "Home folder", "Profile path", "Login script" `
+		-Format $wdTableGrid `
+		-AutoFit $wdAutoFitFixed;
+
+		SetWordCellFormat -Collection $Table -Size 9
+		SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+		$Table.Columns.Item(1).Width = 100;
+		$Table.Columns.Item(2).Width = 110;
+		$Table.Columns.Item(3).Width = 35;
+		$Table.Columns.Item(4).Width = 85;
+		$Table.Columns.Item(5).Width = 85;
+		$Table.Columns.Item(6).Width = 85;
+
+		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustNone)
+
+		FindWordDocumentEnd
+		$Table = $Null
+		WriteWordLine 0 0 ""
+	}
+	ElseIf($Text)
+	{
+		Line 0 $title
+		Line 0 ""
+
+		ForEach($User in $Users)
+		{
+			Line 1 "SamAccountName`t`t: " $User.samAccountName
+			Line 1 "DistinguishedName`t: " $User.DistinguishedName
+			Line 1 "Home drive`t`t: " $User.HomeDrive
+			Line 1 "Home folder`t`t: " $User.HomeDirectory
+			Line 1 "Profile path`t`t: " $User.ProfilePath
+			Line 1 "Login script`t`t: " $User.ScriptPath
+			Line 0 ""
+		}
+	}
+	ElseIf($HTML)
+	{
+		WriteHTMLLine 4 0 $title
+		$rowdata = @()
+		
+		ForEach($User in $Users)
+		{
+			$rowdata += @(,($User.SamAccountName,$htmlwhite,
+							$User.DistinguishedName,$htmlwhite,
+							$User.HomeDrive,$htmlwhite,
+							$User.HomeDirectory,$htmlwhite,
+							$User.ProfilePath,$htmlwhite,
+							$User.ScriptPath,$htmlwhite))
+		}
+		
+		$columnHeaders = @(
+		'SamAccountName',($htmlsilver -bor $htmlbold),
+		'DistinguishedName',($htmlsilver -bor $htmlbold),
+		'Home Drive',($htmlsilver -bor $htmlbold),
+		'Home folder',($htmlsilver -bor $htmlbold),
+		'Profile path',($htmlsilver -bor $htmlbold),
+		'Login script',($htmlsilver -bor $htmlbold))
+		$columnWidths = @("100px","100px","75px","75px","75px","75px")
+		$msg = ""
+		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "500"
+		WriteHTMLLine 0 0 " "
+	}
+}
+
+Function OutputPGUserInfo
+{
+	#new for 2.16
+	Param([object] $Users, [string] $title)
+	
+	Write-Verbose "$(Get-Date): `t`t`t`tOutput $($title)"
+	$Users = $Users | Sort samAccountName
+	
+	If($MSWORD -or $PDF)
+	{
+		[System.Collections.Hashtable[]] $UsersWordTable = @();
+		[int] $CurrentServiceIndex = 2;
+
+		WriteWordLine 4 0 $title
+
+		ForEach($User in $Users)
+		{
+			$WordTableRowHash = @{ 
+			SamAccountName = $User.SamAccountName; 
+			DN = $User.DistinguishedName;
+			PG = $User.PrimaryGroup
+			}
+
+			## Add the hash to the array
+			$UsersWordTable += $WordTableRowHash;
+
+			$CurrentServiceIndex++;
+		}
+		
+		## Add the table to the document, using the hashtable (-Alt is short for -AlternateBackgroundColor!)
+		$Table = AddWordTable -Hashtable $UsersWordTable `
+		-Columns SamAccountName, DN, PG `
+		-Headers "SamAccountName", "DistinguishedName", "Primary Group" `
+		-Format $wdTableGrid `
+		-AutoFit $wdAutoFitFixed;
+
+		SetWordCellFormat -Collection $Table -Size 9
+		SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+		$Table.Columns.Item(1).Width = 100;
+		$Table.Columns.Item(2).Width = 200;
+		$Table.Columns.Item(3).Width = 200;
+
+		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustNone)
+
+		FindWordDocumentEnd
+		$Table = $Null
+		WriteWordLine 0 0 ""
+	}
+	ElseIf($Text)
+	{
+		Line 0 $title
+		Line 0 ""
+
+		ForEach($User in $Users)
+		{
+			Line 1 "samAccountName`t`t: " $User.samAccountName
+			Line 1 "DistinguishedName`t: " $User.DistinguishedName
+			Line 1 "Primary Group`t`t: " $User.PrimaryGroup
+			Line 0 ""
+		}
+	}
+	ElseIf($HTML)
+	{
+		WriteHTMLLine 4 0 $title
+		$rowdata = @()
+		
+		ForEach($User in $Users)
+		{
+			$rowdata += @(,($User.SamAccountName,$htmlwhite,
+							$User.DistinguishedName,$htmlwhite,
+							$User.PrimaryGroup,$htmlwhite))
+		}
+		
+		$columnHeaders = @(
+		'SamAccountName',($htmlsilver -bor $htmlbold),
+		'DistinguishedName',($htmlsilver -bor $htmlbold),
+		'Primary Group',($htmlsilver -bor $htmlbold))
+		$columnWidths = @("100px","200px","200px")
+		$msg = ""
+		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "500"
+		WriteHTMLLine 0 0 " "
+	}
+}
+
+Function OutputRDSHDUserInfo
+{
+	#new for 2.16
+	Param([object] $Users, [string] $title)
+	
+	Write-Verbose "$(Get-Date): `t`t`t`tOutput $($title)"
+	$Users = $Users | Sort samAccountName
+	
+	If($MSWORD -or $PDF)
+	{
+		[System.Collections.Hashtable[]] $UsersWordTable = @();
+		[int] $CurrentServiceIndex = 2;
+
+		WriteWordLine 4 0 $title
+
+		ForEach($User in $Users)
+		{
+			$WordTableRowHash = @{ 
+			SamAccountName = $User.SamAccountName; 
+			DN = $User.DistinguishedName;
+			HomeDrive = $User.TerminalServicesHomeDrive;
+			HomeDir = $User.TerminalServicesHomeDirectory;
+			ProfilePath = $User.TerminalServicesProfilePath;
+			AllowLogon = $User.AllowLogon
+			}
+
+			## Add the hash to the array
+			$UsersWordTable += $WordTableRowHash;
+
+			$CurrentServiceIndex++;
+		}
+		
+		## Add the table to the document, using the hashtable (-Alt is short for -AlternateBackgroundColor!)
+		$Table = AddWordTable -Hashtable $UsersWordTable `
+		-Columns SamAccountName, DN, HOmeDrive, HomeDir, ProfilePath, ALlowLogon `
+		-Headers "SamAccountName", "DistinguishedName", "RDS Home drive", "RDS Home folder", "RDS Profile path", "Allow Logon" `
+		-Format $wdTableGrid `
+		-AutoFit $wdAutoFitFixed;
+
+		SetWordCellFormat -Collection $Table -Size 9
+		SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+		$Table.Columns.Item(1).Width = 100;
+		$Table.Columns.Item(2).Width = 140;
+		$Table.Columns.Item(3).Width = 35;
+		$Table.Columns.Item(4).Width = 75;
+		$Table.Columns.Item(5).Width = 90;
+		$Table.Columns.Item(6).Width = 60;
+
+		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustNone)
+
+		FindWordDocumentEnd
+		$Table = $Null
+		WriteWordLine 0 0 ""
+	}
+	ElseIf($Text)
+	{
+		Line 0 $title
+		Line 0 ""
+
+		ForEach($User in $Users)
+		{
+			Line 1 "SamAccountName`t`t: " $User.samAccountName
+			Line 1 "DistinguishedName`t: " $User.DistinguishedName
+			Line 1 "RDS Home drive`t`t: " $User.TerminalServicesHomeDrive
+			Line 1 "RDS Home folder`t`t: " $User.TerminalServicesHomeDirectory
+			Line 1 "RDS Profile path`t: " $User.TerminalServicesProfilePath
+			Line 1 "Allow Logon`t`t: " $User.AllowLogon
+			Line 0 ""
+		}
+	}
+	ElseIf($HTML)
+	{
+		WriteHTMLLine 4 0 $title
+		$rowdata = @()
+		
+		ForEach($User in $Users)
+		{
+			$rowdata += @(,($User.SamAccountName,$htmlwhite,
+							$User.DistinguishedName,$htmlwhite,
+							$User.TerminalServicesHomeDrive,$htmlwhite,
+							$User.TerminalServicesHomeDirectory,$htmlwhite,
+							$User.TerminalServicesProfilePath,$htmlwhite,
+							$User.AllowLogon,$htmlwhite))
+		}
+		
+		$columnHeaders = @(
+		'SamAccountName',($htmlsilver -bor $htmlbold),
+		'DistinguishedName',($htmlsilver -bor $htmlbold),
+		'RDS Home Drive',($htmlsilver -bor $htmlbold),
+		'RDS Home folder',($htmlsilver -bor $htmlbold),
+		'RDS Profile path',($htmlsilver -bor $htmlbold),
+		'Allow Logon',($htmlsilver -bor $htmlbold))
+		$columnWidths = @("100px","100px","75px","75px","90px","60px")
 		$msg = ""
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "500"
 		WriteHTMLLine 0 0 " "
