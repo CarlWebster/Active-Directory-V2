@@ -5,12 +5,12 @@
 #http://www.CarlWebster.com
 
 #Version 2.16
-#	Adding checking for users with home drive set in Active Directory Users and Computers (ADUC)
-#		Added function OutputSHDUserInfo
-#	Adding checking for users with RDS home drive set in ADUC
+#	Add checking for users with home drive set in Active Directory Users and Computers (ADUC)
+#		Added function OutputHDUserInfo
+#	Add checking for users with RDS home drive set in ADUC
 #		Added function from Jeff Hicks Get-RDUserSetting
 #		Added function OutputRDSHDUserInfo
-#	Adding checking for users whose Primary Group isw not Domain Users
+#	Add checking for users whose Primary Group is not Domain Users
 #		Added function OutputPGUserInfo
 #	Add new parameter ADDomain to restrict report to a single domain in a multi-domain Forest
 #	Add schema extension checking for the following items and add to Forest section:
@@ -18,14 +18,16 @@
 #		'msNPAllowDialin', #RAS Server
 #		'ms-Mcs-AdmPwd', #LAPS
 #		'ms-Mcs-AdmPwdExpirationTime', #LAPS
-#		'mS-SMS-Assignment-Site-Code', #SCCM
-#		'mS-SMS-Capabilities', #SCCM
-#		'msRTCSIP-UserRoutingGroupId', #Lync
-#		'msRTCSIP-MirrorBackEndServer' #Lync
+#		'ms-SMS-Assignment-Site-Code', #SCCM
+#		'ms-SMS-Capabilities', #SCCM
+#		'msRTCSIP-UserRoutingGroupId', #Lync/SfB
+#		'msRTCSIP-MirrorBackEndServer' #Lync/SfB
 #		'ms-exch-schema-version-pt' #Exchange
-#	Remove several large blocks of code that has been commented out
-#	Revise how $LinkedGPOs and $InheritedGPOs variables are set to work around invalid property name DisplayName when collection is empty
+#	Remove several large blocks of code that had been commented out
+#	Revise how $LinkedGPOs and $InheritedGPOs variables are set to work around invalid property 
+#		name DisplayName when collection is empty
 #	Updated Exchange schema versions
+#	Updated help text
 #	When run for a single domain in a multi-domain forest
 #		Revise gathering list of domains
 #		Revise testing for $ComputerName 

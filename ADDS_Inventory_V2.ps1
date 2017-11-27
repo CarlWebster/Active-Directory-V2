@@ -7,8 +7,8 @@
 .SYNOPSIS
 	Creates a complete inventory of a Microsoft Active Directory Forest.
 .DESCRIPTION
-	Creates a complete inventory of a Microsoft Active Directory Forest using Microsoft PowerShell, 
-	Word, plain text or HTML.
+	Creates a complete inventory of a Microsoft Active Directory Forest using Microsoft 
+	PowerShell, Word, plain text or HTML.
 	
 	Creates a Word or PDF document, text or HTML file named after the Active Directory Forest.
 	
@@ -27,7 +27,7 @@
 		Spanish
 		Swedish
 
-	Script requires at least PowerShell version 3 but runs best in version 5.
+	The script requires at least PowerShell version 3 but runs best in version 5.
 
 	Word is NOT needed to run the script. This script will output in Text and HTML.
 	
@@ -39,9 +39,9 @@
 	The Hardware and Services parameters require domain admin privileges.  
 	
 	Version 2.0 of the script adds gathering information on Time Server and AD database, 
-	logfile and SYSVOL locations. Those require access to the registry on each domain controller, 
-	which means the script should now always be run from an elevated PowerShell session with an
-	account with a minimum of domain admin rights.
+	log file, and SYSVOL locations. Those require access to the registry on each domain 
+	controller, which means the script should now always be run from an elevated PowerShell 
+	session with an account with a minimum of domain admin rights.
 	
 	Running the script in a forest with multiple domains requires Enterprise Admin rights.
 
@@ -98,15 +98,16 @@
 	This parameter has an alias of CF.
 .PARAMETER CompanyName
 	Company Name to use for the Cover Page.  
-	Default value is contained in HKCU:\Software\Microsoft\Office\Common\UserInfo\CompanyName or
-	HKCU:\Software\Microsoft\Office\Common\UserInfo\Company, whichever is populated on the 
-	computer running the script.
+	Default value is contained in 
+	HKCU:\Software\Microsoft\Office\Common\UserInfo\CompanyName or
+	HKCU:\Software\Microsoft\Office\Common\UserInfo\Company, whichever is populated 
+	on the computer running the script.
 	This parameter has an alias of CN.
-	If either registry key does not exist and this parameter is not specified, the report will
-	not contain a Company Name on the cover page.
+	If either registry key does not exist and this parameter is not specified, the report 
+	will not contain a Company Name on the cover page.
 	This parameter is only valid with the MSWORD and PDF output parameters.
 .PARAMETER CompanyPhone
-	Company Phone to use for the Cover Page, if the Cover Page has the Phone field.  
+	Company Phone to use for the Cover Page if the Cover Page has the Phone field.  
 	
 	The following Cover Pages have a Phone field:
 		Contrast (Word 2010)
@@ -159,11 +160,11 @@
 		ViewMaster (Word 2013/2016. Works)
 		Whisp (Word 2013/2016. Works)
 		
-	Default value is Sideline.
+	The default value is Sideline.
 	This parameter has an alias of CP.
 	This parameter is only valid with the MSWORD and PDF output parameters.
 .PARAMETER UserName
-	User name to use for the Cover Page and Footer.
+	Username to use for the Cover Page and Footer.
 	Default value is contained in $env:username
 	This parameter has an alias of UN.
 	This parameter is only valid with the MSWORD and PDF output parameters.
@@ -184,12 +185,13 @@
 	This parameter is disabled by default.
 .PARAMETER AddDateTime
 	Adds a date time stamp to the end of the file name.
-	Time stamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2016 at 6PM is 2016-06-01_1800.
-	Output filename will be ReportName_2016-06-01_1800.docx (or .pdf).
+	The timestamp is in the format of yyyy-MM-dd_HHmm.
+	June 1, 2018 at 6PM is 2018-06-01_1800.
+	Output filename will be ReportName_2018-06-01_1800.docx (or .pdf).
 	This parameter is disabled by default.
 .PARAMETER ADForest
-	Specifies an Active Directory forest object by providing one of the following attribute values. 
+	Specifies an Active Directory forest object by providing one of the following 
+	attribute values. 
 	The identifier in parentheses is the LDAP display name for the attribute.
 
 	Fully qualified domain name
@@ -205,9 +207,9 @@
 	
 	If both ADForest and ADDomain are specified, ADDomain takes precedence.
 .PARAMETER ADDomain
-	Specifies an Active Directory domain object by providing one of the following property values. The identifier
-	in parentheses is the LDAP display name for the attribute. All values are for the domainDNS object that 
-	represents the domain.
+	Specifies an Active Directory domain object by providing one of the following 
+	property values. The identifier in parentheses is the LDAP display name for the 
+	attribute. All values are for the domainDNS object that represents the domain.
 
 	Distinguished Name
 
@@ -227,41 +229,49 @@
 
 	NetBIOS domain name
 
-	Example: tullahoma
+	Example: Tullahoma
 
 	If both ADForest and ADDomain are specified, ADDomain takes precedence.
 .PARAMETER ComputerName
 	Specifies which domain controller to use to run the script against.
-	If ADForest is a trusted forest, then ComputerName is required to detect the existence of ADForest.
+	If ADForest is a trusted forest, then ComputerName is required to detect the 
+	existence of ADForest.
 	ComputerName can be entered as the NetBIOS name, FQDN, localhost or IP Address.
 	If entered as localhost, the actual computer name is determined and used.
-	If entered as an IP address, an attempt is made to determine and use the actual computer name.
+	If entered as an IP address, an attempt is made to determine and use the actual 
+	computer name.
 	
 	This parameter has an alias of ServerName.
 	Default value is $Env:USERDNSDOMAIN	
 .PARAMETER DCDNSInfo 
-	Use WMI to gather, for each domain controller, the IP Address and each DNS server configured.
+	Use WMI to gather, for each domain controller, the IP Address, and each DNS server 
+	configured.
 	This parameter requires the script be run from an elevated PowerShell session 
-	using an account with permission to retrieve hardware information (i.e. Domain Admin).
+	using an account with permission to retrieve hardware information (i.e. Domain 
+	Admin).
 	Selecting this parameter will add an extra section to the report.
 	This parameter is disabled by default.
 .PARAMETER Folder
 	Specifies the optional output folder to save the output report. 
 .PARAMETER GPOInheritance
-	In the Group Policies by OU section, adds Inherited GPOs in addition to the GPOs directly linked.
+	In the Group Policies by OU section, adds Inherited GPOs in addition to the GPOs 
+	directly linked.
 	Adds a second column to the table GPO Type.
-	Text file is placed in the same folder from where the script is run.
+	The text file is placed in the same folder from where the script is run.
 	
 	This parameter is disabled by default.
 	This parameter has an alias of GPO.
 .PARAMETER Hardware
-	Use WMI to gather hardware information on: Computer System, Disks, Processor and Network Interface Cards
+	Use WMI to gather hardware information on Computer System, Disks, Processor, and 
+	Network Interface Cards
 	This parameter requires the script be run from an elevated PowerShell session 
-	using an account with permission to retrieve hardware information (i.e. Domain Admin).
-	Selecting this parameter will add to both the time it takes to run the script and size of the report.
+	using an account with permission to retrieve hardware information (i.e. Domain 
+	Admin).
+	Selecting this parameter will add to both the time it takes to run the script and 
+	size of the report.
 	This parameter is disabled by default.
 .PARAMETER IncludeUserInfo
-	For the User Miscellaneous Data section, outputs a table with the SamAccountName
+	For the User Miscellaneous Data section outputs a table with the SamAccountName
 	and DistinguishedName of the users in the All Users counts:
 	
 		Disabled users
@@ -272,6 +282,9 @@
 		All users with password not required
 		All users who cannot change password
 		All users with SID History
+		All users with Homedrive set in ADUC
+		All users whose Primary Group is not Domain Users
+		All users with RDS HomeDrive set in ADUC
 	
 	The Text output option is limited to the first 25 characters of the SamAccountName
 	and the first 116 characters of the DistinguishedName.
@@ -294,18 +307,22 @@
 	This parameter has an alias of MAX.
 .PARAMETER Services
 	Gather information on all services running on domain controllers.
-	Servers that are configured to automatically start but are not running will be colored in red.
+	Servers that are configured to automatically start but are not running will be 
+	colored in red.
 	Used on Domain Controllers only.
 	This parameter requires the script be run from an elevated PowerShell session
-	using an account with permission to retrieve service information (i.e. Domain Admin).
-	Selecting this parameter will add to both the time it takes to run the script and size of the report.
+	using an account with permission to retrieve service information (i.e. Domain 
+	Admin).
+	Selecting this parameter will add to both the time it takes to run the script and 
+	size of the report.
 	This parameter is disabled by default.
 .PARAMETER Section
 	Processes one or more sections of the report.
 	Valid options are:
 		Forest
 		Sites
-		Domains (includes Domain Controllers and optional Hardware, Services and DCDNSInfo)
+		Domains (includes Domain Controllers and optional Hardware, Services and 
+		DCDNSInfo)
 		OUs (Organizational Units)
 		Groups
 		GPOs
@@ -314,16 +331,16 @@
 
 	This parameter defaults to All sections.
 	
-	Multiple sections are separated with a comma. -Section forest,domains
+	Multiple sections are separated by a comma. -Section forest, domains
 	
 .PARAMETER SmtpServer
 	Specifies the optional email server to send the output report. 
 .PARAMETER SmtpPort
 	Specifies the SMTP port. 
-	Default is 25.
+	The default is 25.
 .PARAMETER UseSSL
 	Specifies whether to use SSL for the SmtpServer.
-	Default is False.
+	The default is False.
 .PARAMETER From
 	Specifies the username for the From email address.
 	If SmtpServer is used, this is a required parameter.
@@ -335,12 +352,12 @@
 	Outputs all errors to a text file at the end of the script.
 	
 	This is used when the script developer requests more troubleshooting data.
-	Text file is placed in the same folder from where the script is run.
+	The text file is placed in the same folder from where the script is run.
 	
 	This parameter is disabled by default.
 .PARAMETER ScriptInfo
 	Outputs information about the script to a text file.
-	Text file is placed in the same folder from where the script is run.
+	The text file is placed in the same folder from where the script is run.
 	
 	This parameter is disabled by default.
 	This parameter has an alias of SI.
@@ -348,7 +365,8 @@
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1
 	
 	Will use all default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -356,32 +374,72 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 
-	ADForest defaults to the value in $Env:USERDNSDOMAIN
+	ADForest defaults to the value of $Env:USERDNSDOMAIN.
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
-	value for ComputerName
+	value for ComputerName.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -ADForest company.tld
 	
 	Will use all default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
-	company.tld for the AD Forest
+	company.tld for the AD Forest.
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
-	value for ComputerName
+	value for ComputerName.
+.EXAMPLE
+	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -ADDomain child.company.tld
+	
+	Will use all default values.
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
+	$env:username = Administrator
+
+	Carl Webster for the Company Name.
+	Sideline for the Cover Page format.
+	Administrator for the User Name.
+	child.company.tld for the AD Domain.
+
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
+	a domain controller that is also a global catalog server and will use that as the 
+	value for ComputerName.
+.EXAMPLE
+	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -ADForest parent.company.tld 
+	-ADDomain child.company.tld
+	
+	Will use all default values.
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
+	$env:username = Administrator
+
+	Carl Webster for the Company Name.
+	Sideline for the Cover Page format.
+	Administrator for the User Name.
+	
+	Because both ADForest and ADDomain are specified, ADDomain wins and child.company.tld 
+	is used for AD Domain.
+	ADForest is set to the value of ADDomain.
+
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
+	a domain controller that is also a global catalog server and will use that as the 
+	value for ComputerName.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -ADForest company.tld -ComputerName DC01
 	
 	Will use all default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -389,94 +447,103 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 	company.tld for the AD Forest
-	The script will be run remotely against the DC01 domain controller.
+	The script will be run remotely on the DC01 domain controller.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -PDF -ADForest corp.carlwebster.com
 	
 	Will use all default values and save the document as a PDF file.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
-	corp.carlwebster.com for the AD Forest
+	corp.carlwebster.com for the AD Forest.
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
-	value for ComputerName
+	value for ComputerName.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -Text -ADForest corp.carlwebster.com
 	
 	Will use all default values and save the document as a formatted text file.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
-	$env:username = Administrator
+	$env:username = Administrator.
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
-	corp.carlwebster.com for the AD Forest
+	corp.carlwebster.com for the AD Forest.
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
-	value for ComputerName
+	value for ComputerName.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -HTML -ADForest corp.carlwebster.com
 	
 	Will use all default values and save the document as an HTML file.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
-	$env:username = Administrator
+	$env:username = Administrator.
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
-	corp.carlwebster.com for the AD Forest
+	corp.carlwebster.com for the AD Forest.
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
-	value for ComputerName
+	value for ComputerName.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -hardware
 	
-	Will use all default values and add additional information for each domain controller about its hardware.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	Will use all default values and add additional information for each domain controller 
+	about its hardware.
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
-	$env:username = Administrator
+	$env:username = Administrator.
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 
-	ADForest defaults to the value in $Env:USERDNSDOMAIN.
+	ADForest defaults to the value of $Env:USERDNSDOMAIN.
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
 	value for ComputerName.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -services
 	
-	Will use all default values and add additional information for the services running on each domain controller.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	Will use all default values and add additional information for the services running 
+	on each domain controller.
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
-	$env:username = Administrator
+	$env:username = Administrator.
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 
-	ADForest defaults to the value in $Env:USERDNSDOMAIN.
+	ADForest defaults to the value of $Env:USERDNSDOMAIN.
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
 	value for ComputerName.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -DCDNSInfo
 	
-	Will use all default values and add additional information for each domain controller about its DNS IP configuration.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	Will use all default values and add additional information for each domain controller 
+	about its DNS IP configuration.
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -485,35 +552,38 @@
 	Administrator for the User Name.
 	An extra section will be added to the end of the report.
 
-	ADForest defaults to the value in $Env:USERDNSDOMAIN.
+	ADForest defaults to the value of $Env:USERDNSDOMAIN.
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
 	value for ComputerName.
 .EXAMPLE
-	PS C:\PSScript .\ADDS_Inventory_V2.ps1 -CompanyName "Carl Webster Consulting" -CoverPage "Mod" -UserName "Carl Webster" -ComputerName ADDC01
+	PS C:\PSScript .\ADDS_Inventory_V2.ps1 -CompanyName "Carl Webster Consulting" 
+	-CoverPage "Mod" -UserName "Carl Webster" -ComputerName ADDC01
 
 	Will use:
 		Carl Webster Consulting for the Company Name.
 		Mod for the Cover Page format.
 		Carl Webster for the User Name.
-		ADForest defaults to the value in $Env:USERDNSDOMAIN.
+		ADForest defaults to the value of $Env:USERDNSDOMAIN.
 		Domain Controller named ADDC01 for the ComputerName.
 .EXAMPLE
-	PS C:\PSScript .\ADDS_Inventory_V2.ps1 -CN "Carl Webster Consulting" -CP "Mod" -UN "Carl Webster"
+	PS C:\PSScript .\ADDS_Inventory_V2.ps1 -CN "Carl Webster Consulting" -CP "Mod" 
+	-UN "Carl Webster"
 
 	Will use:
 		Carl Webster Consulting for the Company Name (alias CN).
 		Mod for the Cover Page format (alias CP).
 		Carl Webster for the User Name (alias UN).
 
-	ADForest defaults to the value in $Env:USERDNSDOMAIN.
+	ADForest defaults to the value of $Env:USERDNSDOMAIN.
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
 	value for ComputerName.
 .EXAMPLE
-	PS C:\PSScript .\ADDS_Inventory_V2.ps1 -CompanyName "Sherlock Holmes Consulting"
+	PS C:\PSScript .\ADDS_Inventory_V2.ps1 -CompanyName "Sherlock Holmes 
+	Consulting"
 	-CoverPage Exposure -UserName "Dr. Watson"
 	-CompanyAddress "221B Baker Street, London, England"
 	-CompanyFax "+44 1753 276600"
@@ -525,15 +595,16 @@
 		Dr. Watson for the User Name.
 		221B Baker Street, London, England for the Company Address.
 		+44 1753 276600 for the Company Fax.
-		+44 1753 276200 for the Compnay Phone.
+		+44 1753 276200 for the Company Phone.
 
-	ADForest defaults to the value in $Env:USERDNSDOMAIN.
+	ADForest defaults to the value of $Env:USERDNSDOMAIN.
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
 	value for ComputerName.
 .EXAMPLE
-	PS C:\PSScript .\ADDS_Inventory_V2.ps1 -CompanyName "Sherlock Holmes Consulting"
+	PS C:\PSScript .\ADDS_Inventory_V2.ps1 -CompanyName "Sherlock Holmes 
+	Consulting"
 	-CoverPage Facet -UserName "Dr. Watson"
 	-CompanyEmail SuperSleuth@SherlockHolmes.com
 
@@ -541,39 +612,42 @@
 		Sherlock Holmes Consulting for the Company Name.
 		Facet for the Cover Page format.
 		Dr. Watson for the User Name.
-		SuperSleuth@SherlockHolmes.com for the Compnay Email.
+		SuperSleuth@SherlockHolmes.com for the Company Email.
 
-	ADForest defaults to the value in $Env:USERDNSDOMAIN.
+	ADForest defaults to the value of $Env:USERDNSDOMAIN.
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
 	value for ComputerName.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -ADForest company.tld -AddDateTime
 	
 	Will use all default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
-	$env:username = Administrator
+	$env:username = Administrator.
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 	company.tld for the AD Forest.
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
 	value for ComputerName.
 
 	Adds a date time stamp to the end of the file name.
-	Time stamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2016 at 6PM is 2016-06-01_1800.
-	Output filename will be company.tld_2016-06-01_1800.docx
+	The timestamp is in the format of yyyy-MM-dd_HHmm.
+	June 1, 2018 at 6PM is 2018-06-01_1800.
+	Output filename will be company.tld_2018-06-01_1800.docx.
 .EXAMPLE
-	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -PDF -ADForest corp.carlwebster.com -AddDateTime
+	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -PDF -ADForest corp.carlwebster.com 
+	-AddDateTime
 	
 	Will use all default values and save the document as a PDF file.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -582,19 +656,21 @@
 	Administrator for the User Name.
 	corp.carlwebster.com for the AD Forest.
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
 	value for ComputerName.
 
 	Adds a date time stamp to the end of the file name.
-	Time stamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2016 at 6PM is 2016-06-01_1800.
-	Output filename will be corp.carlwebster.com_2016-06-01_1800.PDF
+	The timestamp is in the format of yyyy-MM-dd_HHmm.
+	June 1, 2018 at 6PM is 2018-06-01_1800.
+	Output filename will be corp.carlwebster.com_2018-06-01_1800.PDF
 .EXAMPLE
-	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -ADForest corp.carlwebster.com -Folder \\FileServer\ShareName
+	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -ADForest corp.carlwebster.com 
+	-Folder \\FileServer\ShareName
 	
 	Will use all default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -603,16 +679,21 @@
 	Administrator for the User Name.
 	corp.carlwebster.com for the AD Forest.
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
 	value for ComputerName.
 	
-	Output file will be saved in the path \\FileServer\ShareName
+	The output file will be saved in the path \\FileServer\ShareName.
 .EXAMPLE
-	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -ADForest corp.carlwebster.com -SmtpServer mail.domain.tld -From XDAdmin@domain.tld -To ITGroup@domain.tld -ComputerName Server01
+	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -ADForest corp.carlwebster.com 
+	-SmtpServer mail.domain.tld 
+	-From XDAdmin@domain.tld 
+	-To ITGroup@domain.tld 
+	-ComputerName Server01
 	
 	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -621,21 +702,29 @@
 	Administrator for the User Name.
 	corp.carlwebster.com for the AD Forest.
 	
-	Script will be run remotely against server Server01.
+	The script will be run remotely against server Server01.
 	
-	Script will use the email server mail.domain.tld, sending from XDAdmin@domain.tld, sending to ITGroup@domain.tld.
-	Script will use the default SMPTP port 25 and will not use SSL.
-	If the current user's credentials are not valid to send email, the user will be prompted to enter valid credentials.
+	The script will use the email server mail.domain.tld, sending from XDAdmin@domain.tld, 
+	sending to ITGroup@domain.tld.
+	The script will use the default SMPTP port 25 and will not use SSL.
+	If the current user's credentials are not valid to send email, the user will be prompted 
+	to enter valid credentials.
 .EXAMPLE
-	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -ADForest corp.carlwebster.com -SmtpServer smtp.office365.com -SmtpPort 587 -UseSSL -From Webster@CarlWebster.com -To ITGroup@CarlWebster.com
+	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -ADForest corp.carlwebster.com 
+	-SmtpServer smtp.office365.com 
+	-SmtpPort 587 
+	-UseSSL 
+	-From Webster@CarlWebster.com 
+	-To ITGroup@CarlWebster.com
 	
 	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 	corp.carlwebster.com for the AD Forest
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
 	value for ComputerName.
 
@@ -643,13 +732,16 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 	
-	Script will use the email server smtp.office365.com on port 587 using SSL, sending from webster@carlwebster.com, sending to ITGroup@carlwebster.com.
-	If the current user's credentials are not valid to send email, the user will be prompted to enter valid credentials.
+	The script will use the email server smtp.office365.com on port 587 using SSL, sending from 
+	webster@carlwebster.com, sending to ITGroup@carlwebster.com.
+	If the current user's credentials are not valid to send email, the user will be prompted 
+	to enter valid credentials.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -Section Forest
 
 	Will use all default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -657,15 +749,16 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 
-	ADForest defaults to the value in $Env:USERDNSDOMAIN
+	ADForest defaults to the value of $Env:USERDNSDOMAIN
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
 	value for ComputerName.
 	
-	Report will include only the Forest section.
+	The report will include only the Forest section.
 .EXAMPLE
-	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -Section groups,misc -ADForest WebstersLab.com -ServerName PrimaryDC.websterslab.com
+	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -Section groups, misc 
+	-ADForest WebstersLab.com -ServerName PrimaryDC.websterslab.com
 
 	Will use all default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
@@ -679,7 +772,7 @@
 	WebstersLab.com for ADForest.
 	PrimaryDC.websterslab.com for ComputerName.
 	
-	Report will include only the Groups and Miscellaneous sections.
+	The report will include only the Groups and Miscellaneous sections.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -MaxDetails
 	
@@ -709,7 +802,7 @@
 	NAME: ADDS_Inventory_V2.ps1
 	VERSION: 2.16
 	AUTHOR: Carl Webster, Sr. Solutions Architect, Choice Solutions, LLC
-	LASTEDIT: November 25, 2017
+	LASTEDIT: November 27, 2017
 #>
 
 
@@ -961,12 +1054,12 @@ Param(
 #	Updated help text
 #
 #Version 2.16
-#	Adding checking for users with home drive set in Active Directory Users and Computers (ADUC)
-#		Added function OutputSHDUserInfo
-#	Adding checking for users with RDS home drive set in ADUC
+#	Add checking for users with home drive set in Active Directory Users and Computers (ADUC)
+#		Added function OutputHDUserInfo
+#	Add checking for users with RDS home drive set in ADUC
 #		Added function from Jeff Hicks Get-RDUserSetting
 #		Added function OutputRDSHDUserInfo
-#	Adding checking for users whose Primary Group isw not Domain Users
+#	Add checking for users whose Primary Group is not Domain Users
 #		Added function OutputPGUserInfo
 #	Add new parameter ADDomain to restrict report to a single domain in a multi-domain Forest
 #	Add schema extension checking for the following items and add to Forest section:
@@ -974,14 +1067,16 @@ Param(
 #		'msNPAllowDialin', #RAS Server
 #		'ms-Mcs-AdmPwd', #LAPS
 #		'ms-Mcs-AdmPwdExpirationTime', #LAPS
-#		'mS-SMS-Assignment-Site-Code', #SCCM
-#		'mS-SMS-Capabilities', #SCCM
-#		'msRTCSIP-UserRoutingGroupId', #Lync
-#		'msRTCSIP-MirrorBackEndServer' #Lync
+#		'ms-SMS-Assignment-Site-Code', #SCCM
+#		'ms-SMS-Capabilities', #SCCM
+#		'msRTCSIP-UserRoutingGroupId', #Lync/SfB
+#		'msRTCSIP-MirrorBackEndServer' #Lync/SfB
 #		'ms-exch-schema-version-pt' #Exchange
-#	Remove several large blocks of code that has been commented out
-#	Revise how $LinkedGPOs and $InheritedGPOs variables are set to work around invalid property name DisplayName when collection is empty
+#	Remove several large blocks of code that had been commented out
+#	Revise how $LinkedGPOs and $InheritedGPOs variables are set to work around invalid property 
+#		name DisplayName when collection is empty
 #	Updated Exchange schema versions
+#	Updated help text
 #	When run for a single domain in a multi-domain forest
 #		Revise gathering list of domains
 #		Revise testing for $ComputerName 
@@ -7707,8 +7802,8 @@ Function ProcessADSchemaItems
 		'msNPAllowDialin', #RAS Server
 		'ms-Mcs-AdmPwd', #LAPS
 		'ms-Mcs-AdmPwdExpirationTime', #LAPS
-		'mS-SMS-Assignment-Site-Code', #SCCM
-		'mS-SMS-Capabilities', #SCCM
+		'ms-SMS-Assignment-Site-Code', #SCCM
+		'ms-SMS-Capabilities', #SCCM
 		'msRTCSIP-UserRoutingGroupId', #Lync/SfB
 		'msRTCSIP-MirrorBackEndServer', #Lync/SfB
 		'ms-exch-schema-version-pt' #Exchange
@@ -7757,8 +7852,8 @@ Function ProcessADSchemaItems
 			'msNPAllowDialin'				{$tmp = "RAS Server"}
 			'ms-Mcs-AdmPwd'					{$tmp = "LAPS"}
 			'ms-Mcs-AdmPwdExpirationTime'	{$tmp = "LAPS"}
-			'mS-SMS-Assignment-Site-Code'	{$tmp = "SCCM"}
-			'mS-SMS-Capabilities'			{$tmp = "SCCM"}
+			'ms-SMS-Assignment-Site-Code'	{$tmp = "SCCM"}
+			'ms-SMS-Capabilities'			{$tmp = "SCCM"}
 			'msRTCSIP-UserRoutingGroupId'	{$tmp = "Lync/Skype for Business"}
 			'msRTCSIP-MirrorBackEndServer'	{$tmp = "Lync/Skype for Business"}
 			'ms-exch-schema-version-pt' 	{$tmp = "Exchange"}
@@ -11967,10 +12062,10 @@ Function ProcessGroupInformation
 				}
 			}
 
-			Write-Verbose "$(Get-Date): `t`tListing enterprise admins"
-			
 			If($Domain -eq $Script:ForestRootDomain)
 			{
+				Write-Verbose "$(Get-Date): `t`tListing enterprise admins"
+			
 				$Admins = Get-ADGroupMember -Identity $EnterpriseAdminsSID -Server $Domain -EA 0 
 				
 				If($? -and $Null -ne $Admins)
@@ -12343,10 +12438,10 @@ Function ProcessGroupInformation
 				}
 			}
 			
-			Write-Verbose "$(Get-Date): `t`tListing schema admins"
-			
 			If($Domain -eq $Script:ForestRootDomain)
 			{
+				Write-Verbose "$(Get-Date): `t`tListing schema admins"
+			
 				$Admins = Get-ADGroupMember -Identity $SchemaAdminsSID -Server $Domain -EA 0 
 				
 				If($? -and $Null -ne $Admins)
@@ -14374,6 +14469,57 @@ Function ProcessMiscDataByDomain
 					[int]$UserssWithSIDHistorycnt = 1
 				}
 
+				#2.16
+				Write-Verbose "$(Get-Date): `t`t`tAll users with Homedrive set in ADUC"
+				$HomeDriveUsers = $Users | Where {$_.HomeDrive -ne $Null}
+			
+				If($Null -eq $HomeDriveUsers)
+				{
+					[int]$UsersHomeDrivecnt = 0
+				}
+				ElseIf($HomeDriveUsers -is [array])
+				{
+					[int]$UsersHomeDrivecnt = $HomeDriveUsers.Count
+				}
+				Else
+				{
+					[int]$UsersHomeDrivecnt = 1
+				}
+				
+				#2.16
+				Write-Verbose "$(Get-Date): `t`t`tAll users whose Primary Group is not Domain Users"
+				$PrimaryGroupUsers = $Users | Where {$_.SamAccountName -ne 'Guest' -and $_.PrimaryGroup -notmatch 'Domain Users'}
+			
+				If($Null -eq $PrimaryGroupUsers)
+				{
+					[int]$UsersPrimaryGroupcnt = 0
+				}
+				ElseIf($PrimaryGroupUsers -is [array])
+				{
+					[int]$UsersPrimaryGroupcnt = $PrimaryGroupUsers.Count
+				}
+				Else
+				{
+					[int]$UsersPrimaryGroupcnt = 1
+				}
+
+				#2.16
+				Write-Verbose "$(Get-Date): `t`t`tAll users with RDS HomeDrive set in ADUC"
+				$RDSHomeDriveUsers = $users | Get-RDUserSetting | Where {$_.TerminalServicesHomeDrive -gt 0}
+			
+				If($Null -eq $RDSHomeDriveUsers)
+				{
+					[int]$UsersRDSHomeDrivecnt = 0
+				}
+				ElseIf($RDSHomeDriveUsers -is [array])
+				{
+					[int]$UsersRDSHomeDrivecnt = $RDSHomeDriveUsers.Count
+				}
+				Else
+				{
+					[int]$UsersRDSHomeDrivecnt = 1
+				}
+
 				#active users now
 				Write-Verbose "$(Get-Date): `t`t`tActive users"
 				$EnabledUsers = $Users | Where {$_.Enabled -eq $True}
@@ -14469,57 +14615,6 @@ Function ProcessMiscDataByDomain
 				Else
 				{
 					[int]$ActiveUserslastLogonTimestamp = 1
-				}
-
-				#2.16
-				Write-Verbose "$(Get-Date): `t`t`tHomeDrive users"
-				$HomeDriveUsers = $Users | Where {$_.HomeDrive -ne $Null}
-			
-				If($Null -eq $HomeDriveUsers)
-				{
-					[int]$UsersHomeDrivecnt = 0
-				}
-				ElseIf($HomeDriveUsers -is [array])
-				{
-					[int]$UsersHomeDrivecnt = $HomeDriveUsers.Count
-				}
-				Else
-				{
-					[int]$UsersHomeDrivecnt = 1
-				}
-				
-				#2.16
-				Write-Verbose "$(Get-Date): `t`t`tPrimaryGroup users"
-				$PrimaryGroupUsers = $Users | Where {$_.SamAccountName -ne 'Guest' -and $_.PrimaryGroup -notmatch 'Domain Users'}
-			
-				If($Null -eq $PrimaryGroupUsers)
-				{
-					[int]$UsersPrimaryGroupcnt = 0
-				}
-				ElseIf($PrimaryGroupUsers -is [array])
-				{
-					[int]$UsersPrimaryGroupcnt = $PrimaryGroupUsers.Count
-				}
-				Else
-				{
-					[int]$UsersPrimaryGroupcnt = 1
-				}
-
-				#2.16
-				Write-Verbose "$(Get-Date): `t`t`tRDS HomeDrive users"
-				$RDSHomeDriveUsers = $users | Get-RDUserSetting | Where {$_.TerminalServicesHomeDrive -gt 0}
-			
-				If($Null -eq $RDSHomeDriveUsers)
-				{
-					[int]$UsersRDSHomeDrivecnt = 0
-				}
-				ElseIf($RDSHomeDriveUsers -is [array])
-				{
-					[int]$UsersRDSHomeDrivecnt = $RDSHomeDriveUsers.Count
-				}
-				Else
-				{
-					[int]$UsersRDSHomeDrivecnt = 1
 				}
 			}
 			Else
@@ -15043,7 +15138,7 @@ Function ProcessMiscDataByDomain
 
 			If($UsersPrimaryGroupcnt -gt 0 -and $IncludeUserInfo -eq $True)
 			{
-				OutputPGUserInfo $PrimaryGroupUsers "All users with Primary Group not Domain Users"
+				OutputPGUserInfo $PrimaryGroupUsers "All users whose Primary Group is not Domain Users"
 			}
 
 			If($UsersRDSHomeDrivecnt -gt 0 -and $IncludeUserInfo -eq $True)
