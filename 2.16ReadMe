@@ -17,11 +17,17 @@
 #		'msRTCSIP-UserRoutingGroupId', #Lync/SfB
 #		'msRTCSIP-MirrorBackEndServer' #Lync/SfB
 #		'ms-exch-schema-version-pt' #Exchange
+#	Add "Site: " in front of Site name when listing Subnets, Servers, and Connection Objects
 #	Remove several large blocks of code that had been commented out
 #	Revise how $LinkedGPOs and $InheritedGPOs variables are set to work around invalid property 
 #		name DisplayName when collection is empty
+#	Sort Enabled Scopes in AD Optional Features
 #	Updated Exchange schema versions
 #	Updated help text
+#	When reporting on the domain controllers in the Forest, if unable to get data from a domain controller,
+#		instead of reporting "Unknown", use:
+#		Unable to retrieve Global Catalog status on <DCName>
+#		Unable to retrieve Read-only status on <DCName>
 #	When run for a single domain in a multi-domain forest
 #		Revise gathering list of domains
 #		Revise testing for $ComputerName 

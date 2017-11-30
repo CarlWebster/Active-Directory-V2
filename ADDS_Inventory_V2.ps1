@@ -802,7 +802,7 @@
 	NAME: ADDS_Inventory_V2.ps1
 	VERSION: 2.16
 	AUTHOR: Carl Webster, Sr. Solutions Architect, Choice Solutions, LLC
-	LASTEDIT: November 27, 2017
+	LASTEDIT: November 30, 2017
 #>
 
 
@@ -1072,11 +1072,17 @@ Param(
 #		'msRTCSIP-UserRoutingGroupId', #Lync/SfB
 #		'msRTCSIP-MirrorBackEndServer' #Lync/SfB
 #		'ms-exch-schema-version-pt' #Exchange
+#	Add "Site: " in front of Site name when listing Subnets, Servers, and Connection Objects
 #	Remove several large blocks of code that had been commented out
 #	Revise how $LinkedGPOs and $InheritedGPOs variables are set to work around invalid property 
 #		name DisplayName when collection is empty
+#	Sort Enabled Scopes in AD Optional Features
 #	Updated Exchange schema versions
 #	Updated help text
+#	When reporting on the domain controllers in the Forest, if unable to get data from a domain controller,
+#		instead of reporting "Unknown", use:
+#		Unable to retrieve Global Catalog status on <DCName>
+#		Unable to retrieve Read-only status on <DCName>
 #	When run for a single domain in a multi-domain forest
 #		Revise gathering list of domains
 #		Revise testing for $ComputerName 
@@ -7232,8 +7238,8 @@ Function ProcessAllDCsInTheForest
 				}
 				Else
 				{
-					$GC = "Unknown"
-					$ReadOnly = "Unknown"
+					$GC = "Unable to retrieve Global Catalog status on $DC"
+					$ReadOnly = "Unable to retrieve Read-only status on $DC"
 				}
 				
 				$WordTableRowHash += @{ 
@@ -7263,8 +7269,8 @@ Function ProcessAllDCsInTheForest
 				}
 				Else
 				{
-					Line 1 "Global Catalog`t: Unknown"
-					Line 1 "Read-only`t: Unknown"
+					Line 1 "Global Catalog`t: Unable to retrieve Global Catalog status on $DC"
+					Line 1 "Read-only`t: Unable to retrieve Read-only status on $DC"
 				}
 				Line 0 ""
 				$Results = $Null
@@ -7289,8 +7295,8 @@ Function ProcessAllDCsInTheForest
 				}
 				Else
 				{
-					$GC = "Unknown"
-					$ReadOnly = "Unknown"
+					$GC = "Unable to retrieve Global Catalog status on $DC"
+					$ReadOnly = "Unable to retrieve Read-only status on $DC"
 				}
 				
 				$rowdata += @(,($DC,$htmlwhite,
@@ -7643,6 +7649,7 @@ Function ProcessADOptionalFeatures
 			If($Item.EnabledScopes.Count -gt 0)
 			{
 				$Enabled = "Yes"
+				$EnabledScopes = $Item.EnabledScopes | Sort
 			}
 			
 			If($MSWORD -or $PDF)
@@ -7655,7 +7662,7 @@ Function ProcessADOptionalFeatures
 				{
 					
 					$cnt = 0
-					ForEach($Scope in $Item.EnabledScopes)
+					ForEach($Scope in $EnabledScopes)
 					{
 						$cnt++
 					
@@ -7697,7 +7704,7 @@ Function ProcessADOptionalFeatures
 					Line 1 "Enabled Scopes`t: " -NoNewLine
 					
 					$cnt = 0
-					ForEach($Scope in $Item.EnabledScopes)
+					ForEach($Scope in $EnabledScopes)
 					{
 						$cnt++
 					
@@ -7727,7 +7734,7 @@ Function ProcessADOptionalFeatures
 				{
 					
 					$cnt = 0
-					ForEach($Scope in $Item.EnabledScopes)
+					ForEach($Scope in $EnabledScopes)
 					{
 						$cnt++
 					
@@ -8148,7 +8155,7 @@ Function ProcessSiteInformation
 			ForEach($Site in $Sites)
 			{
 				Write-Verbose "$(Get-Date): `tProcessing site $($Site.Name)"
-				WriteWordLine 2 0 $Site.Name
+				WriteWordLine 2 0 "Site: " $Site.Name
 
 				WriteWordLine 3 0 "Subnets"
 				Write-Verbose "$(Get-Date): `t`tProcessing subnets"
@@ -8404,7 +8411,7 @@ Function ProcessSiteInformation
 			ForEach($Site in $Sites)
 			{
 				Write-Verbose "$(Get-Date): `tProcessing site $($Site.Name)"
-				Line 0 $Site.Name
+				Line 0 "Site: " $Site.Name
 
 				Line 1 "Subnets"
 				Write-Verbose "$(Get-Date): `t`tProcessing subnets"
@@ -8650,7 +8657,7 @@ Function ProcessSiteInformation
 			ForEach($Site in $Sites)
 			{
 				Write-Verbose "$(Get-Date): `tProcessing site $($Site.Name)"
-				WriteHTMLLine 2 0 $Site.Name
+				WriteHTMLLine 2 0 "Site: " $Site.Name
 
 				WriteHTMLLine 3 0 "Subnets"
 				Write-Verbose "$(Get-Date): `t`tProcessing subnets"
