@@ -12,6 +12,7 @@
 #		Added function OutputRDSHDUserInfo
 #	Add checking for users whose Primary Group is not Domain Users
 #		Added function OutputPGUserInfo
+#	Add "DC: " in fron tof the domain controller name, in text output, for domain controller information
 #	Add new parameter ADDomain to restrict report to a single domain in a multi-domain Forest
 #	Add schema extension checking for the following items and add to Forest section:
 #		'User-Account-Control', #Flags that control the behavior of a user account
@@ -28,6 +29,13 @@
 #	Revise how $LinkedGPOs and $InheritedGPOs variables are set to work around invalid property 
 #		name DisplayName when collection is empty
 #	Sort Enabled Scopes in AD Optional Features
+#	Text output changes to tabular data:
+#		Services
+#		Organizational Units
+#		Domain Admins
+#		Enterprise Admins
+#		Schema Admins
+#		Users with AdminCount=1
 #	Updated Exchange schema versions
 #	Updated help text
 #	When reporting on the domain controllers in the Forest, if unable to get data from a domain controller,
@@ -38,7 +46,7 @@
 #		Revise gathering list of domains
 #		Revise testing for $ComputerName 
 #		Revise variable $ADContext in Function ProcessAllDCsInTheForest
-
+#
 #Version 2.15 26-Jun-2017
 #	Added new parameter MaxDetails:
 #		This is the same as using the following parameters:

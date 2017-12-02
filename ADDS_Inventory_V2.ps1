@@ -802,7 +802,7 @@
 	NAME: ADDS_Inventory_V2.ps1
 	VERSION: 2.16
 	AUTHOR: Carl Webster, Sr. Solutions Architect, Choice Solutions, LLC
-	LASTEDIT: November 30, 2017
+	LASTEDIT: December 2, 2017
 #>
 
 
@@ -1061,6 +1061,7 @@ Param(
 #		Added function OutputRDSHDUserInfo
 #	Add checking for users whose Primary Group is not Domain Users
 #		Added function OutputPGUserInfo
+#	Add "DC: " in fron tof the domain controller name, in text output, for domain controller information
 #	Add new parameter ADDomain to restrict report to a single domain in a multi-domain Forest
 #	Add schema extension checking for the following items and add to Forest section:
 #		'User-Account-Control', #Flags that control the behavior of a user account
@@ -1077,6 +1078,13 @@ Param(
 #	Revise how $LinkedGPOs and $InheritedGPOs variables are set to work around invalid property 
 #		name DisplayName when collection is empty
 #	Sort Enabled Scopes in AD Optional Features
+#	Text output changes to tabular data:
+#		Services
+#		Organizational Units
+#		Domain Admins
+#		Enterprise Admins
+#		Schema Admins
+#		Users with AdminCount=1
 #	Updated Exchange schema versions
 #	Updated help text
 #	When reporting on the domain controllers in the Forest, if unable to get data from a domain controller,
@@ -2670,6 +2678,20 @@ Function GetComputerServices
 		{
 			Line 0 "Services ($NumServices Services found)"
 			Line 0 ""
+			
+			#V2.16 addition
+			[int]$MaxDisplayNameLength = ($Services.DisplayName | Measure-Object -Maximum -Property Length).Maximum
+			If($MaxDisplayNameLength -gt 12) #12 is length of "Display Name"
+			{
+				#10 is length of "Display Name" minus 2 to allow for spacing between columns
+				Line 1 ("Display Name" + (' ' * ($MaxDisplayNameLength - 10))) -NoNewLine
+			}
+			Else
+			{
+				Line 1 "Display Name " -NoNewLine
+			}
+			Line 1 "Status  " -NoNewLine
+			Line 1 "Startup Type"
 		}
 		ElseIf($HTML)
 		{
@@ -2703,10 +2725,24 @@ Function GetComputerServices
 			}
 			ElseIf($Text)
 			{
-				Line 0 "Display Name`t: " $Service.DisplayName
-				Line 0 "Status`t`t: " $Service.State
-				Line 0 "Start Mode`t: " $Service.StartMode
-				Line 0 ""
+				#Line 0 "Display Name`t: " $Service.DisplayName
+				#Line 0 "Status`t`t: " $Service.State
+				#Line 0 "Start Mode`t: " $Service.StartMode
+				#Line 0 ""
+				
+				#V2.16 change
+				If(($Service.DisplayName).Length -lt ($MaxDisplayNameLength))
+				{
+					[int]$NumOfSpaces = (($MaxDisplayNameLength) - ($Service.DisplayName.Length)) + 2 #+2 to allow for column spacing
+					$tmp1 = ($($Service.DisplayName) + (' ' * $NumOfSPaces))
+					Line 1 $tmp1 -NoNewLine
+				}
+				Else
+				{
+					Line 1 "$($Service.DisplayName)  " -NoNewLine
+				}
+				Line 1 "$($Service.State) " -NoNewLine
+				Line 1 $Service.StartMode
 			}
 			ElseIf($HTML)
 			{
@@ -2746,7 +2782,8 @@ Function GetComputerServices
 		}
 		ElseIf($Text)
 		{
-			#nothing to do
+			#V2.16 change
+			Line 0 ""
 		}
 		ElseIf($HTML)
 		{
@@ -10496,7 +10533,7 @@ Function ProcessDomainControllers
 		}
 		ElseIf($Text)
 		{
-			Line 0 $DC.Name
+			Line 0 "DC: " $DC.Name
 			Line 1 "Default partition`t`t: " $DC.DefaultPartition
 			Line 1 "Domain`t`t`t`t: " $DC.domain
 			If($DC.Enabled -eq $True)
@@ -11262,6 +11299,23 @@ Function ProcessOrganizationalUnits
 				{
 					[int]$NumOUs = 1
 				}
+				#V2.16 addition
+				[int]$MaxOUNameLength = ($OUs.CanonicalName.SubString($OUs[0].CanonicalName.IndexOf("/")+1) | measure-object -maximum -property length).maximum
+				
+				If($MaxOUNameLength -gt 4) #4 is length of "Name"
+				{
+					#2 is length of "Name" minus 2 to allow for spacing between columns
+					Line 1 ("Name" + (' ' * ($MaxOUNameLength - 2))) -NoNewLine
+					Line 0 "Created                Protected # Users # Computers # Groups"
+					Line 1 ('=' * $MaxOUNameLength) -NoNewLine
+					Line 0 "==============================================================="
+				}
+				Else
+				{
+					Line 1 "Name  Created                Protected # Users # Computers # Groups"
+					Line 1 "==================================================================="
+				}
+
 				ForEach($OU in $OUs)
 				{
 					$OUCount++
@@ -11316,8 +11370,6 @@ Function ProcessOrganizationalUnits
 						$GroupCount = 1
 					}
 					
-					Line 1 "Name`t`t: " $OUDisplayName
-					Line 1 "Created`t`t: " $OU.Created.ToString()
 					If($OU.ProtectedFromAccidentalDeletion -eq $True)
 					{
 						$tmp = "Yes"
@@ -11326,22 +11378,27 @@ Function ProcessOrganizationalUnits
 					{
 						$tmp = "No"
 					}
-					Line 1 "Protected`t: " $tmp
-					
 					[string]$UserCountStr = "{0,7:N0}" -f $UserCount
-					[string]$ComputerCountStr = "{0,7:N0}" -f $ComputerCount
+					[string]$ComputerCountStr = "{0,11:N0}" -f $ComputerCount
 					[string]$GroupCountStr = "{0,7:N0}" -f $GroupCount
 
-					Line 1 "# Users`t`t: " $UserCountStr
-					Line 1 "# Computers`t: " $ComputerCountStr
-					Line 1 "# Groups`t: " $GroupCountStr
-					Line 0 ""
+					#V2.16 change
+					If(($OUDisplayName).Length -lt ($MaxOUNameLength))
+					{
+						[int]$NumOfSpaces = ($MaxOUNameLength * -1) 
+					}
+                    Else
+                    {
+                        [int]$NumOfSpaces = -4
+                    }
+					Line 1 ( "{0,$NumOfSpaces}  {1,-22} {2,-9} {3,-7} {4,-12} {5,-7}" -f $OUDisplayName,$OU.Created.ToString(),$tmp,$UserCountStr,$ComputerCountStr,$GroupCountStr)
 
 					$Results = $Null
 					$UserCountStr = $Null
 					$ComputerCountStr = $Null
 					$GroupCountStr = $Null
 				}
+				Line 0 ""
 				$Results = $Null
 				$UserCountStr = $Null
 				$ComputerCountStr = $Null
@@ -11926,7 +11983,12 @@ Function ProcessGroupInformation
 				ElseIf($Text)
 				{
 					Line 0 "Privileged Groups"
-					Line 1 "Domain Admins ($($AdminsCountStr) members):"
+					Line 1 "Domain Admins ($AdminsCountStr members):"
+					#V2.16 addition
+					Line 2 "                                                   Password    Password          "
+					Line 2 "                                                   Last        Never      Account"
+					Line 2 "Name                                               Changed     Expires    Enabled"
+					Line 2 "================================================================================="
 					ForEach($Admin in $Admins)
 					{
 						$User = Get-ADUser -Identity $Admin.SID -Server $Domain -Properties PasswordLastSet, Enabled, PasswordNeverExpires -EA 0
@@ -11957,20 +12019,16 @@ Function ProcessGroupInformation
 							{
 								$UserEnabled = "False"
 							}
-							Line 2 "Name`t`t`t`t: " $User.Name
-							Line 2 "Password Last Changed`t`t: " $PasswordLastSet
-							Line 2 "Password Never Expires`t`t: " $PasswordNeverExpires
-							Line 2 "Account Enabled`t`t`t: " $UserEnabled
+							#V2.16 change
+							Line 2 ( "{0,-50} {1,-11} {2,-10} {3,-5}" -f $User.Name,$PasswordLastSet,$PasswordNeverExpires,$UserEnabled)
 						}
 						Else
 						{
-							Line 2 "Name`t`t`t`t: " $Admin.SID
-							Line 2 "Password Last Changed`t`t: Unknown"
-							Line 2 "Password Never Expires`t`t: Unknown"
-							Line 2 "Account Enabled`t`t`t: Unknown"						
+							#V2.16 change
+							Line 2 ( "{0,-50} {1,-11} {2,-10} {3,-5}" -f $Admin.SID,"Unknown","Unknown","Unknown")
 						}
-						Line 0 ""
 					}
+					Line 0 ""
 				}
 				ElseIf($HTML)
 				{
@@ -12231,7 +12289,12 @@ Function ProcessGroupInformation
 					}
 					ElseIf($Text)
 					{
-						Line 1 "Enterprise Admins ($($AdminsCountStr) members):"
+						Line 1 "Enterprise Admins ($AdminsCountStr members):"
+						#V2.16 addition
+						Line 2 "                                                                              Password   Password          "
+						Line 2 "                                                                              Last       Never      Account"
+						Line 2 "Name                                                Domain                    Changed    Expires    Enabled"
+						Line 2 "==========================================================================================================="
 						ForEach($Admin in $Admins)
 						{
 							$xArray = $Admin.DistinguishedName.Split(",")
@@ -12280,31 +12343,22 @@ Function ProcessGroupInformation
 									{
 										$PasswordLastSet = (get-date $User.PasswordLastSet -f d)
 									}
-									Line 2 "Name`t`t`t`t: " $User.Name
-									Line 2 "Domain`t`t`t`t: " $xServer
-									Line 2 "Password Last Changed`t`t: " $PasswordLastSet
-									Line 2 "Password Never Expires`t`t: " $User.PasswordNeverExpires.ToString()
-									Line 2 "Account Enabled`t`t`t: " $User.Enabled.ToString()
+									#V2.16 change
+									Line 2 ( "{0,-50}  {1,-25} {2,-10} {3,-10} {4,-5}" -f $User.Name,$xServer,$PasswordLastSet,$User.PasswordNeverExpires.ToString(),$User.Enabled.ToString())
 								}
 								ElseIf($Admin.ObjectClass -eq 'group')
 								{
-									Line 2 "Name`t`t`t`t: $($User.Name) (group)"
-									Line 2 "Domain`t`t`t`t: " $xServer
-									Line 2 "Password Last Changed`t`t: N/A" 
-									Line 2 "Password Never Expires`t`t: N/A" 
-									Line 2 "Account Enabled`t`t`t: N/A" 
+									#V2.16 change
+									Line 2 ( "{0,-43} (group) {1,-25} {2,-10} {3,-10} {4,-5}" -f $User.Name,$xServer,"N/A","N/A","N/A")
 								}
 							}
 							Else
 							{
-								Line 2 "Name`t`t`t`t: " $Admin.SID.Value
-								Line 2 "Domain`t`t`t`t: " $xServer
-								Line 2 "Password Last Changed`t`t: Unknown"
-								Line 2 "Password Never Expires`t`t: Unknown"
-								Line 2 "Account Enabled`t`t`t: Unknown"
+								#v2.16 change
+								Line 2 ( "{0,-50} {1,-25} {2,-10} {3,-10} {4,-5}" -f $Admin.SID.Value,$xServer,"Unknown","Unknown","Unknown")
 							}
-							Line 0 ""
 						}
+						Line 0 ""
 					}
 					ElseIf($HTML)
 					{
@@ -12609,6 +12663,11 @@ Function ProcessGroupInformation
 					ElseIf($Text)
 					{
 						Line 1 "Schema Admins ($($AdminsCountStr) members): "
+						#V2.16 addition
+						Line 2 "                                                                              Password   Password          "
+						Line 2 "                                                                              Last       Never      Account"
+						Line 2 "Name                                                Domain                    Changed    Expires    Enabled"
+						Line 2 "==========================================================================================================="
 						ForEach($Admin in $Admins)
 						{
 							$xArray = $Admin.DistinguishedName.Split(",")
@@ -12657,32 +12716,22 @@ Function ProcessGroupInformation
 									{
 										$PasswordLastSet = (get-date $User.PasswordLastSet -f d)
 									}
-									Line 2 "Name`t`t`t`t: " $User.Name
-									Line 2 "Domain`t`t`t`t: " $xServer
-									Line 2 "Password Last Changed`t`t: " $PasswordLastSet
-									Line 2 "Password Never Expires`t`t: " $User.PasswordNeverExpires.ToString()
-									Line 2 "Account Enabled`t`t`t: " $User.Enabled.ToString()
+									#V2.16 change
+									Line 2 ( "{0,-50}  {1,-25} {2,-10} {3,-10} {4,-5}" -f $User.Name,$xServer,$PasswordLastSet,$User.PasswordNeverExpires.ToString(),$User.Enabled.ToString())
 								}
 								ElseIf($Admin.ObjectClass -eq 'group')
 								{
-									Line 2 "Name`t`t`t`t: $($User.Name) (group)"
-									Line 2 "Domain`t`t`t`t: " $xServer
-									Line 2 "Password Last Changed`t`t: N/A" 
-									Line 2 "Password Never Expires`t`t: N/A" 
-									Line 2 "Account Enabled`t`t`t: N/A" 
+									#V2.16 change
+									Line 2 ( "{0,-43} (group) {1,-25} {2,-10} {3,-10} {4,-5}" -f $User.Name,$xServer,"N/A","N/A","N/A")
 								}
-								
 							}
 							Else
 							{
-								Line 2 "Name`t`t`t`t: " $Admin.SID.Value
-								Line 2 "Domain`t`t`t`t: " $xServer
-								Line 2 "Password Last Changed`t`t: Unknown"
-								Line 2 "Password Never Expires`t`t: Unknown"
-								Line 2 "Account Enabled`t`t`t: Unknown"
+								#v2.16 change
+								Line 2 ( "{0,-50} {1,-25} {2,-10} {3,-10} {4,-5}" -f $Admin.SID.Value,$xServer,"Unknown","Unknown","Unknown")
 							}
-							Line 0 ""
 						}
+						Line 0 ""
 					}
 					ElseIf($HTML)
 					{
@@ -12824,7 +12873,7 @@ Function ProcessGroupInformation
 			}
 
 			#http://www.shariqsheikh.com/blog/index.php/200908/use-powershell-to-look-up-admincount-from-adminsdholder-and-sdprop/		
-			Write-Verbose "$(Get-Date): `t`tListing users with AdminCount = 1"
+			Write-Verbose "$(Get-Date): `t`tListing users with AdminCount=1"
 			$AdminCounts = Get-ADUser -LDAPFilter "(admincount=1)"  -Server $Domain -EA 0 
 			
 			If($? -and $Null -ne $AdminCounts)
@@ -12842,7 +12891,7 @@ Function ProcessGroupInformation
 				
 				If($MSWORD -or $PDF)
 				{
-					WriteWordLine 4 0 "Users with AdminCount=1 ($($AdminsCountStr) users):"
+					WriteWordLine 4 0 "Users with AdminCount=1 ($AdminsCountStr users):"
 					$TableRange = $Script:doc.Application.Selection.Range
 					[int]$Columns = 4
 					[int]$Rows = $AdminCounts.Count + 1
@@ -12935,7 +12984,12 @@ Function ProcessGroupInformation
 				}
 				ElseIf($Text)
 				{
-					Line 1 "Users with AdminCount=1 ($($AdminsCountStr) users):"
+					Line 1 "Users with AdminCount=1 ($AdminsCountStr users):"
+					#V2.16 addition
+					Line 2 "                                                   Password   Password          "
+					Line 2 "                                                   Last       Never      Account"
+					Line 2 "Name                                               Changed    Expires    Enabled"
+					Line 2 "================================================================================"
 					ForEach($Admin in $AdminCounts)
 					{
 						$User = Get-ADUser -Identity $Admin.SID -Server $Domain `
@@ -12967,20 +13021,24 @@ Function ProcessGroupInformation
 							{
 								$UserEnabled = "False"
 							}
-							Line 2 "Name`t`t`t`t: " $User.Name
-							Line 2 "Password Last Changed`t`t: " $PasswordLastSet
-							Line 2 "Password Never Expires`t`t: " $PasswordNeverExpires
-							Line 2 "Account Enabled`t`t`t: " $UserEnabled
+							#V2.16 change
+							#Line 2 "Name`t`t`t`t: " $User.Name
+							#Line 2 "Password Last Changed`t`t: " $PasswordLastSet
+							#Line 2 "Password Never Expires`t`t: " $PasswordNeverExpires
+							#Line 2 "Account Enabled`t`t`t: " $UserEnabled
+							Line 2 ( "{0,-50} {1,-10} {2,-10} {3,-5}" -f $User.Name,$PasswordLastSet,$PasswordNeverExpires,$UserEnabled)
 						}
 						Else
 						{
-							Line 2 "Name`t`t`t`t: " $Admin.SID
-							Line 2 "Password Last Changed`t`t: Unknown"
-							Line 2 "Password Never Expires`t`t: Unknown"
-							Line 2 "Account Enabled`t`t`t: Unknown"						
+							#V2.16 change
+							#Line 2 "Name`t`t`t`t: " $Admin.SID
+							#Line 2 "Password Last Changed`t`t: Unknown"
+							#Line 2 "Password Never Expires`t`t: Unknown"
+							#Line 2 "Account Enabled`t`t`t: Unknown"						
+							Line 2 ( "{0,-50} {1,-10} {2,-10} {3,-5}" -f $Admin.SID,"Unknown","Unknown","Unknown")
 						}
-						Line 0 ""
 					}
+					Line 0 ""
 				}
 				ElseIf($HTML)
 				{
@@ -14918,7 +14976,7 @@ Function ProcessMiscDataByDomain
 
 				[single]$pct = (($UsersHomeDrivecnt / $UsersCount)*100)
 				$pctstr = "{0,5:N2}" -f $pct
-				Line 1 "With HomeDrive`t: $($UsersHomeDriveStr)`t$($pctstr)% of Total Users"
+				Line 1 "With HomeDrive`t`t: $($UsersHomeDriveStr)`t$($pctstr)% of Total Users"
 
 				[single]$pct = (($UsersPrimaryGroupcnt / $UsersCount)*100)
 				$pctstr = "{0,5:N2}" -f $pct
