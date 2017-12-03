@@ -4,7 +4,7 @@
 #@carlwebster on Twitter
 #http://www.CarlWebster.com
 
-#Version 2.16
+#Version 2.16 4-Dec-2017
 #	Add checking for users with home drive set in Active Directory Users and Computers (ADUC)
 #		Added function OutputHDUserInfo
 #	Add checking for users with RDS home drive set in ADUC
@@ -30,6 +30,8 @@
 #		name DisplayName when collection is empty
 #	Sort Enabled Scopes in AD Optional Features
 #	Text output changes to tabular data:
+#		Domain Controllers (in Forest section)
+#		AD Schema Items (in Forest section)
 #		Services
 #		Organizational Units
 #		Domain Admins
@@ -46,7 +48,7 @@
 #		Revise gathering list of domains
 #		Revise testing for $ComputerName 
 #		Revise variable $ADContext in Function ProcessAllDCsInTheForest
-#
+
 #Version 2.15 26-Jun-2017
 #	Added new parameter MaxDetails:
 #		This is the same as using the following parameters:

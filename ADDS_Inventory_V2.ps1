@@ -801,8 +801,8 @@
 .NOTES
 	NAME: ADDS_Inventory_V2.ps1
 	VERSION: 2.16
-	AUTHOR: Carl Webster, Sr. Solutions Architect, Choice Solutions, LLC
-	LASTEDIT: December 2, 2017
+	AUTHOR: Carl Webster, Sr. Solutions Architect, Choice Solutions, LLC and Michael B. Smith
+	LASTEDIT: December 3, 2017
 #>
 
 
@@ -1053,7 +1053,7 @@ Param(
 #	Updated Function UpdateDocumentProperties for the new Cover Page properties and Parameters
 #	Updated help text
 #
-#Version 2.16
+#Version 2.16 4-Dec-2017
 #	Add checking for users with home drive set in Active Directory Users and Computers (ADUC)
 #		Added function OutputHDUserInfo
 #	Add checking for users with RDS home drive set in ADUC
@@ -1079,6 +1079,8 @@ Param(
 #		name DisplayName when collection is empty
 #	Sort Enabled Scopes in AD Optional Features
 #	Text output changes to tabular data:
+#		Domain Controllers (in Forest section)
+#		AD Schema Items (in Forest section)
 #		Services
 #		Organizational Units
 #		Domain Admins
@@ -6385,7 +6387,6 @@ Function ProcessScriptSetup
 			$Script:ComputerName = $Results
 			Write-Verbose "$(Get-Date): Server name has been renamed from $Env:USERDNSDOMAIN to $ComputerName"
 		}
-		#ElseIf(!$? -and $Null -eq $Results)
 		ElseIf(!$?) #changed for 2.16
 		{
 			#may be in a child domain where -Service GlobalCatalog doesn't work. Try PrimaryDC
@@ -6641,8 +6642,6 @@ Function ProcessForestInformation
 				$tmpDomains2 += "$($Domain.ToString())"
 			}
 		}
-		
-		#$Script:Domains = $tmpDomains
 	}
 	Else
 	{
@@ -7275,8 +7274,8 @@ Function ProcessAllDCsInTheForest
 				}
 				Else
 				{
-					$GC = "Unable to retrieve Global Catalog status on $DC"
-					$ReadOnly = "Unable to retrieve Read-only status on $DC"
+					$GC = "Unable to retrieve status"
+					$ReadOnly = "Unable to retrieve status"
 				}
 				
 				$WordTableRowHash += @{ 
@@ -7290,28 +7289,56 @@ Function ProcessAllDCsInTheForest
 		}
 		ElseIf($Text)
 		{
+			#V2.16 addition
+			[int]$MaxDCNameLength = ($AllDCs | Measure-Object -Maximum -Property Length).Maximum
+			
+			If($MaxDCNameLength -gt 4) #4 is length of "Name"
+			{
+				#2 is to allow for spacing between columns
+				Line 1 ("Name" + (' ' * ($MaxDCNameLength - 2))) -NoNewLine
+				Line 0 "Global Catalog            Read-only                "
+				Line 1 ('=' * $MaxDCNameLength) -NoNewLine
+				Line 0 "====================================================="
+			}
+			Else
+			{
+				Line 1 "Name  Global Catalog            Read-only                "
+				Line 1 "==========================================================="
+			}
+			
 			ForEach($DC in $AllDCs)
 			{
 				Write-Verbose "$(Get-Date): `t`t`t$DC"
 				$DCName = $DC.SubString(0,$DC.IndexOf("."))
 				$SrvName = $DC.SubString($DC.IndexOf(".")+1)
-				Line 1 "Name`t`t: " $DC
 				
 				$Results = Get-ADDomainController -Identity $DCName -Server $SrvName -EA 0
 				
+				#V2.16 change
 				If($? -and $Null -ne $Results)
 				{
-					Line 1 "Global Catalog`t: " $Results.IsGlobalCatalog.ToString()
-					Line 1 "Read-only`t: " $Results.IsReadOnly.ToString()
+					$xGC = $Results.IsGlobalCatalog.ToString()
+					$xRO = $Results.IsReadOnly.ToString()
 				}
 				Else
 				{
-					Line 1 "Global Catalog`t: Unable to retrieve Global Catalog status on $DC"
-					Line 1 "Read-only`t: Unable to retrieve Read-only status on $DC"
+					$xGC = "Unable to retrieve status"
+					$xRO = "Unable to retrieve status"
 				}
-				Line 0 ""
+
+				If(($DC).Length -lt ($MaxDCNameLength))
+				{
+					[int]$NumOfSpaces = ($MaxDCNameLength * -1) 
+				}
+				Else
+				{
+					[int]$NumOfSpaces = -4
+				}
+				Line 1 ( "{0,$NumOfSpaces}  {1,-25} {2,-25}" -f $DC,$xGC,$xRO)
+
 				$Results = $Null
 			}
+			Line 0 ""
 		}
 		ElseIf($HTML)
 		{
@@ -7332,8 +7359,8 @@ Function ProcessAllDCsInTheForest
 				}
 				Else
 				{
-					$GC = "Unable to retrieve Global Catalog status on $DC"
-					$ReadOnly = "Unable to retrieve Read-only status on $DC"
+					$GC = "Unable to retrieve status"
+					$ReadOnly = "Unable to retrieve status"
 				}
 				
 				$rowdata += @(,($DC,$htmlwhite,
@@ -7955,6 +7982,12 @@ Function ProcessADSchemaItems
 		$Table.Cell($xRow,3).Range.Text = "Used for"
 		
 	}
+	ElseIf($Text)
+	{
+		#V2.16 change
+		Line 1 "Schema item name                Present      Used for                                         "
+		Line 1 "=============================================================================================="
+	}
 	ElseIf($HTML)
 	{
 		$rowdata = @()
@@ -7977,10 +8010,8 @@ Function ProcessADSchemaItems
 		}
 		ElseIf($Text)
 		{
-			Line 1 "Schema item name: " $Item.ItemName
-			Line 1 "Present`t`t: " $Item.ItemState
-			Line 1 "Used for`t: " $Item.ItemDesc
-			Line 0 ""
+			#V2.16 change
+			Line 1 ( "{0,-30}  {1,-11}  {2,-50}" -f $Item.ItemName,$Item.ItemState,$Item.ItemDesc)
 		}
 		ElseIf($HTML)
 		{
@@ -8017,6 +8048,11 @@ Function ProcessADSchemaItems
 		WriteWordLine 0 0 ""
 		$TableRange = $Null
 		$Table = $Null
+	}
+	ElseIf($Text)
+	{
+		#V2.16 change
+		Line 0 ""
 	}
 	ElseIf($HTML)
 	{
@@ -11304,7 +11340,7 @@ Function ProcessOrganizationalUnits
 				
 				If($MaxOUNameLength -gt 4) #4 is length of "Name"
 				{
-					#2 is length of "Name" minus 2 to allow for spacing between columns
+					#2 is to allow for spacing between columns
 					Line 1 ("Name" + (' ' * ($MaxOUNameLength - 2))) -NoNewLine
 					Line 0 "Created                Protected # Users # Computers # Groups"
 					Line 1 ('=' * $MaxOUNameLength) -NoNewLine
@@ -13022,19 +13058,11 @@ Function ProcessGroupInformation
 								$UserEnabled = "False"
 							}
 							#V2.16 change
-							#Line 2 "Name`t`t`t`t: " $User.Name
-							#Line 2 "Password Last Changed`t`t: " $PasswordLastSet
-							#Line 2 "Password Never Expires`t`t: " $PasswordNeverExpires
-							#Line 2 "Account Enabled`t`t`t: " $UserEnabled
 							Line 2 ( "{0,-50} {1,-10} {2,-10} {3,-5}" -f $User.Name,$PasswordLastSet,$PasswordNeverExpires,$UserEnabled)
 						}
 						Else
 						{
 							#V2.16 change
-							#Line 2 "Name`t`t`t`t: " $Admin.SID
-							#Line 2 "Password Last Changed`t`t: Unknown"
-							#Line 2 "Password Never Expires`t`t: Unknown"
-							#Line 2 "Account Enabled`t`t`t: Unknown"						
 							Line 2 ( "{0,-50} {1,-10} {2,-10} {3,-5}" -f $Admin.SID,"Unknown","Unknown","Unknown")
 						}
 					}
@@ -13997,8 +14025,6 @@ Function ProcessgGPOsByOUNew
 					
 					#change for 2.16
 					#work around invalid property DisplayName when the gpolinks and inheritedgpolinks collections are empty
-					#$LinkedGPOs = (Get-GPInheritance -target $OU.DistinguishedName -EA 0).gpolinks.DisplayName
-					#$InheritedGPOs = (Get-GPInheritance -target $OU.DistinguishedName -EA 0).inheritedgpolinks.DisplayName
 					
 					$Results = Get-GPInheritance -target $OU.DistinguishedName -EA 0
 					
@@ -14231,26 +14257,20 @@ Function Get-RDUserSetting
 	 
 	Begin 
 	{
-		#Write-Verbose "Starting $($MyInvocation.MyCommand)"
-		#Write-Verbose ($PSBoundParameters | Out-String)
 		#remote desktop properties
 		$TSSettings = @("TerminalServicesProfilePath","TerminalServicesHomeDirectory","TerminalServicesHomeDrive")
 	}
 	 
 	Process 
 	{
-		#Write-Verbose "Using parameter set $($PSCmdlet.ParameterSetName)"
 		Switch ($PSCmdlet.ParameterSetName) 
 		{
 			"SAM" 
 			{
-				#Write-Verbose "Retrieving distinguishedname for $samAccountname"
 				$searcher = New-Object DirectoryServices.DirectorySearcher
 				$searcher.Filter = "(&(objectcategory=person)(objectclass=user)(samAccountname=$sAMAccountname))"
-				#Write-Verbose $searcher.filter
 				If($SearchRoot) 
 				{
-					#Write-Verbose "Searching from $SearchRoot"
 					If($Server) 
 					{
 						$searchPath = "LDAP://$server/$SearchRoot"
@@ -14267,10 +14287,8 @@ Function Get-RDUserSetting
 			} 
 			"DN" 
 			{
-				#Write-Verbose "Processing $DistinguishedName"
 				If($server) 
 				{
-					#Write-Verbose "Connecting to $Server"
 					[ADSI]$User = "LDAP://$Server/$DistinguishedName"
 				}
 				Else 
@@ -14302,19 +14320,19 @@ Function Get-RDUserSetting
 			}
 			Catch 
 			{
-				#Write-Warning "Failed to retrieve remote desktop settings for $Distinguishedname. $($_.exception.message)"
+				#nothing
 			}
 		} #if user found
 		Else 
 		{
-			#Write-Warning "Failed to find user $DistinguishedName. $($_.exception.message)"
+			#nothing
 		}
 	 
 	} #Process
 	 
 	End 
 	{
-		#Write-Verbose "Ending $($MyInvocation.MyCommand)"
+		#nothing
 	} #End
  
 } #end function
