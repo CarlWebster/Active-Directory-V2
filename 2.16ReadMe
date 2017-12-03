@@ -1,0 +1,44 @@
+#Version 2.16 4-Dec-2017
+#	Add checking for users with home drive set in Active Directory Users and Computers (ADUC)
+#		Added function OutputHDUserInfo
+#	Add checking for users with RDS home drive set in ADUC
+#		Added function from Jeff Hicks Get-RDUserSetting
+#		Added function OutputRDSHDUserInfo
+#	Add checking for users whose Primary Group is not Domain Users
+#		Added function OutputPGUserInfo
+#	Add "DC: " in fron tof the domain controller name, in text output, for domain controller information
+#	Add new parameter ADDomain to restrict report to a single domain in a multi-domain Forest
+#	Add schema extension checking for the following items and add to Forest section:
+#		'User-Account-Control', #Flags that control the behavior of a user account
+#		'msNPAllowDialin', #RAS Server
+#		'ms-Mcs-AdmPwd', #LAPS
+#		'ms-Mcs-AdmPwdExpirationTime', #LAPS
+#		'ms-SMS-Assignment-Site-Code', #SCCM
+#		'ms-SMS-Capabilities', #SCCM
+#		'msRTCSIP-UserRoutingGroupId', #Lync/SfB
+#		'msRTCSIP-MirrorBackEndServer' #Lync/SfB
+#		'ms-exch-schema-version-pt' #Exchange
+#	Add "Site: " in front of Site name when listing Subnets, Servers, and Connection Objects
+#	Remove several large blocks of code that had been commented out
+#	Revise how $LinkedGPOs and $InheritedGPOs variables are set to work around invalid property 
+#		name DisplayName when collection is empty
+#	Sort Enabled Scopes in AD Optional Features
+#	Text output changes to tabular data:
+#		Domain Controllers (in Forest section)
+#		AD Schema Items (in Forest section)
+#		Services
+#		Organizational Units
+#		Domain Admins
+#		Enterprise Admins
+#		Schema Admins
+#		Users with AdminCount=1
+#	Updated Exchange schema versions
+#	Updated help text
+#	When reporting on the domain controllers in the Forest, if unable to get data from a domain controller,
+#		instead of reporting "Unknown", use:
+#		Unable to retrieve Global Catalog status on <DCName>
+#		Unable to retrieve Read-only status on <DCName>
+#	When run for a single domain in a multi-domain forest
+#		Revise gathering list of domains
+#		Revise testing for $ComputerName 
+#		Revise variable $ADContext in Function ProcessAllDCsInTheForest

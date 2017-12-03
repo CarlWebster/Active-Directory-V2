@@ -7,8 +7,8 @@
 .SYNOPSIS
 	Creates a complete inventory of a Microsoft Active Directory Forest.
 .DESCRIPTION
-	Creates a complete inventory of a Microsoft Active Directory Forest using Microsoft PowerShell, 
-	Word, plain text or HTML.
+	Creates a complete inventory of a Microsoft Active Directory Forest using Microsoft 
+	PowerShell, Word, plain text or HTML.
 	
 	Creates a Word or PDF document, text or HTML file named after the Active Directory Forest.
 	
@@ -27,7 +27,7 @@
 		Spanish
 		Swedish
 
-	Script requires at least PowerShell version 3 but runs best in version 5.
+	The script requires at least PowerShell version 3 but runs best in version 5.
 
 	Word is NOT needed to run the script. This script will output in Text and HTML.
 	
@@ -39,9 +39,9 @@
 	The Hardware and Services parameters require domain admin privileges.  
 	
 	Version 2.0 of the script adds gathering information on Time Server and AD database, 
-	logfile and SYSVOL locations. Those require access to the registry on each domain controller, 
-	which means the script should now always be run from an elevated PowerShell session with an
-	account with a minimum of domain admin rights.
+	log file, and SYSVOL locations. Those require access to the registry on each domain 
+	controller, which means the script should now always be run from an elevated PowerShell 
+	session with an account with a minimum of domain admin rights.
 	
 	Running the script in a forest with multiple domains requires Enterprise Admin rights.
 
@@ -98,15 +98,16 @@
 	This parameter has an alias of CF.
 .PARAMETER CompanyName
 	Company Name to use for the Cover Page.  
-	Default value is contained in HKCU:\Software\Microsoft\Office\Common\UserInfo\CompanyName or
-	HKCU:\Software\Microsoft\Office\Common\UserInfo\Company, whichever is populated on the 
-	computer running the script.
+	Default value is contained in 
+	HKCU:\Software\Microsoft\Office\Common\UserInfo\CompanyName or
+	HKCU:\Software\Microsoft\Office\Common\UserInfo\Company, whichever is populated 
+	on the computer running the script.
 	This parameter has an alias of CN.
-	If either registry key does not exist and this parameter is not specified, the report will
-	not contain a Company Name on the cover page.
+	If either registry key does not exist and this parameter is not specified, the report 
+	will not contain a Company Name on the cover page.
 	This parameter is only valid with the MSWORD and PDF output parameters.
 .PARAMETER CompanyPhone
-	Company Phone to use for the Cover Page, if the Cover Page has the Phone field.  
+	Company Phone to use for the Cover Page if the Cover Page has the Phone field.  
 	
 	The following Cover Pages have a Phone field:
 		Contrast (Word 2010)
@@ -159,11 +160,11 @@
 		ViewMaster (Word 2013/2016. Works)
 		Whisp (Word 2013/2016. Works)
 		
-	Default value is Sideline.
+	The default value is Sideline.
 	This parameter has an alias of CP.
 	This parameter is only valid with the MSWORD and PDF output parameters.
 .PARAMETER UserName
-	User name to use for the Cover Page and Footer.
+	Username to use for the Cover Page and Footer.
 	Default value is contained in $env:username
 	This parameter has an alias of UN.
 	This parameter is only valid with the MSWORD and PDF output parameters.
@@ -184,54 +185,93 @@
 	This parameter is disabled by default.
 .PARAMETER AddDateTime
 	Adds a date time stamp to the end of the file name.
-	Time stamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2016 at 6PM is 2016-06-01_1800.
-	Output filename will be ReportName_2016-06-01_1800.docx (or .pdf).
+	The timestamp is in the format of yyyy-MM-dd_HHmm.
+	June 1, 2018 at 6PM is 2018-06-01_1800.
+	Output filename will be ReportName_2018-06-01_1800.docx (or .pdf).
 	This parameter is disabled by default.
 .PARAMETER ADForest
-	Specifies an Active Directory forest object by providing one of the following attribute values. 
+	Specifies an Active Directory forest object by providing one of the following 
+	attribute values. 
 	The identifier in parentheses is the LDAP display name for the attribute.
 
 	Fully qualified domain name
-		Example: corp.contoso.com
+		Example: labaddomain.com
 	GUID (objectGUID)
-		Example: 599c3d2e-f72d-4d20-8a88-030d99495f20
+		Example: 599c3d2e-e61e-4d20-7b77-030d99495e19
 	DNS host name
-		Example: dnsServer.corp.contoso.com
+		Example: labaddomain.com
 	NetBIOS name
-		Example: corp
-		
+		Example: labaddomain
+	
+	Default value is $Env:USERDNSDOMAIN	
+	
+	If both ADForest and ADDomain are specified, ADDomain takes precedence.
+.PARAMETER ADDomain
+	Specifies an Active Directory domain object by providing one of the following 
+	property values. The identifier in parentheses is the LDAP display name for the 
+	attribute. All values are for the domainDNS object that represents the domain.
+
+	Distinguished Name
+
+	Example: DC=tullahoma,DC=corp,DC=labaddomain,DC=com
+
+	GUID (objectGUID)
+
+	Example: b9fa5fbd-4334-4a98-85f1-3a3a44069fc6
+
+	Security Identifier (objectSid)
+
+	Example: S-1-5-21-3643273344-1505409314-3732760578
+
+	DNS domain name
+
+	Example: tullahoma.corp.labaddomain.com
+
+	NetBIOS domain name
+
+	Example: Tullahoma
+
+	If both ADForest and ADDomain are specified, ADDomain takes precedence.
 .PARAMETER ComputerName
 	Specifies which domain controller to use to run the script against.
-	If ADForest is a trusted forest, then ComputerName is required to detect the existence of ADForest.
+	If ADForest is a trusted forest, then ComputerName is required to detect the 
+	existence of ADForest.
 	ComputerName can be entered as the NetBIOS name, FQDN, localhost or IP Address.
 	If entered as localhost, the actual computer name is determined and used.
-	If entered as an IP address, an attempt is made to determine and use the actual computer name.
+	If entered as an IP address, an attempt is made to determine and use the actual 
+	computer name.
 	
 	This parameter has an alias of ServerName.
+	Default value is $Env:USERDNSDOMAIN	
 .PARAMETER DCDNSInfo 
-	Use WMI to gather, for each domain controller, the IP Address and each DNS server configured.
+	Use WMI to gather, for each domain controller, the IP Address, and each DNS server 
+	configured.
 	This parameter requires the script be run from an elevated PowerShell session 
-	using an account with permission to retrieve hardware information (i.e. Domain Admin).
+	using an account with permission to retrieve hardware information (i.e. Domain 
+	Admin).
 	Selecting this parameter will add an extra section to the report.
 	This parameter is disabled by default.
 .PARAMETER Folder
 	Specifies the optional output folder to save the output report. 
 .PARAMETER GPOInheritance
-	In the Group Policies by OU section, adds Inherited GPOs in addition to the GPOs directly linked.
+	In the Group Policies by OU section, adds Inherited GPOs in addition to the GPOs 
+	directly linked.
 	Adds a second column to the table GPO Type.
-	Text file is placed in the same folder from where the script is run.
+	The text file is placed in the same folder from where the script is run.
 	
 	This parameter is disabled by default.
 	This parameter has an alias of GPO.
 .PARAMETER Hardware
-	Use WMI to gather hardware information on: Computer System, Disks, Processor and Network Interface Cards
+	Use WMI to gather hardware information on Computer System, Disks, Processor, and 
+	Network Interface Cards
 	This parameter requires the script be run from an elevated PowerShell session 
-	using an account with permission to retrieve hardware information (i.e. Domain Admin).
-	Selecting this parameter will add to both the time it takes to run the script and size of the report.
+	using an account with permission to retrieve hardware information (i.e. Domain 
+	Admin).
+	Selecting this parameter will add to both the time it takes to run the script and 
+	size of the report.
 	This parameter is disabled by default.
 .PARAMETER IncludeUserInfo
-	For the User Miscellaneous Data section, outputs a table with the SamAccountName
+	For the User Miscellaneous Data section outputs a table with the SamAccountName
 	and DistinguishedName of the users in the All Users counts:
 	
 		Disabled users
@@ -242,6 +282,9 @@
 		All users with password not required
 		All users who cannot change password
 		All users with SID History
+		All users with Homedrive set in ADUC
+		All users whose Primary Group is not Domain Users
+		All users with RDS HomeDrive set in ADUC
 	
 	The Text output option is limited to the first 25 characters of the SamAccountName
 	and the first 116 characters of the DistinguishedName.
@@ -264,18 +307,22 @@
 	This parameter has an alias of MAX.
 .PARAMETER Services
 	Gather information on all services running on domain controllers.
-	Servers that are configured to automatically start but are not running will be colored in red.
+	Servers that are configured to automatically start but are not running will be 
+	colored in red.
 	Used on Domain Controllers only.
 	This parameter requires the script be run from an elevated PowerShell session
-	using an account with permission to retrieve service information (i.e. Domain Admin).
-	Selecting this parameter will add to both the time it takes to run the script and size of the report.
+	using an account with permission to retrieve service information (i.e. Domain 
+	Admin).
+	Selecting this parameter will add to both the time it takes to run the script and 
+	size of the report.
 	This parameter is disabled by default.
 .PARAMETER Section
 	Processes one or more sections of the report.
 	Valid options are:
 		Forest
 		Sites
-		Domains (includes Domain Controllers and optional Hardware, Services and DCDNSInfo)
+		Domains (includes Domain Controllers and optional Hardware, Services and 
+		DCDNSInfo)
 		OUs (Organizational Units)
 		Groups
 		GPOs
@@ -284,16 +331,16 @@
 
 	This parameter defaults to All sections.
 	
-	Multiple sections are separated with a comma. -Section forest,domains
+	Multiple sections are separated by a comma. -Section forest, domains
 	
 .PARAMETER SmtpServer
 	Specifies the optional email server to send the output report. 
 .PARAMETER SmtpPort
 	Specifies the SMTP port. 
-	Default is 25.
+	The default is 25.
 .PARAMETER UseSSL
 	Specifies whether to use SSL for the SmtpServer.
-	Default is False.
+	The default is False.
 .PARAMETER From
 	Specifies the username for the From email address.
 	If SmtpServer is used, this is a required parameter.
@@ -305,12 +352,12 @@
 	Outputs all errors to a text file at the end of the script.
 	
 	This is used when the script developer requests more troubleshooting data.
-	Text file is placed in the same folder from where the script is run.
+	The text file is placed in the same folder from where the script is run.
 	
 	This parameter is disabled by default.
 .PARAMETER ScriptInfo
 	Outputs information about the script to a text file.
-	Text file is placed in the same folder from where the script is run.
+	The text file is placed in the same folder from where the script is run.
 	
 	This parameter is disabled by default.
 	This parameter has an alias of SI.
@@ -318,7 +365,8 @@
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1
 	
 	Will use all default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -326,32 +374,72 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 
-	ADForest defaults to the value in $Env:USERDNSDOMAIN
+	ADForest defaults to the value of $Env:USERDNSDOMAIN.
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
-	value for ComputerName
+	value for ComputerName.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -ADForest company.tld
 	
 	Will use all default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
-	company.tld for the AD Forest
+	company.tld for the AD Forest.
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
-	value for ComputerName
+	value for ComputerName.
+.EXAMPLE
+	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -ADDomain child.company.tld
+	
+	Will use all default values.
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
+	$env:username = Administrator
+
+	Carl Webster for the Company Name.
+	Sideline for the Cover Page format.
+	Administrator for the User Name.
+	child.company.tld for the AD Domain.
+
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
+	a domain controller that is also a global catalog server and will use that as the 
+	value for ComputerName.
+.EXAMPLE
+	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -ADForest parent.company.tld 
+	-ADDomain child.company.tld
+	
+	Will use all default values.
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
+	$env:username = Administrator
+
+	Carl Webster for the Company Name.
+	Sideline for the Cover Page format.
+	Administrator for the User Name.
+	
+	Because both ADForest and ADDomain are specified, ADDomain wins and child.company.tld 
+	is used for AD Domain.
+	ADForest is set to the value of ADDomain.
+
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
+	a domain controller that is also a global catalog server and will use that as the 
+	value for ComputerName.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -ADForest company.tld -ComputerName DC01
 	
 	Will use all default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -359,94 +447,103 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 	company.tld for the AD Forest
-	The script will be run remotely against the DC01 domain controller.
+	The script will be run remotely on the DC01 domain controller.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -PDF -ADForest corp.carlwebster.com
 	
 	Will use all default values and save the document as a PDF file.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
-	corp.carlwebster.com for the AD Forest
+	corp.carlwebster.com for the AD Forest.
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
-	value for ComputerName
+	value for ComputerName.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -Text -ADForest corp.carlwebster.com
 	
 	Will use all default values and save the document as a formatted text file.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
-	$env:username = Administrator
+	$env:username = Administrator.
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
-	corp.carlwebster.com for the AD Forest
+	corp.carlwebster.com for the AD Forest.
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
-	value for ComputerName
+	value for ComputerName.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -HTML -ADForest corp.carlwebster.com
 	
 	Will use all default values and save the document as an HTML file.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
-	$env:username = Administrator
+	$env:username = Administrator.
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
-	corp.carlwebster.com for the AD Forest
+	corp.carlwebster.com for the AD Forest.
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
-	value for ComputerName
+	value for ComputerName.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -hardware
 	
-	Will use all default values and add additional information for each domain controller about its hardware.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	Will use all default values and add additional information for each domain controller 
+	about its hardware.
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
-	$env:username = Administrator
+	$env:username = Administrator.
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 
-	ADForest defaults to the value in $Env:USERDNSDOMAIN.
+	ADForest defaults to the value of $Env:USERDNSDOMAIN.
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
 	value for ComputerName.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -services
 	
-	Will use all default values and add additional information for the services running on each domain controller.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	Will use all default values and add additional information for the services running 
+	on each domain controller.
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
-	$env:username = Administrator
+	$env:username = Administrator.
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 
-	ADForest defaults to the value in $Env:USERDNSDOMAIN.
+	ADForest defaults to the value of $Env:USERDNSDOMAIN.
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
 	value for ComputerName.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -DCDNSInfo
 	
-	Will use all default values and add additional information for each domain controller about its DNS IP configuration.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	Will use all default values and add additional information for each domain controller 
+	about its DNS IP configuration.
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -455,35 +552,38 @@
 	Administrator for the User Name.
 	An extra section will be added to the end of the report.
 
-	ADForest defaults to the value in $Env:USERDNSDOMAIN.
+	ADForest defaults to the value of $Env:USERDNSDOMAIN.
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
 	value for ComputerName.
 .EXAMPLE
-	PS C:\PSScript .\ADDS_Inventory_V2.ps1 -CompanyName "Carl Webster Consulting" -CoverPage "Mod" -UserName "Carl Webster" -ComputerName ADDC01
+	PS C:\PSScript .\ADDS_Inventory_V2.ps1 -CompanyName "Carl Webster Consulting" 
+	-CoverPage "Mod" -UserName "Carl Webster" -ComputerName ADDC01
 
 	Will use:
 		Carl Webster Consulting for the Company Name.
 		Mod for the Cover Page format.
 		Carl Webster for the User Name.
-		ADForest defaults to the value in $Env:USERDNSDOMAIN.
+		ADForest defaults to the value of $Env:USERDNSDOMAIN.
 		Domain Controller named ADDC01 for the ComputerName.
 .EXAMPLE
-	PS C:\PSScript .\ADDS_Inventory_V2.ps1 -CN "Carl Webster Consulting" -CP "Mod" -UN "Carl Webster"
+	PS C:\PSScript .\ADDS_Inventory_V2.ps1 -CN "Carl Webster Consulting" -CP "Mod" 
+	-UN "Carl Webster"
 
 	Will use:
 		Carl Webster Consulting for the Company Name (alias CN).
 		Mod for the Cover Page format (alias CP).
 		Carl Webster for the User Name (alias UN).
 
-	ADForest defaults to the value in $Env:USERDNSDOMAIN.
+	ADForest defaults to the value of $Env:USERDNSDOMAIN.
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
 	value for ComputerName.
 .EXAMPLE
-	PS C:\PSScript .\ADDS_Inventory_V2.ps1 -CompanyName "Sherlock Holmes Consulting"
+	PS C:\PSScript .\ADDS_Inventory_V2.ps1 -CompanyName "Sherlock Holmes 
+	Consulting"
 	-CoverPage Exposure -UserName "Dr. Watson"
 	-CompanyAddress "221B Baker Street, London, England"
 	-CompanyFax "+44 1753 276600"
@@ -495,15 +595,16 @@
 		Dr. Watson for the User Name.
 		221B Baker Street, London, England for the Company Address.
 		+44 1753 276600 for the Company Fax.
-		+44 1753 276200 for the Compnay Phone.
+		+44 1753 276200 for the Company Phone.
 
-	ADForest defaults to the value in $Env:USERDNSDOMAIN.
+	ADForest defaults to the value of $Env:USERDNSDOMAIN.
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
 	value for ComputerName.
 .EXAMPLE
-	PS C:\PSScript .\ADDS_Inventory_V2.ps1 -CompanyName "Sherlock Holmes Consulting"
+	PS C:\PSScript .\ADDS_Inventory_V2.ps1 -CompanyName "Sherlock Holmes 
+	Consulting"
 	-CoverPage Facet -UserName "Dr. Watson"
 	-CompanyEmail SuperSleuth@SherlockHolmes.com
 
@@ -511,39 +612,42 @@
 		Sherlock Holmes Consulting for the Company Name.
 		Facet for the Cover Page format.
 		Dr. Watson for the User Name.
-		SuperSleuth@SherlockHolmes.com for the Compnay Email.
+		SuperSleuth@SherlockHolmes.com for the Company Email.
 
-	ADForest defaults to the value in $Env:USERDNSDOMAIN.
+	ADForest defaults to the value of $Env:USERDNSDOMAIN.
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
 	value for ComputerName.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -ADForest company.tld -AddDateTime
 	
 	Will use all default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
-	$env:username = Administrator
+	$env:username = Administrator.
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 	company.tld for the AD Forest.
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
 	value for ComputerName.
 
 	Adds a date time stamp to the end of the file name.
-	Time stamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2016 at 6PM is 2016-06-01_1800.
-	Output filename will be company.tld_2016-06-01_1800.docx
+	The timestamp is in the format of yyyy-MM-dd_HHmm.
+	June 1, 2018 at 6PM is 2018-06-01_1800.
+	Output filename will be company.tld_2018-06-01_1800.docx.
 .EXAMPLE
-	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -PDF -ADForest corp.carlwebster.com -AddDateTime
+	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -PDF -ADForest corp.carlwebster.com 
+	-AddDateTime
 	
 	Will use all default values and save the document as a PDF file.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -552,19 +656,21 @@
 	Administrator for the User Name.
 	corp.carlwebster.com for the AD Forest.
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
 	value for ComputerName.
 
 	Adds a date time stamp to the end of the file name.
-	Time stamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2016 at 6PM is 2016-06-01_1800.
-	Output filename will be corp.carlwebster.com_2016-06-01_1800.PDF
+	The timestamp is in the format of yyyy-MM-dd_HHmm.
+	June 1, 2018 at 6PM is 2018-06-01_1800.
+	Output filename will be corp.carlwebster.com_2018-06-01_1800.PDF
 .EXAMPLE
-	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -ADForest corp.carlwebster.com -Folder \\FileServer\ShareName
+	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -ADForest corp.carlwebster.com 
+	-Folder \\FileServer\ShareName
 	
 	Will use all default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -573,16 +679,21 @@
 	Administrator for the User Name.
 	corp.carlwebster.com for the AD Forest.
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
 	value for ComputerName.
 	
-	Output file will be saved in the path \\FileServer\ShareName
+	The output file will be saved in the path \\FileServer\ShareName.
 .EXAMPLE
-	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -ADForest corp.carlwebster.com -SmtpServer mail.domain.tld -From XDAdmin@domain.tld -To ITGroup@domain.tld -ComputerName Server01
+	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -ADForest corp.carlwebster.com 
+	-SmtpServer mail.domain.tld 
+	-From XDAdmin@domain.tld 
+	-To ITGroup@domain.tld 
+	-ComputerName Server01
 	
 	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -591,21 +702,29 @@
 	Administrator for the User Name.
 	corp.carlwebster.com for the AD Forest.
 	
-	Script will be run remotely against server Server01.
+	The script will be run remotely against server Server01.
 	
-	Script will use the email server mail.domain.tld, sending from XDAdmin@domain.tld, sending to ITGroup@domain.tld.
-	Script will use the default SMPTP port 25 and will not use SSL.
-	If the current user's credentials are not valid to send email, the user will be prompted to enter valid credentials.
+	The script will use the email server mail.domain.tld, sending from XDAdmin@domain.tld, 
+	sending to ITGroup@domain.tld.
+	The script will use the default SMPTP port 25 and will not use SSL.
+	If the current user's credentials are not valid to send email, the user will be prompted 
+	to enter valid credentials.
 .EXAMPLE
-	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -ADForest corp.carlwebster.com -SmtpServer smtp.office365.com -SmtpPort 587 -UseSSL -From Webster@CarlWebster.com -To ITGroup@CarlWebster.com
+	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -ADForest corp.carlwebster.com 
+	-SmtpServer smtp.office365.com 
+	-SmtpPort 587 
+	-UseSSL 
+	-From Webster@CarlWebster.com 
+	-To ITGroup@CarlWebster.com
 	
 	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 	corp.carlwebster.com for the AD Forest
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
 	value for ComputerName.
 
@@ -613,13 +732,16 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 	
-	Script will use the email server smtp.office365.com on port 587 using SSL, sending from webster@carlwebster.com, sending to ITGroup@carlwebster.com.
-	If the current user's credentials are not valid to send email, the user will be prompted to enter valid credentials.
+	The script will use the email server smtp.office365.com on port 587 using SSL, sending from 
+	webster@carlwebster.com, sending to ITGroup@carlwebster.com.
+	If the current user's credentials are not valid to send email, the user will be prompted 
+	to enter valid credentials.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -Section Forest
 
 	Will use all default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -627,15 +749,16 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 
-	ADForest defaults to the value in $Env:USERDNSDOMAIN
+	ADForest defaults to the value of $Env:USERDNSDOMAIN
 
-	ComputerName defaults to the value in $Env:USERDNSDOMAIN then the script queries for 
+	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
 	a domain controller that is also a global catalog server and will use that as the 
 	value for ComputerName.
 	
-	Report will include only the Forest section.
+	The report will include only the Forest section.
 .EXAMPLE
-	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -Section groups,misc -ADForest WebstersLab.com -ServerName PrimaryDC.websterslab.com
+	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -Section groups, misc 
+	-ADForest WebstersLab.com -ServerName PrimaryDC.websterslab.com
 
 	Will use all default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
@@ -649,7 +772,7 @@
 	WebstersLab.com for ADForest.
 	PrimaryDC.websterslab.com for ComputerName.
 	
-	Report will include only the Groups and Miscellaneous sections.
+	The report will include only the Groups and Miscellaneous sections.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -MaxDetails
 	
@@ -677,9 +800,9 @@
 	No objects are output from this script.  This script creates a Word or PDF document.
 .NOTES
 	NAME: ADDS_Inventory_V2.ps1
-	VERSION: 2.15
-	AUTHOR: Carl Webster, Sr. Solutions Architect, Choice Solutions, LLC
-	LASTEDIT: June 26, 2017
+	VERSION: 2.16
+	AUTHOR: Carl Webster, Sr. Solutions Architect, Choice Solutions, LLC and Michael B. Smith
+	LASTEDIT: December 3, 2017
 #>
 
 
@@ -757,6 +880,9 @@ Param(
 	
 	[parameter(Mandatory=$False)] 
 	[string]$ADForest=$Env:USERDNSDOMAIN, 
+
+	[parameter(Mandatory=$False)] 
+	[string]$ADDomain="", 
 
 	[parameter(Mandatory=$False)] 
 	[Alias("ServerName")]
@@ -926,6 +1052,52 @@ Param(
 #	Updated Function ShowScriptOptions for the new Cover Page properties and Parameters
 #	Updated Function UpdateDocumentProperties for the new Cover Page properties and Parameters
 #	Updated help text
+#
+#Version 2.16 4-Dec-2017
+#	Add checking for users with home drive set in Active Directory Users and Computers (ADUC)
+#		Added function OutputHDUserInfo
+#	Add checking for users with RDS home drive set in ADUC
+#		Added function from Jeff Hicks Get-RDUserSetting
+#		Added function OutputRDSHDUserInfo
+#	Add checking for users whose Primary Group is not Domain Users
+#		Added function OutputPGUserInfo
+#	Add "DC: " in fron tof the domain controller name, in text output, for domain controller information
+#	Add new parameter ADDomain to restrict report to a single domain in a multi-domain Forest
+#	Add schema extension checking for the following items and add to Forest section:
+#		'User-Account-Control', #Flags that control the behavior of a user account
+#		'msNPAllowDialin', #RAS Server
+#		'ms-Mcs-AdmPwd', #LAPS
+#		'ms-Mcs-AdmPwdExpirationTime', #LAPS
+#		'ms-SMS-Assignment-Site-Code', #SCCM
+#		'ms-SMS-Capabilities', #SCCM
+#		'msRTCSIP-UserRoutingGroupId', #Lync/SfB
+#		'msRTCSIP-MirrorBackEndServer' #Lync/SfB
+#		'ms-exch-schema-version-pt' #Exchange
+#	Add "Site: " in front of Site name when listing Subnets, Servers, and Connection Objects
+#	Remove several large blocks of code that had been commented out
+#	Revise how $LinkedGPOs and $InheritedGPOs variables are set to work around invalid property 
+#		name DisplayName when collection is empty
+#	Sort Enabled Scopes in AD Optional Features
+#	Text output changes to tabular data:
+#		Domain Controllers (in Forest section)
+#		AD Schema Items (in Forest section)
+#		Services
+#		Organizational Units
+#		Domain Admins
+#		Enterprise Admins
+#		Schema Admins
+#		Users with AdminCount=1
+#	Updated Exchange schema versions
+#	Updated help text
+#	When reporting on the domain controllers in the Forest, if unable to get data from a domain controller,
+#		instead of reporting "Unknown", use:
+#		Unable to retrieve Global Catalog status on <DCName>
+#		Unable to retrieve Read-only status on <DCName>
+#	When run for a single domain in a multi-domain forest
+#		Revise gathering list of domains
+#		Revise testing for $ComputerName 
+#		Revise variable $ADContext in Function ProcessAllDCsInTheForest
+#
 
 Set-StrictMode -Version 2
 
@@ -1006,7 +1178,14 @@ Else
 	Exit
 }
 
-#If the MaxDetails parameter is used, set a bunch of stuff true and some stuff false
+If($ADForest -ne "" -and $ADDomain -ne "")
+{
+	#2.16
+	#Make ADForest equal to ADDomain so no code has to change in the script
+	$ADForest = $ADDomain
+}
+
+#If the MaxDetails parameter is used, set a bunch of stuff true
 If($MaxDetails)
 {
 	$DCDNSInfo       	= $True
@@ -1014,7 +1193,6 @@ If($MaxDetails)
 	$HardWare        	= $True
 	$IncludeUserInfo	= $True
 	$Services        	= $True
-	
 	$Section			= "All"
 }
 
@@ -2502,6 +2680,20 @@ Function GetComputerServices
 		{
 			Line 0 "Services ($NumServices Services found)"
 			Line 0 ""
+			
+			#V2.16 addition
+			[int]$MaxDisplayNameLength = ($Services.DisplayName | Measure-Object -Maximum -Property Length).Maximum
+			If($MaxDisplayNameLength -gt 12) #12 is length of "Display Name"
+			{
+				#10 is length of "Display Name" minus 2 to allow for spacing between columns
+				Line 1 ("Display Name" + (' ' * ($MaxDisplayNameLength - 10))) -NoNewLine
+			}
+			Else
+			{
+				Line 1 "Display Name " -NoNewLine
+			}
+			Line 1 "Status  " -NoNewLine
+			Line 1 "Startup Type"
 		}
 		ElseIf($HTML)
 		{
@@ -2535,10 +2727,24 @@ Function GetComputerServices
 			}
 			ElseIf($Text)
 			{
-				Line 0 "Display Name`t: " $Service.DisplayName
-				Line 0 "Status`t`t: " $Service.State
-				Line 0 "Start Mode`t: " $Service.StartMode
-				Line 0 ""
+				#Line 0 "Display Name`t: " $Service.DisplayName
+				#Line 0 "Status`t`t: " $Service.State
+				#Line 0 "Start Mode`t: " $Service.StartMode
+				#Line 0 ""
+				
+				#V2.16 change
+				If(($Service.DisplayName).Length -lt ($MaxDisplayNameLength))
+				{
+					[int]$NumOfSpaces = (($MaxDisplayNameLength) - ($Service.DisplayName.Length)) + 2 #+2 to allow for column spacing
+					$tmp1 = ($($Service.DisplayName) + (' ' * $NumOfSPaces))
+					Line 1 $tmp1 -NoNewLine
+				}
+				Else
+				{
+					Line 1 "$($Service.DisplayName)  " -NoNewLine
+				}
+				Line 1 "$($Service.State) " -NoNewLine
+				Line 1 $Service.StartMode
 			}
 			ElseIf($HTML)
 			{
@@ -2578,7 +2784,8 @@ Function GetComputerServices
 		}
 		ElseIf($Text)
 		{
-			#nothing to do
+			#V2.16 change
+			Line 0 ""
 		}
 		ElseIf($HTML)
 		{
@@ -3994,13 +4201,6 @@ Function WriteHTMLLine
 		} 
 	}
 	
-	#added by webster 12-oct-2016
-	#if a heading, don't add the <br />
-	#If($HTMLStyle1 -eq "")
-	#{
-	#	$HTMLBody += "<br />"
-	#}
-
 	out-file -FilePath $Script:FileName1 -Append -InputObject $HTMLBody 4>$Null
 }
 #endregion
@@ -5063,6 +5263,7 @@ Function UserIsaDomainAdmin
 		If($ID.CompareTo($domainAdminsSID) -eq 0)
 		{
 			$IsDA = $True
+			Break
 		}     
 	}
 
@@ -5768,67 +5969,68 @@ Function ShowScriptOptions
 {
 	Write-Verbose "$(Get-Date): "
 	Write-Verbose "$(Get-Date): "
-	Write-Verbose "$(Get-Date): AddDateTime     : $($AddDateTime)"
+	Write-Verbose "$(Get-Date): AddDateTime     : $AddDateTime"
 	If($MSWORD -or $PDF)
 	{
-		Write-Verbose "$(Get-Date): Company Name    : $($Script:CoName)"
+		Write-Verbose "$(Get-Date): Company Name    : $Script:CoName"
 	}
-	Write-Verbose "$(Get-Date): ComputerName    : $($ComputerName)"
+	Write-Verbose "$(Get-Date): ComputerName    : $ComputerName"
 	If($MSWORD -or $PDF)
 	{
-		Write-Verbose "$(Get-Date): Company Address : $($CompanyAddress)"
-		Write-Verbose "$(Get-Date): Company Email   : $($CompanyEmail)"
-		Write-Verbose "$(Get-Date): Company Fax     : $($CompanyFax)"
-		Write-Verbose "$(Get-Date): Company Phone   : $($CompanyPhone)"
-		Write-Verbose "$(Get-Date): Cover Page      : $($CoverPage)"
+		Write-Verbose "$(Get-Date): Company Address : $CompanyAddress"
+		Write-Verbose "$(Get-Date): Company Email   : $CompanyEmail"
+		Write-Verbose "$(Get-Date): Company Fax     : $CompanyFax"
+		Write-Verbose "$(Get-Date): Company Phone   : $CompanyPhone"
+		Write-Verbose "$(Get-Date): Cover Page      : $CoverPage"
 	}
-	Write-Verbose "$(Get-Date): DCDNSInfo       : $($DCDNSInfo)"
-	Write-Verbose "$(Get-Date): Dev             : $($Dev)"
+	Write-Verbose "$(Get-Date): DCDNSInfo       : $DCDNSInfo"
+	Write-Verbose "$(Get-Date): Dev             : $Dev"
 	If($Dev)
 	{
-		Write-Verbose "$(Get-Date): DevErrorFile    : $($Script:DevErrorFile)"
+		Write-Verbose "$(Get-Date): DevErrorFile    : $Script:DevErrorFile"
 	}
-	Write-Verbose "$(Get-Date): Elevated        : $($Script:Elevated)"
-	Write-Verbose "$(Get-Date): Filename1       : $($Script:filename1)"
+	Write-Verbose "$(Get-Date): Domain Name     : $ADDomain"
+	Write-Verbose "$(Get-Date): Elevated        : $Script:Elevated"
+	Write-Verbose "$(Get-Date): Filename1       : $Script:filename1"
 	If($PDF)
 	{
-		Write-Verbose "$(Get-Date): Filename2       : $($Script:filename2)"
+		Write-Verbose "$(Get-Date): Filename2       : $Script:filename2"
 	}
-	Write-Verbose "$(Get-Date): Folder          : $($Folder)"
-	Write-Verbose "$(Get-Date): Forest Name     : $($ADForest)"
-	Write-Verbose "$(Get-Date): From            : $($From)"
-	Write-Verbose "$(Get-Date): GPOInheritance  : $($GPOInheritance)"
-	Write-Verbose "$(Get-Date): HW Inventory    : $($Hardware)"
-	Write-Verbose "$(Get-Date): IncludeUserInfo : $($IncludeUserInfo)"
-	Write-Verbose "$(Get-Date): MaxDetail       : $($MaxDetails)"
-	Write-Verbose "$(Get-Date): Save As HTML    : $($HTML)"
-	Write-Verbose "$(Get-Date): Save As PDF     : $($PDF)"
-	Write-Verbose "$(Get-Date): Save As TEXT    : $($TEXT)"
-	Write-Verbose "$(Get-Date): Save As WORD    : $($MSWORD)"
-	Write-Verbose "$(Get-Date): ScriptInfo      : $($ScriptInfo)"
-	Write-Verbose "$(Get-Date): Section         : $($Section)"
-	Write-Verbose "$(Get-Date): Services        : $($Services)"
-	Write-Verbose "$(Get-Date): Smtp Port       : $($SmtpPort)"
-	Write-Verbose "$(Get-Date): Smtp Server     : $($SmtpServer)"
-	Write-Verbose "$(Get-Date): Title           : $($Script:Title)"
-	Write-Verbose "$(Get-Date): To              : $($To)"
-	Write-Verbose "$(Get-Date): Use SSL         : $($UseSSL)"
+	Write-Verbose "$(Get-Date): Folder          : $Folder"
+	Write-Verbose "$(Get-Date): Forest Name     : $ADForest"
+	Write-Verbose "$(Get-Date): From            : $From"
+	Write-Verbose "$(Get-Date): GPOInheritance  : $GPOInheritance"
+	Write-Verbose "$(Get-Date): HW Inventory    : $Hardware"
+	Write-Verbose "$(Get-Date): IncludeUserInfo : $IncludeUserInfo"
+	Write-Verbose "$(Get-Date): MaxDetail       : $MaxDetails"
+	Write-Verbose "$(Get-Date): Save As HTML    : $HTML"
+	Write-Verbose "$(Get-Date): Save As PDF     : $PDF"
+	Write-Verbose "$(Get-Date): Save As TEXT    : $TEXT"
+	Write-Verbose "$(Get-Date): Save As WORD    : $MSWORD"
+	Write-Verbose "$(Get-Date): ScriptInfo      : $ScriptInfo"
+	Write-Verbose "$(Get-Date): Section         : $Section"
+	Write-Verbose "$(Get-Date): Services        : $Services"
+	Write-Verbose "$(Get-Date): Smtp Port       : $SmtpPort"
+	Write-Verbose "$(Get-Date): Smtp Server     : $SmtpServer"
+	Write-Verbose "$(Get-Date): Title           : $Script:Title"
+	Write-Verbose "$(Get-Date): To              : $To"
+	Write-Verbose "$(Get-Date): Use SSL         : $UseSSL"
 	If($MSWORD -or $PDF)
 	{
-		Write-Verbose "$(Get-Date): User Name       : $($UserName)"
+		Write-Verbose "$(Get-Date): User Name       : $UserName"
 	}
 	Write-Verbose "$(Get-Date): "
-	Write-Verbose "$(Get-Date): OS Detected     : $($Script:RunningOS)"
+	Write-Verbose "$(Get-Date): OS Detected     : $Script:RunningOS"
 	Write-Verbose "$(Get-Date): PoSH version    : $($Host.Version)"
-	Write-Verbose "$(Get-Date): PSCulture       : $($PSCulture)"
-	Write-Verbose "$(Get-Date): PSUICulture     : $($PSUICulture)"
+	Write-Verbose "$(Get-Date): PSCulture       : $PSCulture"
+	Write-Verbose "$(Get-Date): PSUICulture     : $PSUICulture"
 	If($MSWORD -or $PDF)
 	{
-		Write-Verbose "$(Get-Date): Word language   : $($Script:WordLanguageValue)"
-		Write-Verbose "$(Get-Date): Word version    : $($Script:WordProduct)"
+		Write-Verbose "$(Get-Date): Word language   : $Script:WordLanguageValue"
+		Write-Verbose "$(Get-Date): Word version    : $Script:WordProduct"
 	}
 	Write-Verbose "$(Get-Date): "
-	Write-Verbose "$(Get-Date): Script start    : $($Script:StartTime)"
+	Write-Verbose "$(Get-Date): Script start    : $Script:StartTime"
 	Write-Verbose "$(Get-Date): "
 	Write-Verbose "$(Get-Date): "
 }
@@ -6050,7 +6252,7 @@ Function ProcessScriptSetup
 	}
 
 	#If hardware inventory or services are requested, make sure user is running the script with Domain Admin rights
-	Write-Verbose "$(Get-Date): `tTesting to see if $($env:username) has Domain Admin rights"
+	Write-Verbose "$(Get-Date): `tTesting to see if $env:username has Domain Admin rights"
 	$Script:DARights = $False
 	$Script:Elevated = $False
 	
@@ -6058,13 +6260,27 @@ Function ProcessScriptSetup
 	If($AmIReallyDA -eq $True)
 	{
 		#user has Domain Admin rights
-		Write-Verbose "$(Get-Date): $($env:username) has Domain Admin rights in the $($ADForest) Forest"
+		If($ADDomain -ne "")
+		{
+			Write-Verbose "$(Get-Date): $env:username has Domain Admin rights in the $ADDomain Domain"
+		}
+		Else
+		{
+			Write-Verbose "$(Get-Date): $env:username has Domain Admin rights in the $ADForest Forest"
+		}
 		$Script:DARights = $True
 	}
 	Else
 	{
 		#user does nto have Domain Admin rights
-		Write-Verbose "$(Get-Date): $($env:username) does not have Domain Admin rights in the $($ADForest) Forest"
+		If($ADDomain -ne "")
+		{
+			Write-Verbose "$(Get-Date): $env:username does not have Domain Admin rights in the $ADDomain Domain"
+		}
+		Else
+		{
+			Write-Verbose "$(Get-Date): $env:username does not have Domain Admin rights in the $ADForest Forest"
+		}
 	}
 	
 	$Script:Elevated = ElevatedSession
@@ -6169,9 +6385,9 @@ Function ProcessScriptSetup
 		If($? -and $Null -ne $Results)
 		{
 			$Script:ComputerName = $Results
-			Write-Verbose "$(Get-Date): Server name has been renamed from $($Env:USERDNSDOMAIN) to $($ComputerName)"
+			Write-Verbose "$(Get-Date): Server name has been renamed from $Env:USERDNSDOMAIN to $ComputerName"
 		}
-		ElseIf(!$? -and $Null -eq $Results)
+		ElseIf(!$?) #changed for 2.16
 		{
 			#may be in a child domain where -Service GlobalCatalog doesn't work. Try PrimaryDC
 			$Results = (Get-ADDomainController -DomainName $ADForest -Discover -Service PrimaryDC -EA 0).Name
@@ -6179,7 +6395,7 @@ Function ProcessScriptSetup
 			If($? -and $Null -ne $Results)
 			{
 				$Script:ComputerName = $Results
-				Write-Verbose "$(Get-Date): Server name has been renamed from $($Env:USERDNSDOMAIN) to $($ComputerName)"
+				Write-Verbose "$(Get-Date): Server name has been renamed from $Env:USERDNSDOMAIN to $ComputerName"
 			}
 		}
 	}
@@ -6195,11 +6411,11 @@ Function ProcessScriptSetup
 		If($? -and $Null -ne $Result)
 		{
 			$Script:ComputerName = $Result.HostName
-			Write-Verbose "$(Get-Date): Server name has been renamed from $($ip) to $($ComputerName)"
+			Write-Verbose "$(Get-Date): Server name has been renamed from $ip to $ComputerName"
 		}
 		Else
 		{
-			Write-Warning "Unable to resolve $($ComputerName) to a hostname"
+			Write-Warning "Unable to resolve $ComputerName to a hostname"
 		}
 	}
 	Else
@@ -6211,11 +6427,11 @@ Function ProcessScriptSetup
 	{
 		#get server name
 		#first test to make sure the server is reachable
-		Write-Verbose "$(Get-Date): Testing to see if $($ComputerName) is online and reachable"
+		Write-Verbose "$(Get-Date): Testing to see if $ComputerName is online and reachable"
 		If(Test-Connection -ComputerName $ComputerName -quiet -EA 0)
 		{
-			Write-Verbose "$(Get-Date): Server $($ComputerName) is online."
-			Write-Verbose "$(Get-Date): `tTest #1 to see if $($ComputerName) is a Domain Controller."
+			Write-Verbose "$(Get-Date): Server $ComputerName is online."
+			Write-Verbose "$(Get-Date): `tTest #1 to see if $ComputerName is a Domain Controller."
 			#the server may be online but is it really a domain controller?
 
 			#is the ComputerName in the current domain
@@ -6224,67 +6440,129 @@ Function ProcessScriptSetup
 			If(!$? -or $Null -eq $Results)
 			{
 				#try using the Forest name
-				Write-Verbose "$(Get-Date): `tTest #2 to see if $($ComputerName) is a Domain Controller."
+				Write-Verbose "$(Get-Date): `tTest #2 to see if $ComputerName is a Domain Controller."
 				$Results = Get-ADDomainController $ComputerName -Server $ADForest -EA 0
 				If(!$?)
 				{
 					$ErrorActionPreference = $SaveEAPreference
-					Write-Error "`n`n`t`t$($ComputerName) is not a domain controller for $($ADForest).`n`t`tScript cannot continue.`n`n"
+					Write-Error "`n`n`t`t$ComputerName is not a domain controller for $ADForest.`n`t`tScript cannot continue.`n`n"
 					Exit
 				}
 				Else
 				{
-					Write-Verbose "$(Get-Date): `tTest #2 succeeded. $($ComputerName) is a Domain Controller."
+					Write-Verbose "$(Get-Date): `tTest #2 succeeded. $ComputerName is a Domain Controller."
 				}
 			}
 			Else
 			{
-				Write-Verbose "$(Get-Date): `tTest #1 succeeded. $($ComputerName) is a Domain Controller."
+				Write-Verbose "$(Get-Date): `tTest #1 succeeded. $ComputerName is a Domain Controller."
 			}
 			
 			$Results = $Null
 		}
 		Else
 		{
-			Write-Verbose "$(Get-Date): Computer $($ComputerName) is offline"
+			Write-Verbose "$(Get-Date): Computer $ComputerName is offline"
 			$ErrorActionPreference = $SaveEAPreference
-			Write-Error "`n`n`t`tComputer $($ComputerName) is offline.`nScript cannot continue.`n`n"
+			Write-Error "`n`n`t`tComputer $ComputerName is offline.`nScript cannot continue.`n`n"
 			Exit
 		}
 	}
 
-	#get forest information so output filename can be generated
-	Write-Verbose "$(Get-Date): Testing to see if $($ADForest) is a valid forest name"
-	If([String]::IsNullOrEmpty($ComputerName))
+	If($ADForest -ne $ADDomain)
 	{
-		$Script:Forest = Get-ADForest -Identity $ADForest -EA 0
+		#get forest information so output filename can be generated
+		Write-Verbose "$(Get-Date): Testing to see if $($ADForest) is a valid forest name"
+		If([String]::IsNullOrEmpty($ComputerName))
+		{
+			$Script:Forest = Get-ADForest -Identity $ADForest -EA 0
+			
+			If(!$?)
+			{
+				$ErrorActionPreference = $SaveEAPreference
+				Write-Error "`n`n`t`tCould not find a forest identified by: $ADForest.`nScript cannot continue.`n`n"
+				Exit
+			}
+		}
+		Else
+		{
+			$Script:Forest = Get-ADForest -Identity $ADForest -Server $ComputerName -EA 0
+
+			If(!$?)
+			{
+				$ErrorActionPreference = $SaveEAPreference
+				Write-Error "`n`n`t`tCould not find a forest with the name of $ADForest.`n`n`t`tScript cannot continue.`n`n`t`tIs $ComputerName running Active Directory Web Services?"
+				Exit
+			}
+		}
+		Write-Verbose "$(Get-Date): $ADForest is a valid forest name"
+		[string]$Script:Title = "AD Inventory Report for the $Script:ForestName Forest"
+		$Script:Domains       = $Script:Forest.Domains | Sort
+		$Script:ConfigNC      = (Get-ADRootDSE -Server $ADForest -EA 0).ConfigurationNamingContext
+	}
+	
+	If($ADDomain -ne "")
+	{
+		If([String]::IsNullOrEmpty($ComputerName))
+		{
+			$results = Get-ADDomain -Identity $ADDomain -EA 0
+			
+			If(!$?)
+			{
+				$ErrorActionPreference = $SaveEAPreference
+				Write-Error "`n`n`t`tCould not find a domain identified by: $ADDomain.`nScript cannot continue.`n`n"
+				Exit
+			}
+		}
+		Else
+		{
+			$results = Get-ADDomain -Identity $ADDomain -Server $ComputerName -EA 0
+
+			If(!$?)
+			{
+				$ErrorActionPreference = $SaveEAPreference
+				Write-Error "`n`n`t`tCould not find a domain with the name of $ADDomain.`n`n`t`tScript cannot continue.`n`n`t`tIs $ComputerName running Active Directory Web Services?"
+				Exit
+			}
+		}
+		Write-Verbose "$(Get-Date): $ADDomain is a valid domain name"
+		$Script:Domains       = $results.DNSRoot
+		$Script:DomainDNSRoot = $results.DNSRoot
+		[string]$Script:Title = "AD Inventory Report for the $Script:Domains Domain"
 		
-		If(!$?)
+		$tmp = $results.Forest
+		#get forest info 
+		Write-Verbose "$(Get-Date): Retrieving forest information"
+		If([String]::IsNullOrEmpty($ComputerName))
 		{
-			$ErrorActionPreference = $SaveEAPreference
-			Write-Error "`n`n`t`tCould not find a forest identified by: $($ADForest).`nScript cannot continue.`n`n"
-			Exit
+			$Script:Forest = Get-ADForest -Identity $tmp -EA 0
+			
+			If(!$?)
+			{
+				$ErrorActionPreference = $SaveEAPreference
+				Write-Error "`n`n`t`tCould not find a forest identified by: $tmp.`nScript cannot continue.`n`n"
+				Exit
+			}
 		}
-	}
-	Else
-	{
-		$Script:Forest = Get-ADForest -Identity $ADForest -Server $ComputerName -EA 0
+		Else
+		{
+			$Script:Forest = Get-ADForest -Identity $tmp -Server $ComputerName -EA 0
 
-		If(!$?)
-		{
-			$ErrorActionPreference = $SaveEAPreference
-			Write-Error "`n`n`t`tCould not find a forest with the name of $($ADForest).`n`n`t`tScript cannot continue.`n`n`t`tIs $($ComputerName) running Active Directory Web Services?"
-			Exit
+			If(!$?)
+			{
+				$ErrorActionPreference = $SaveEAPreference
+				Write-Error "`n`n`t`tCould not find a forest with the name of $tmp.`n`n`t`tScript cannot continue.`n`n`t`tIs $ComputerName running Active Directory Web Services?"
+				Exit
+			}
 		}
+		Write-Verbose "$(Get-Date): Found forest information for $tmp"
+		$Script:ConfigNC = (Get-ADRootDSE -Server $tmp -EA 0).ConfigurationNamingContext
 	}
-	Write-Verbose "$(Get-Date): $($ADForest) is a valid forest name"
+	
 	#store root domain so it only has to be accessed once
 	[string]$Script:ForestRootDomain = $Script:Forest.RootDomain
 	[string]$Script:ForestName       = $Script:Forest.Name
-	[string]$Script:Title            = "Inventory Report V2.14 for the $($Script:ForestName) Forest"
-	$Script:Domains                  = $Script:Forest.Domains | Sort
 	#set naming context
-	$Script:ConfigNC                 = (Get-ADRootDSE -Server $ADForest -EA 0).ConfigurationNamingContext
 }
 #endregion
 
@@ -6328,7 +6606,7 @@ Function ProcessForestInformation
 		"WindowsThresholdForest"   {$ForestMode = "Windows Server 2016 TP4"; Break}
 		"Windows2016Forest"		   {$ForestMode = "Windows Server 2016"; Break}
 		"UnknownForest"            {$ForestMode = "Unknown Forest Mode"; Break}
-		Default                    {$ForestMode = "Unable to determine Forest Mode: $($Forest.ForestMode)"; Break}
+		Default                    {$ForestMode = "Unable to determine Forest Mode: $($Script:Forest.ForestMode)"; Break}
 	}
 
 	$AppPartitions         = $Script:Forest.ApplicationPartitions | Sort
@@ -6346,6 +6624,40 @@ Function ProcessForestInformation
 	If($TombstoneLifetime -eq $Null -or $TombstoneLifetime -eq 0)
 	{
 		$TombstoneLifetime = 60
+	}
+
+	#2.16
+	#move this duplicated block of code outside the output format test
+	If($ADDomain -ne "")
+	{
+		#2.16 don't mess with the $Script:Domains variable
+		#redo list of domains so forest root domain is listed first
+		[array]$tmpDomains = "$Script:ForestRootDomain"
+		[array]$tmpDomains2 = "$($Script:ForestRootDomain)"
+		ForEach($Domain in $Forest.Domains)
+		{
+			If($Domain -ne $Script:ForestRootDomain)
+			{
+				$tmpDomains += "$($Domain.ToString())"
+				$tmpDomains2 += "$($Domain.ToString())"
+			}
+		}
+	}
+	Else
+	{
+		#redo list of domains so forest root domain is listed first
+		[array]$tmpDomains = "$Script:ForestRootDomain"
+		[array]$tmpDomains2 = "$($Script:ForestRootDomain)"
+		ForEach($Domain in $Script:Domains)
+		{
+			If($Domain -ne $Script:ForestRootDomain)
+			{
+				$tmpDomains += "$($Domain.ToString())"
+				$tmpDomains2 += "$($Domain.ToString())"
+			}
+		}
+		
+		$Script:Domains = $tmpDomains
 	}
 
 	If($MSWORD -or $PDF)
@@ -6480,21 +6792,6 @@ Function ProcessForestInformation
 		}
 		Else
 		{
-			#redo list of domains so forest root domain is listed first
-			[array]$tmpDomains = "$Script:ForestRootDomain"
-			[array]$tmpDomains2 = "$($Script:ForestRootDomain)"
-			ForEach($Domain in $Script:Domains)
-			{
-				If($Domain -ne $Script:ForestRootDomain)
-				{
-					$tmpDomains += "$($Domain.ToString())"
-					$tmpDomains2 += "$($Domain.ToString())"
-				}
-			}
-			
-			$Script:Domains = $tmpDomains
-			$tmp = $tmpDomains2
-			
 			$cnt = 0
 			ForEach($Domain in $tmpDomains2)
 			{
@@ -6677,20 +6974,6 @@ Function ProcessForestInformation
 		}
 		Else
 		{
-			#redo list of domains so forest root domain is listed first
-			[array]$tmpDomains = "$Script:ForestRootDomain"
-			[array]$tmpDomains2 = "$($Script:ForestRootDomain)"
-			ForEach($Domain in $Script:Domains)
-			{
-				If($Domain -ne $Script:ForestRootDomain)
-				{
-					$tmpDomains += "$($Domain.ToString())"
-					$tmpDomains2 += "$($Domain.ToString())"
-				}
-			}
-			
-			$Script:Domains = $tmpDomains
-			
 			Line 0 "Domains in forest`t: " -NoNewLine
 			$cnt = 0
 			
@@ -6869,21 +7152,6 @@ Function ProcessForestInformation
 		}
 		Else
 		{
-			#redo list of domains so forest root domain is listed first
-			[array]$tmpDomains = "$Script:ForestRootDomain"
-			[array]$tmpDomains2 = "$($Script:ForestRootDomain)"
-			ForEach($Domain in $Script:Domains)
-			{
-				If($Domain -ne $Script:ForestRootDomain)
-				{
-					$tmpDomains += "$($Domain.ToString())"
-					$tmpDomains2 += "$($Domain.ToString())"
-				}
-			}
-			
-			$Script:Domains = $tmpDomains
-			$tmp = $tmpDomains2
-			
 			$cnt = 0
 			ForEach($Domain in $tmpDomains2)
 			{
@@ -6960,9 +7228,13 @@ Function ProcessAllDCsInTheForest
 
 	#http://www.superedge.net/2012/09/how-to-get-ad-forest-in-powershell.html
 	#http://msdn.microsoft.com/en-us/library/vstudio/system.directoryservices.activedirectory.forest.getforest%28v=vs.90%29
-	$ADContext = New-Object System.DirectoryServices.ActiveDirectory.DirectoryContext("forest", $ADForest) 
+	#$ADContext = New-Object System.DirectoryServices.ActiveDirectory.DirectoryContext("forest", $ADForest) 
+	#2.16 change
+	$ADContext = New-Object System.DirectoryServices.ActiveDirectory.DirectoryContext("forest", $Script:Forest.Name)
 	$Forest2 = [system.directoryservices.activedirectory.Forest]::GetForest($ADContext)
+	Write-Verbose "$(Get-Date): `t`tBuild list of Domain controllers in the Forest"
 	$AllDCs = $Forest2.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
+	Write-Verbose "$(Get-Date): `t`tSort list of all Domain controllers"
 	$AllDCs = $AllDCs | Sort
 	$ADContext = $Null
 	$Forest2 = $Null
@@ -6989,6 +7261,7 @@ Function ProcessAllDCsInTheForest
 			[System.Collections.Hashtable[]] $WordTableRowHash = @();
 			ForEach($DC in $AllDCs)
 			{
+				Write-Verbose "$(Get-Date): `t`t`t$DC"
 				$DCName = $DC.SubString(0,$DC.IndexOf("."))
 				$SrvName = $DC.SubString($DC.IndexOf(".")+1)
 				
@@ -7001,8 +7274,8 @@ Function ProcessAllDCsInTheForest
 				}
 				Else
 				{
-					$GC = "Unknown"
-					$ReadOnly = "Unknown"
+					$GC = "Unable to retrieve status"
+					$ReadOnly = "Unable to retrieve status"
 				}
 				
 				$WordTableRowHash += @{ 
@@ -7016,27 +7289,56 @@ Function ProcessAllDCsInTheForest
 		}
 		ElseIf($Text)
 		{
+			#V2.16 addition
+			[int]$MaxDCNameLength = ($AllDCs | Measure-Object -Maximum -Property Length).Maximum
+			
+			If($MaxDCNameLength -gt 4) #4 is length of "Name"
+			{
+				#2 is to allow for spacing between columns
+				Line 1 ("Name" + (' ' * ($MaxDCNameLength - 2))) -NoNewLine
+				Line 0 "Global Catalog            Read-only                "
+				Line 1 ('=' * $MaxDCNameLength) -NoNewLine
+				Line 0 "====================================================="
+			}
+			Else
+			{
+				Line 1 "Name  Global Catalog            Read-only                "
+				Line 1 "==========================================================="
+			}
+			
 			ForEach($DC in $AllDCs)
 			{
+				Write-Verbose "$(Get-Date): `t`t`t$DC"
 				$DCName = $DC.SubString(0,$DC.IndexOf("."))
 				$SrvName = $DC.SubString($DC.IndexOf(".")+1)
-				Line 1 "Name`t`t: " $DC
 				
 				$Results = Get-ADDomainController -Identity $DCName -Server $SrvName -EA 0
 				
+				#V2.16 change
 				If($? -and $Null -ne $Results)
 				{
-					Line 1 "Global Catalog`t: " $Results.IsGlobalCatalog.ToString()
-					Line 1 "Read-only`t: " $Results.IsReadOnly.ToString()
+					$xGC = $Results.IsGlobalCatalog.ToString()
+					$xRO = $Results.IsReadOnly.ToString()
 				}
 				Else
 				{
-					Line 1 "Global Catalog`t: Unknown"
-					Line 1 "Read-only`t: Unknown"
+					$xGC = "Unable to retrieve status"
+					$xRO = "Unable to retrieve status"
 				}
-				Line 0 ""
+
+				If(($DC).Length -lt ($MaxDCNameLength))
+				{
+					[int]$NumOfSpaces = ($MaxDCNameLength * -1) 
+				}
+				Else
+				{
+					[int]$NumOfSpaces = -4
+				}
+				Line 1 ( "{0,$NumOfSpaces}  {1,-25} {2,-25}" -f $DC,$xGC,$xRO)
+
 				$Results = $Null
 			}
+			Line 0 ""
 		}
 		ElseIf($HTML)
 		{
@@ -7044,6 +7346,7 @@ Function ProcessAllDCsInTheForest
 			
 			ForEach($DC in $AllDCs)
 			{
+				Write-Verbose "$(Get-Date): `t`t`t$DC"
 				$DCName = $DC.SubString(0,$DC.IndexOf("."))
 				$SrvName = $DC.SubString($DC.IndexOf(".")+1)
 				
@@ -7056,8 +7359,8 @@ Function ProcessAllDCsInTheForest
 				}
 				Else
 				{
-					$GC = "Unknown"
-					$ReadOnly = "Unknown"
+					$GC = "Unable to retrieve status"
+					$ReadOnly = "Unable to retrieve status"
 				}
 				
 				$rowdata += @(,($DC,$htmlwhite,
@@ -7144,6 +7447,7 @@ Function ProcessCAInformation
 	$rootCA = 'CN=Certification Authorities,CN=Public Key Services,CN=Services,' + $configNC
 	$rootObj = [ADSI] ( 'LDAP://' + $rootCA )
 	$RootCnt = 0
+	$AllCnt = 0
 	
 	If($Null -ne $rootObj)
 	{
@@ -7409,6 +7713,7 @@ Function ProcessADOptionalFeatures
 			If($Item.EnabledScopes.Count -gt 0)
 			{
 				$Enabled = "Yes"
+				$EnabledScopes = $Item.EnabledScopes | Sort
 			}
 			
 			If($MSWORD -or $PDF)
@@ -7421,7 +7726,7 @@ Function ProcessADOptionalFeatures
 				{
 					
 					$cnt = 0
-					ForEach($Scope in $Item.EnabledScopes)
+					ForEach($Scope in $EnabledScopes)
 					{
 						$cnt++
 					
@@ -7463,7 +7768,7 @@ Function ProcessADOptionalFeatures
 					Line 1 "Enabled Scopes`t: " -NoNewLine
 					
 					$cnt = 0
-					ForEach($Scope in $Item.EnabledScopes)
+					ForEach($Scope in $EnabledScopes)
 					{
 						$cnt++
 					
@@ -7493,7 +7798,7 @@ Function ProcessADOptionalFeatures
 				{
 					
 					$cnt = 0
-					ForEach($Scope in $Item.EnabledScopes)
+					ForEach($Scope in $EnabledScopes)
 					{
 						$cnt++
 					
@@ -7554,6 +7859,217 @@ Function ProcessADOptionalFeatures
 			WriteHTMLLine 0 0 " "
 		}
 	}
+}
+#endregion
+
+#region process ad schema items
+
+#new for 2.16
+Function ProcessADSchemaItems
+{
+	Param(
+		[String []] $Name = @( 
+		'User-Account-Control', #Flags that control the behavior of a user account
+		'msNPAllowDialin', #RAS Server
+		'ms-Mcs-AdmPwd', #LAPS
+		'ms-Mcs-AdmPwdExpirationTime', #LAPS
+		'ms-SMS-Assignment-Site-Code', #SCCM
+		'ms-SMS-Capabilities', #SCCM
+		'msRTCSIP-UserRoutingGroupId', #Lync/SfB
+		'msRTCSIP-MirrorBackEndServer', #Lync/SfB
+		'ms-exch-schema-version-pt' #Exchange
+		)
+	)
+
+	Write-Verbose "$(Get-Date): `tAD Schema Items"
+	
+	$txt = "AD Schema Items"
+	$txt1 = "Just because a schema extension is Present does not mean it is in use."
+	If($MSWORD -or $PDF)
+	{
+		WriteWordLine 3 0 $txt
+		WriteWordLine 0 0 $txt1 "" $Null 8 $False $True	
+	}
+	ElseIf($Text)
+	{
+		Line 0 $txt
+		Line 0 $txt1
+		Line 0 ""
+	}
+	ElseIf($HTML)
+	{
+		WriteHTMLLine 3 0 $txt
+		WriteHTMLLine 0 0 $txt1 "" "Calibri" 1
+	}
+
+	$rootDS   = [ADSI] 'LDAP://RootDSE'
+	$schemaNC = $rootDS.schemaNamingContext.Item( 0 )
+
+	$SchemaItems = @()
+	ForEach( $item in $Name )
+	{
+		Write-Verbose "$(Get-Date): `t`tChecking for $item declared in schema"
+
+		$objDN = 'LDAP://' + 'CN=' + $item + ',' + $schemaNC
+
+		$obj = [ADSI] $objDN
+		$mem = Get-Member -Name name -InputObject $obj
+
+		$Itemobj = New-Object -TypeName PSObject
+
+		Switch ($item)
+		{
+			'User-Account-Control'			{$tmp = "Flags that control the behavior of a user account"}
+			'msNPAllowDialin'				{$tmp = "RAS Server"}
+			'ms-Mcs-AdmPwd'					{$tmp = "LAPS"}
+			'ms-Mcs-AdmPwdExpirationTime'	{$tmp = "LAPS"}
+			'ms-SMS-Assignment-Site-Code'	{$tmp = "SCCM"}
+			'ms-SMS-Capabilities'			{$tmp = "SCCM"}
+			'msRTCSIP-UserRoutingGroupId'	{$tmp = "Lync/Skype for Business"}
+			'msRTCSIP-MirrorBackEndServer'	{$tmp = "Lync/Skype for Business"}
+			'ms-exch-schema-version-pt' 	{$tmp = "Exchange"}
+			Default							{$tmp = "Unknown"}
+		}
+		
+		If( $mem )
+		{
+			$Itemobj | Add-Member -MemberType NoteProperty -Name ItemName	-Value $item
+			$Itemobj | Add-Member -MemberType NoteProperty -Name ItemState	-Value "Present"
+			$Itemobj | Add-Member -MemberType NoteProperty -Name ItemDesc	-Value $tmp
+			$SchemaItems += $Itemobj
+		}
+		Else
+		{
+			$Itemobj | Add-Member -MemberType NoteProperty -Name ItemName	-Value $item
+			$Itemobj | Add-Member -MemberType NoteProperty -Name ItemState	-Value "Not Present"
+			$Itemobj | Add-Member -MemberType NoteProperty -Name ItemDesc	-Value $tmp
+			$SchemaItems += $Itemobj
+		}
+		$mem = $null
+		$obj = $null
+	}
+
+	If($MSWORD -or $PDF)
+	{
+		$TableRange = $doc.Application.Selection.Range
+		[int]$Columns = 3
+		If($SchemaItems -is [array])
+		{
+			[int]$Rows = $SchemaItems.Count + 1
+		}
+		Else
+		{
+			[int]$Rows = 2
+		}
+		[int]$xRow = 1
+
+		$Table = $doc.Tables.Add($TableRange, $Rows, $Columns)
+		$Table.AutoFitBehavior($wdAutoFitFixed)
+		$Table.Style = $Script:MyHash.Word_TableGrid
+	
+		$Table.rows.first.headingformat = $wdHeadingFormatTrue
+		$Table.Borders.InsideLineStyle = $wdLineStyleSingle
+		$Table.Borders.OutsideLineStyle = $wdLineStyleSingle
+
+		$Table.Rows.First.Shading.BackgroundPatternColor = $wdColorGray15
+		$Table.Cell($xRow,1).Range.Font.Bold = $True
+		$Table.Cell($xRow,1).Range.Text = "Schema item name"
+		
+		$Table.Cell($xRow,2).Range.Font.Bold = $True
+		$Table.Cell($xRow,2).Range.Text = "Present"
+		
+		$Table.Cell($xRow,3).Range.Font.Bold = $True
+		$Table.Cell($xRow,3).Range.Text = "Used for"
+		
+	}
+	ElseIf($Text)
+	{
+		#V2.16 change
+		Line 1 "Schema item name                Present      Used for                                         "
+		Line 1 "=============================================================================================="
+	}
+	ElseIf($HTML)
+	{
+		$rowdata = @()
+	}
+	
+	ForEach($item in $SchemaItems)
+	{
+		If($MSWORD -or $PDF)
+		{
+			$xRow++
+			If($xRow % 2 -eq 0)
+			{
+				$Table.Cell($xRow,1).Shading.BackgroundPatternColor = $wdColorGray05
+				$Table.Cell($xRow,2).Shading.BackgroundPatternColor = $wdColorGray05
+				$Table.Cell($xRow,3).Shading.BackgroundPatternColor = $wdColorGray05
+			}
+			$Table.Cell($xRow,1).Range.Text = $Item.ItemName
+			$Table.Cell($xRow,2).Range.Text = $Item.ItemState
+			$Table.Cell($xRow,3).Range.Text = $Item.ItemDesc
+		}
+		ElseIf($Text)
+		{
+			#V2.16 change
+			Line 1 ( "{0,-30}  {1,-11}  {2,-50}" -f $Item.ItemName,$Item.ItemState,$Item.ItemDesc)
+		}
+		ElseIf($HTML)
+		{
+			$rowdata += @(,(
+			$Item.ItemName,$htmlwhite,
+			$Item.ItemState,$htmlwhite,
+			$Item.ItemDesc,$htmlwhite))
+		}
+	}
+
+	If($MSWORD -or $PDF)
+	{
+		#set column widths
+		$xcols = $table.columns
+
+		ForEach($xcol in $xcols)
+		{
+			switch ($xcol.Index)
+			{
+			  1 {$xcol.width = 200; Break}
+			  2 {$xcol.width = 75; Break}
+			  3 {$xcol.width = 200; Break}
+			}
+		}
+		
+		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustNone)
+		$Table.AutoFitBehavior($wdAutoFitFixed)
+
+		#return focus back to document
+		$doc.ActiveWindow.ActivePane.view.SeekView = $wdSeekMainDocument
+
+		#move to the end of the current document
+		$selection.EndKey($wdStory,$wdMove) | Out-Null
+		WriteWordLine 0 0 ""
+		$TableRange = $Null
+		$Table = $Null
+	}
+	ElseIf($Text)
+	{
+		#V2.16 change
+		Line 0 ""
+	}
+	ElseIf($HTML)
+	{
+		$columnHeaders = @('Schema item name',($htmlsilver -bor $htmlbold),
+							'Present',($htmlsilver -bor $htmlbold),
+							'Used for',($htmlsilver -bor $htmlbold)
+							)
+		$msg = ""
+		$columnWidths = @("200","75","200")
+		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "475"
+		WriteHTMLLine 0 0 " "
+	}
+	
+	$rootDS      = $null
+	$schemaNC    = $null
+	$objDN       = $null
+	$SchemaItems = $null
 }
 #endregion
 
@@ -7712,7 +8228,7 @@ Function ProcessSiteInformation
 			ForEach($Site in $Sites)
 			{
 				Write-Verbose "$(Get-Date): `tProcessing site $($Site.Name)"
-				WriteWordLine 2 0 $Site.Name
+				WriteWordLine 2 0 "Site: " $Site.Name
 
 				WriteWordLine 3 0 "Subnets"
 				Write-Verbose "$(Get-Date): `t`tProcessing subnets"
@@ -7968,7 +8484,7 @@ Function ProcessSiteInformation
 			ForEach($Site in $Sites)
 			{
 				Write-Verbose "$(Get-Date): `tProcessing site $($Site.Name)"
-				Line 0 $Site.Name
+				Line 0 "Site: " $Site.Name
 
 				Line 1 "Subnets"
 				Write-Verbose "$(Get-Date): `t`tProcessing subnets"
@@ -8214,7 +8730,7 @@ Function ProcessSiteInformation
 			ForEach($Site in $Sites)
 			{
 				Write-Verbose "$(Get-Date): `tProcessing site $($Site.Name)"
-				WriteHTMLLine 2 0 $Site.Name
+				WriteHTMLLine 2 0 "Site: " $Site.Name
 
 				WriteHTMLLine 3 0 "Subnets"
 				Write-Verbose "$(Get-Date): `t`tProcessing subnets"
@@ -8463,7 +8979,11 @@ Function ProcessDomains
 	"15303" = "Exchange 2013 CU6";
 	"15312" = "Exchange 2013 CU7/CU8/CU9/CU10/CU11/CU12/CU13";
 	"15317" = "Exchange 2016";
-	"15323" = "Exchange 2016 CU1"
+	"15323" = "Exchange 2016 CU1";
+	"15325" = "Exchange 2016 CU2";
+	"15326" = "Exchange 2016 CU3/CU4/CU5"; #added in 2.16
+	"15330" = "Exchange 2016 CU6"; #added in 2.16
+	"15332" = "Exchange 2016 CU7" #added in 2.16
 	}
 
 	ForEach($Domain in $Script:Domains)
@@ -8771,79 +9291,6 @@ Function ProcessDomains
 						
 						$ScriptInformation += @{ Data = "Created"; Value = $Trust.Created; }
 						$ScriptInformation += @{ Data = "Modified"; Value = $Trust.Modified; }
-<#
-						$TrustDirectionNumber = $Trust.TrustDirection
-						$TrustTypeNumber = $Trust.TrustType
-						$TrustAttributesNumber = $Trust.TrustAttributes
-
-						#http://msdn.microsoft.com/en-us/library/cc234293.aspx
-						Switch ($TrustTypeNumber) 
-						{ 
-							1 { $TrustType = "Trust with a Windows domain not running Active Directory"; Break} 
-							2 { $TrustType = "Trust with a Windows domain running Active Directory"; Break} 
-							3 { $TrustType = "Trust with a non-Windows-compliant Kerberos distribution"; Break} 
-							4 { $TrustType = "Trust with a DCE realm (not used)"; Break} 
-							Default { $TrustType = "Invalid Trust Type of $($TrustTypeNumber)" ; Break}
-						} 
-						$ScriptInformation += @{ Data = "Type"; Value = $TrustType; }
-
-						#http://msdn.microsoft.com/en-us/library/cc223779.aspx
-						#thanks to former CTP Jeremy Saunders for the following switch statement for trustAttributes
-						#I adapted his code
-						$attributes = @()
-						#$hextrustAttributesValue = '{0:X}' -f $trustAttributesNumber
-						Switch ($trustAttributesNumber)
-						{
-							{($trustAttributesNumber -bor 0x00000001) -eq $trustAttributesNumber} 
-								{$attributes += "Non-Transitive"}
-							
-							{($trustAttributesNumber -bor 0x00000002) -eq $trustAttributesNumber} 
-								{$attributes += "Uplevel clients only"}
-							
-							{($trustAttributesNumber -bor 0x00000004) -eq $trustAttributesNumber} 
-								{$attributes += "Quarantined Domain (External, SID Filtering)"}
-							
-							{($trustAttributesNumber -bor 0x00000008) -eq $trustAttributesNumber} 
-								{$attributes += "Cross-Organizational Trust (Selective Authentication)"}
-							
-							{($trustAttributesNumber -bor 0x00000010) -eq $trustAttributesNumber} 
-								{$attributes += "Intra-Forest Trust"}
-							
-							{($trustAttributesNumber -bor 0x00000020) -eq $trustAttributesNumber} 
-								{$attributes += "Inter-Forest Trust"}
-							
-							{($trustAttributesNumber -bor 0x00000040) -eq $trustAttributesNumber} 
-								{$attributes += "MIT Trust using RC4 Encryption"}
-							
-							{($trustAttributesNumber -bor 0x00000200) -eq $trustAttributesNumber} 
-								{$attributes += "Cross organization Trust no TGT delegation"}
-						}
-
-						$cnt = 0
-						ForEach($attribute in $attributes)
-						{
-							$cnt++
-							
-							If($cnt -eq 1)
-							{
-								$ScriptInformation += @{ Data = "Attributes"; Value = $attribute.ToString(); }
-							}
-							Else
-							{
-								$ScriptInformation += @{ Data = ""; Value = "$($attribute.ToString())"; }
-							}
-						}
-
-						#http://msdn.microsoft.com/en-us/library/cc223768.aspx
-						Switch ($TrustDirectionNumber) 
-						{ 
-							0 { $TrustDirection = "Disabled"; Break} 
-							1 { $TrustDirection = "Inbound"; Break} 
-							2 { $TrustDirection = "Outbound"; Break} 
-							3 { $TrustDirection = "Bidirectional"; Break} 
-							Default { $TrustDirection = $TrustDirectionNumber ; Break}
-						}
-#>
 
 						$TrustExtendedAttributes = Get-ADTrustInfo $Trust
 						
@@ -8978,7 +9425,7 @@ Function ProcessDomains
 							
 							If($FGPP.ComplexityEnabled -eq $True)
 							{
-								$ScriptInformation += @{ Data = "Password must meet complexity requirements"; Value = Enabled; }
+								$ScriptInformation += @{ Data = "Password must meet complexity requirements"; Value = "Enabled"; }
 							}
 							Else
 							{
@@ -9284,85 +9731,10 @@ Function ProcessDomains
 						
 						Line 1 "Created`t`t: " $Trust.Created
 						Line 1 "Modified`t: " $Trust.Modified
-<#
-						$TrustDirectionNumber = $Trust.TrustDirection
-						$TrustTypeNumber = $Trust.TrustType
-						$TrustAttributesNumber = $Trust.TrustAttributes
 
-						#http://msdn.microsoft.com/en-us/library/cc234293.aspx
-						Switch ($TrustTypeNumber) 
-						{ 
-							1 { $TrustType = "Trust with a Windows domain not running Active Directory"; Break} 
-							2 { $TrustType = "Trust with a Windows domain running Active Directory"; Break} 
-							3 { $TrustType = "Trust with a non-Windows-compliant Kerberos distribution"; Break} 
-							4 { $TrustType = "Trust with a DCE realm (not used)"; Break} 
-							Default { $TrustType = "Invalid Trust Type of $($TrustTypeNumber)" ; Break}
-						} 
-						Line 1 "Type`t`t: " $TrustType
-
-						#http://msdn.microsoft.com/en-us/library/cc223779.aspx
-						#thanks to former CTP Jeremy Saunders for the following switch statement for trustAttributes
-						#I adapted his code
-						$attributes = @()
-						$hextrustAttributesValue = '{0:X}' -f $trustAttributesNumber
-						Switch ($hextrustAttributesValue)
-						{
-							{($hextrustAttributesValue -bor 0x00000001) -eq $hextrustAttributesValue} 
-								{$attributes += "Non-Transitive"; break}
-							
-							{($hextrustAttributesValue -bor 0x00000002) -eq $hextrustAttributesValue} 
-								{$attributes += "Uplevel clients only"; break}
-							
-							{($hextrustAttributesValue -bor 0x00000004) -eq $hextrustAttributesValue} 
-								{$attributes += "Quarantined Domain (External, SID Filtering)"; break}
-							
-							{($hextrustAttributesValue -bor 0x00000008) -eq $hextrustAttributesValue} 
-								{$attributes += "Cross-Organizational Trust (Selective Authentication)"; break}
-							
-							{($hextrustAttributesValue -bor 0x00000010) -eq $hextrustAttributesValue} 
-								{$attributes += "Intra-Forest Trust"; break}
-							
-							{($hextrustAttributesValue -bor 0x00000020) -eq $hextrustAttributesValue} 
-								{$attributes += "Inter-Forest Trust"; break}
-							
-							{($hextrustAttributesValue -bor 0x00000040) -eq $hextrustAttributesValue} 
-								{$attributes += "MIT Trust using RC4 Encryption"; break}
-							
-							{($hextrustAttributesValue -bor 0x00000200) -eq $hextrustAttributesValue} 
-								{$attributes += "Cross organization Trust no TGT delegation"; break}
-						}
-
-						Line 1 "Attributes`t: " -NoNewLine
-						$cnt = 0
-						ForEach($attribute in $attributes)
-						{
-							$cnt++
-							
-							If($cnt -eq 1)
-							{
-								Line 0 $attribute.ToString()
-							}
-							Else
-							{
-								Line 3 "  $($attribute.ToString())"
-							}
-						}
-
-						#http://msdn.microsoft.com/en-us/library/cc223768.aspx
-						Switch ($TrustDirectionNumber) 
-						{ 
-							0 { $TrustDirection = "Disabled"; Break} 
-							1 { $TrustDirection = "Inbound"; Break} 
-							2 { $TrustDirection = "Outbound"; Break} 
-							3 { $TrustDirection = "Bidirectional"; Break} 
-							Default { $TrustDirection = $TrustDirectionNumber ; Break}
-						}
-#>
 						$TrustExtendedAttributes = Get-ADTrustInfo $Trust
 						
 						Line 1 "Type`t`t: " $TrustExtendedAttributes.TrustType
-
-						
 						Line 1 "Attributes`t: " -NoNewLine
 						$cnt = 0
 						ForEach($attribute in $TrustExtendedAttributes.Trustattribute)
@@ -9759,79 +10131,6 @@ Function ProcessDomains
 						
 						$rowdata += @(,('Created',($htmlsilver -bor $htmlbold),$Trust.Created,$htmlwhite))
 						$rowdata += @(,('Modified',($htmlsilver -bor $htmlbold),$Trust.Modified,$htmlwhite))
-<#
-						$TrustDirectionNumber = $Trust.TrustDirection
-						$TrustTypeNumber = $Trust.TrustType
-						$TrustAttributesNumber = $Trust.TrustAttributes
-
-						#http://msdn.microsoft.com/en-us/library/cc234293.aspx
-						Switch ($TrustTypeNumber) 
-						{ 
-							1 { $TrustType = "Trust with a Windows domain not running Active Directory"; Break} 
-							2 { $TrustType = "Trust with a Windows domain running Active Directory"; Break} 
-							3 { $TrustType = "Trust with a non-Windows-compliant Kerberos distribution"; Break} 
-							4 { $TrustType = "Trust with a DCE realm (not used)"; Break} 
-							Default { $TrustType = "Invalid Trust Type of $($TrustTypeNumber)" ; Break}
-						} 
-						$rowdata += @(,('Type',($htmlsilver -bor $htmlbold),$TrustType,$htmlwhite))
-
-						#http://msdn.microsoft.com/en-us/library/cc223779.aspx
-						#thanks to former CTP Jeremy Saunders for the following switch statement for trustAttributes
-						#I adapted his code
-						$attributes = @()
-						$hextrustAttributesValue = '{0:X}' -f $trustAttributesNumber
-						Switch ($hextrustAttributesValue)
-						{
-							{($hextrustAttributesValue -bor 0x00000001) -eq $hextrustAttributesValue} 
-								{$attributes += "Non-Transitive"; break}
-							
-							{($hextrustAttributesValue -bor 0x00000002) -eq $hextrustAttributesValue} 
-								{$attributes += "Uplevel clients only"; break}
-							
-							{($hextrustAttributesValue -bor 0x00000004) -eq $hextrustAttributesValue} 
-								{$attributes += "Quarantined Domain (External, SID Filtering)"; break}
-							
-							{($hextrustAttributesValue -bor 0x00000008) -eq $hextrustAttributesValue} 
-								{$attributes += "Cross-Organizational Trust (Selective Authentication)"; break}
-							
-							{($hextrustAttributesValue -bor 0x00000010) -eq $hextrustAttributesValue} 
-								{$attributes += "Intra-Forest Trust"; break}
-							
-							{($hextrustAttributesValue -bor 0x00000020) -eq $hextrustAttributesValue} 
-								{$attributes += "Inter-Forest Trust"; break}
-							
-							{($hextrustAttributesValue -bor 0x00000040) -eq $hextrustAttributesValue} 
-								{$attributes += "MIT Trust using RC4 Encryption"; break}
-							
-							{($hextrustAttributesValue -bor 0x00000200) -eq $hextrustAttributesValue} 
-								{$attributes += "Cross organization Trust no TGT delegation"; break}
-						}
-
-						$cnt = 0
-						ForEach($attribute in $attributes)
-						{
-							$cnt++
-							
-							If($cnt -eq 1)
-							{
-								$rowdata += @(,('Attributes',($htmlsilver -bor $htmlbold),$attribute.ToString(),$htmlwhite))
-							}
-							Else
-							{
-								$rowdata += @(,('',($htmlsilver -bor $htmlbold),$attribute.ToString(),$htmlwhite))
-							}
-						}
-
-						#http://msdn.microsoft.com/en-us/library/cc223768.aspx
-						Switch ($TrustDirectionNumber) 
-						{ 
-							0 { $TrustDirection = "Disabled"; Break} 
-							1 { $TrustDirection = "Inbound"; Break} 
-							2 { $TrustDirection = "Outbound"; Break} 
-							3 { $TrustDirection = "Bidirectional"; Break} 
-							Default { $TrustDirection = $TrustDirectionNumber ; Break}
-						}
-#>
 	
 						$TrustExtendedAttributes = Get-ADTrustInfo $Trust
 						 
@@ -10123,7 +10422,6 @@ Function ProcessDomainControllers
 		WriteHTMLLine 1 0 "Domain Controllers in $($Script:ForestName)"
 	}
 
-	#$Script:DCDNSIPInfo = @()
 	$Script:DCDNSIPInfo = New-Object System.Collections.ArrayList
 	$Script:TimeServerInfo = New-Object System.Collections.ArrayList
 	$Script:AllDomainControllers = $Script:AllDomainControllers | Sort Name
@@ -10271,7 +10569,7 @@ Function ProcessDomainControllers
 		}
 		ElseIf($Text)
 		{
-			Line 0 $DC.Name
+			Line 0 "DC: " $DC.Name
 			Line 1 "Default partition`t`t: " $DC.DefaultPartition
 			Line 1 "Domain`t`t`t`t: " $DC.domain
 			If($DC.Enabled -eq $True)
@@ -11037,6 +11335,23 @@ Function ProcessOrganizationalUnits
 				{
 					[int]$NumOUs = 1
 				}
+				#V2.16 addition
+				[int]$MaxOUNameLength = ($OUs.CanonicalName.SubString($OUs[0].CanonicalName.IndexOf("/")+1) | measure-object -maximum -property length).maximum
+				
+				If($MaxOUNameLength -gt 4) #4 is length of "Name"
+				{
+					#2 is to allow for spacing between columns
+					Line 1 ("Name" + (' ' * ($MaxOUNameLength - 2))) -NoNewLine
+					Line 0 "Created                Protected # Users # Computers # Groups"
+					Line 1 ('=' * $MaxOUNameLength) -NoNewLine
+					Line 0 "==============================================================="
+				}
+				Else
+				{
+					Line 1 "Name  Created                Protected # Users # Computers # Groups"
+					Line 1 "==================================================================="
+				}
+
 				ForEach($OU in $OUs)
 				{
 					$OUCount++
@@ -11091,8 +11406,6 @@ Function ProcessOrganizationalUnits
 						$GroupCount = 1
 					}
 					
-					Line 1 "Name`t`t: " $OUDisplayName
-					Line 1 "Created`t`t: " $OU.Created.ToString()
 					If($OU.ProtectedFromAccidentalDeletion -eq $True)
 					{
 						$tmp = "Yes"
@@ -11101,22 +11414,27 @@ Function ProcessOrganizationalUnits
 					{
 						$tmp = "No"
 					}
-					Line 1 "Protected`t: " $tmp
-					
 					[string]$UserCountStr = "{0,7:N0}" -f $UserCount
-					[string]$ComputerCountStr = "{0,7:N0}" -f $ComputerCount
+					[string]$ComputerCountStr = "{0,11:N0}" -f $ComputerCount
 					[string]$GroupCountStr = "{0,7:N0}" -f $GroupCount
 
-					Line 1 "# Users`t`t: " $UserCountStr
-					Line 1 "# Computers`t: " $ComputerCountStr
-					Line 1 "# Groups`t: " $GroupCountStr
-					Line 0 ""
+					#V2.16 change
+					If(($OUDisplayName).Length -lt ($MaxOUNameLength))
+					{
+						[int]$NumOfSpaces = ($MaxOUNameLength * -1) 
+					}
+                    Else
+                    {
+                        [int]$NumOfSpaces = -4
+                    }
+					Line 1 ( "{0,$NumOfSpaces}  {1,-22} {2,-9} {3,-7} {4,-12} {5,-7}" -f $OUDisplayName,$OU.Created.ToString(),$tmp,$UserCountStr,$ComputerCountStr,$GroupCountStr)
 
 					$Results = $Null
 					$UserCountStr = $Null
 					$ComputerCountStr = $Null
 					$GroupCountStr = $Null
 				}
+				Line 0 ""
 				$Results = $Null
 				$UserCountStr = $Null
 				$ComputerCountStr = $Null
@@ -11701,7 +12019,12 @@ Function ProcessGroupInformation
 				ElseIf($Text)
 				{
 					Line 0 "Privileged Groups"
-					Line 1 "Domain Admins ($($AdminsCountStr) members):"
+					Line 1 "Domain Admins ($AdminsCountStr members):"
+					#V2.16 addition
+					Line 2 "                                                   Password    Password          "
+					Line 2 "                                                   Last        Never      Account"
+					Line 2 "Name                                               Changed     Expires    Enabled"
+					Line 2 "================================================================================="
 					ForEach($Admin in $Admins)
 					{
 						$User = Get-ADUser -Identity $Admin.SID -Server $Domain -Properties PasswordLastSet, Enabled, PasswordNeverExpires -EA 0
@@ -11732,20 +12055,16 @@ Function ProcessGroupInformation
 							{
 								$UserEnabled = "False"
 							}
-							Line 2 "Name`t`t`t`t: " $User.Name
-							Line 2 "Password Last Changed`t`t: " $PasswordLastSet
-							Line 2 "Password Never Expires`t`t: " $PasswordNeverExpires
-							Line 2 "Account Enabled`t`t`t: " $UserEnabled
+							#V2.16 change
+							Line 2 ( "{0,-50} {1,-11} {2,-10} {3,-5}" -f $User.Name,$PasswordLastSet,$PasswordNeverExpires,$UserEnabled)
 						}
 						Else
 						{
-							Line 2 "Name`t`t`t`t: " $Admin.SID
-							Line 2 "Password Last Changed`t`t: Unknown"
-							Line 2 "Password Never Expires`t`t: Unknown"
-							Line 2 "Account Enabled`t`t`t: Unknown"						
+							#V2.16 change
+							Line 2 ( "{0,-50} {1,-11} {2,-10} {3,-5}" -f $Admin.SID,"Unknown","Unknown","Unknown")
 						}
-						Line 0 ""
 					}
+					Line 0 ""
 				}
 				ElseIf($HTML)
 				{
@@ -11844,10 +12163,10 @@ Function ProcessGroupInformation
 				}
 			}
 
-			Write-Verbose "$(Get-Date): `t`tListing enterprise admins"
-			
 			If($Domain -eq $Script:ForestRootDomain)
 			{
+				Write-Verbose "$(Get-Date): `t`tListing enterprise admins"
+			
 				$Admins = Get-ADGroupMember -Identity $EnterpriseAdminsSID -Server $Domain -EA 0 
 				
 				If($? -and $Null -ne $Admins)
@@ -12006,7 +12325,12 @@ Function ProcessGroupInformation
 					}
 					ElseIf($Text)
 					{
-						Line 1 "Enterprise Admins ($($AdminsCountStr) members):"
+						Line 1 "Enterprise Admins ($AdminsCountStr members):"
+						#V2.16 addition
+						Line 2 "                                                                              Password   Password          "
+						Line 2 "                                                                              Last       Never      Account"
+						Line 2 "Name                                                Domain                    Changed    Expires    Enabled"
+						Line 2 "==========================================================================================================="
 						ForEach($Admin in $Admins)
 						{
 							$xArray = $Admin.DistinguishedName.Split(",")
@@ -12055,31 +12379,22 @@ Function ProcessGroupInformation
 									{
 										$PasswordLastSet = (get-date $User.PasswordLastSet -f d)
 									}
-									Line 2 "Name`t`t`t`t: " $User.Name
-									Line 2 "Domain`t`t`t`t: " $xServer
-									Line 2 "Password Last Changed`t`t: " $PasswordLastSet
-									Line 2 "Password Never Expires`t`t: " $User.PasswordNeverExpires.ToString()
-									Line 2 "Account Enabled`t`t`t: " $User.Enabled.ToString()
+									#V2.16 change
+									Line 2 ( "{0,-50}  {1,-25} {2,-10} {3,-10} {4,-5}" -f $User.Name,$xServer,$PasswordLastSet,$User.PasswordNeverExpires.ToString(),$User.Enabled.ToString())
 								}
 								ElseIf($Admin.ObjectClass -eq 'group')
 								{
-									Line 2 "Name`t`t`t`t: $($User.Name) (group)"
-									Line 2 "Domain`t`t`t`t: " $xServer
-									Line 2 "Password Last Changed`t`t: N/A" 
-									Line 2 "Password Never Expires`t`t: N/A" 
-									Line 2 "Account Enabled`t`t`t: N/A" 
+									#V2.16 change
+									Line 2 ( "{0,-43} (group) {1,-25} {2,-10} {3,-10} {4,-5}" -f $User.Name,$xServer,"N/A","N/A","N/A")
 								}
 							}
 							Else
 							{
-								Line 2 "Name`t`t`t`t: " $Admin.SID.Value
-								Line 2 "Domain`t`t`t`t: " $xServer
-								Line 2 "Password Last Changed`t`t: Unknown"
-								Line 2 "Password Never Expires`t`t: Unknown"
-								Line 2 "Account Enabled`t`t`t: Unknown"
+								#v2.16 change
+								Line 2 ( "{0,-50} {1,-25} {2,-10} {3,-10} {4,-5}" -f $Admin.SID.Value,$xServer,"Unknown","Unknown","Unknown")
 							}
-							Line 0 ""
 						}
+						Line 0 ""
 					}
 					ElseIf($HTML)
 					{
@@ -12220,10 +12535,10 @@ Function ProcessGroupInformation
 				}
 			}
 			
-			Write-Verbose "$(Get-Date): `t`tListing schema admins"
-			
 			If($Domain -eq $Script:ForestRootDomain)
 			{
+				Write-Verbose "$(Get-Date): `t`tListing schema admins"
+			
 				$Admins = Get-ADGroupMember -Identity $SchemaAdminsSID -Server $Domain -EA 0 
 				
 				If($? -and $Null -ne $Admins)
@@ -12384,6 +12699,11 @@ Function ProcessGroupInformation
 					ElseIf($Text)
 					{
 						Line 1 "Schema Admins ($($AdminsCountStr) members): "
+						#V2.16 addition
+						Line 2 "                                                                              Password   Password          "
+						Line 2 "                                                                              Last       Never      Account"
+						Line 2 "Name                                                Domain                    Changed    Expires    Enabled"
+						Line 2 "==========================================================================================================="
 						ForEach($Admin in $Admins)
 						{
 							$xArray = $Admin.DistinguishedName.Split(",")
@@ -12432,32 +12752,22 @@ Function ProcessGroupInformation
 									{
 										$PasswordLastSet = (get-date $User.PasswordLastSet -f d)
 									}
-									Line 2 "Name`t`t`t`t: " $User.Name
-									Line 2 "Domain`t`t`t`t: " $xServer
-									Line 2 "Password Last Changed`t`t: " $PasswordLastSet
-									Line 2 "Password Never Expires`t`t: " $User.PasswordNeverExpires.ToString()
-									Line 2 "Account Enabled`t`t`t: " $User.Enabled.ToString()
+									#V2.16 change
+									Line 2 ( "{0,-50}  {1,-25} {2,-10} {3,-10} {4,-5}" -f $User.Name,$xServer,$PasswordLastSet,$User.PasswordNeverExpires.ToString(),$User.Enabled.ToString())
 								}
 								ElseIf($Admin.ObjectClass -eq 'group')
 								{
-									Line 2 "Name`t`t`t`t: $($User.Name) (group)"
-									Line 2 "Domain`t`t`t`t: " $xServer
-									Line 2 "Password Last Changed`t`t: N/A" 
-									Line 2 "Password Never Expires`t`t: N/A" 
-									Line 2 "Account Enabled`t`t`t: N/A" 
+									#V2.16 change
+									Line 2 ( "{0,-43} (group) {1,-25} {2,-10} {3,-10} {4,-5}" -f $User.Name,$xServer,"N/A","N/A","N/A")
 								}
-								
 							}
 							Else
 							{
-								Line 2 "Name`t`t`t`t: " $Admin.SID.Value
-								Line 2 "Domain`t`t`t`t: " $xServer
-								Line 2 "Password Last Changed`t`t: Unknown"
-								Line 2 "Password Never Expires`t`t: Unknown"
-								Line 2 "Account Enabled`t`t`t: Unknown"
+								#v2.16 change
+								Line 2 ( "{0,-50} {1,-25} {2,-10} {3,-10} {4,-5}" -f $Admin.SID.Value,$xServer,"Unknown","Unknown","Unknown")
 							}
-							Line 0 ""
 						}
+						Line 0 ""
 					}
 					ElseIf($HTML)
 					{
@@ -12599,7 +12909,7 @@ Function ProcessGroupInformation
 			}
 
 			#http://www.shariqsheikh.com/blog/index.php/200908/use-powershell-to-look-up-admincount-from-adminsdholder-and-sdprop/		
-			Write-Verbose "$(Get-Date): `t`tListing users with AdminCount = 1"
+			Write-Verbose "$(Get-Date): `t`tListing users with AdminCount=1"
 			$AdminCounts = Get-ADUser -LDAPFilter "(admincount=1)"  -Server $Domain -EA 0 
 			
 			If($? -and $Null -ne $AdminCounts)
@@ -12617,7 +12927,7 @@ Function ProcessGroupInformation
 				
 				If($MSWORD -or $PDF)
 				{
-					WriteWordLine 4 0 "Users with AdminCount=1 ($($AdminsCountStr) users):"
+					WriteWordLine 4 0 "Users with AdminCount=1 ($AdminsCountStr users):"
 					$TableRange = $Script:doc.Application.Selection.Range
 					[int]$Columns = 4
 					[int]$Rows = $AdminCounts.Count + 1
@@ -12710,7 +13020,12 @@ Function ProcessGroupInformation
 				}
 				ElseIf($Text)
 				{
-					Line 1 "Users with AdminCount=1 ($($AdminsCountStr) users):"
+					Line 1 "Users with AdminCount=1 ($AdminsCountStr users):"
+					#V2.16 addition
+					Line 2 "                                                   Password   Password          "
+					Line 2 "                                                   Last       Never      Account"
+					Line 2 "Name                                               Changed    Expires    Enabled"
+					Line 2 "================================================================================"
 					ForEach($Admin in $AdminCounts)
 					{
 						$User = Get-ADUser -Identity $Admin.SID -Server $Domain `
@@ -12742,20 +13057,16 @@ Function ProcessGroupInformation
 							{
 								$UserEnabled = "False"
 							}
-							Line 2 "Name`t`t`t`t: " $User.Name
-							Line 2 "Password Last Changed`t`t: " $PasswordLastSet
-							Line 2 "Password Never Expires`t`t: " $PasswordNeverExpires
-							Line 2 "Account Enabled`t`t`t: " $UserEnabled
+							#V2.16 change
+							Line 2 ( "{0,-50} {1,-10} {2,-10} {3,-5}" -f $User.Name,$PasswordLastSet,$PasswordNeverExpires,$UserEnabled)
 						}
 						Else
 						{
-							Line 2 "Name`t`t`t`t: " $Admin.SID
-							Line 2 "Password Last Changed`t`t: Unknown"
-							Line 2 "Password Never Expires`t`t: Unknown"
-							Line 2 "Account Enabled`t`t`t: Unknown"						
+							#V2.16 change
+							Line 2 ( "{0,-50} {1,-10} {2,-10} {3,-5}" -f $Admin.SID,"Unknown","Unknown","Unknown")
 						}
-						Line 0 ""
 					}
+					Line 0 ""
 				}
 				ElseIf($HTML)
 				{
@@ -13509,8 +13820,6 @@ Function ProcessgGPOsByOUOld
 							$Table = $Script:doc.Tables.Add($TableRange, $Rows, $Columns)
 							$Table.Style = $Script:MyHash.Word_TableGrid
 			
-							#$Table.Borders.InsideLineStyle = $wdLineStyleSingle
-							#$Table.Borders.OutsideLineStyle = $wdLineStyleSingle
 							$Table.Borders.InsideLineStyle = $wdLineStyleNone
 							$Table.Borders.OutsideLineStyle = $wdLineStyleNone
 							
@@ -13713,8 +14022,30 @@ Function ProcessgGPOsByOUNew
 				If($? -and $Null -ne $OUInfo)
 				{
 					Write-Verbose "$(Get-Date): `t`t`tGetting linked and inherited GPOs"
-					$LinkedGPOs = (Get-GPInheritance -target $OU.DistinguishedName -EA 0).gpolinks.DisplayName
-					$InheritedGPOs = (Get-GPInheritance -target $OU.DistinguishedName -EA 0).inheritedgpolinks.DisplayName
+					
+					#change for 2.16
+					#work around invalid property DisplayName when the gpolinks and inheritedgpolinks collections are empty
+					
+					$Results = Get-GPInheritance -target $OU.DistinguishedName -EA 0
+					
+					If(($Results.gpoLinks).Count -gt 0)
+					{
+						$LinkedGPOs = $Results.gpolinks.DisplayName
+					}
+					Else
+					{
+						$LinkedGPOs = $Null
+					}
+					
+					If(($Results.inheritedgpoLinks).Count -gt 0)
+					{
+						$InheritedGPOs = $Results.inheritedgpolinks.DisplayName
+					}
+					Else
+					{
+						$InheritedGPOs = $Null
+					}
+					
 					If($Null -eq $LinkedGPOs -and $Null -eq $InheritedGPOs)
 					{
 						# do nothing
@@ -13897,6 +14228,115 @@ Function ProcessgGPOsByOUNew
 #endregion
 
 #region misc info by domain
+#From Jeff Hicks
+#modified from his original
+#https://www.petri.com/powershell-problem-solver-active-directory-remote-desktop-settings
+#added for 2.16
+Function Get-RDUserSetting 
+{
+	[cmdletbinding(DefaultParameterSetName="SAM")]
+	 
+	Param(
+	[Parameter(Position=0,Mandatory,HelpMessage="Enter a user's sAMAccountName",
+	ValueFromPipeline,ParameterSetName="SAM")]
+	[ValidateNotNullorEmpty()]
+	[Alias("Name")]
+	[string]$SAMAccountname,
+	[Parameter(ParameterSetName="SAM")]
+	[string]$SearchRoot,
+	 
+	[Parameter(Mandatory,HelpMessage="Enter a user's distingished name",
+	ValueFromPipelineByPropertyName,ParameterSetName="DN")]
+	[ValidateNotNullorEmpty()]
+	[Alias("DN")]
+	[string]$DistinguishedName,
+	 
+	[string]$Server
+	 
+	)
+	 
+	Begin 
+	{
+		#remote desktop properties
+		$TSSettings = @("TerminalServicesProfilePath","TerminalServicesHomeDirectory","TerminalServicesHomeDrive")
+	}
+	 
+	Process 
+	{
+		Switch ($PSCmdlet.ParameterSetName) 
+		{
+			"SAM" 
+			{
+				$searcher = New-Object DirectoryServices.DirectorySearcher
+				$searcher.Filter = "(&(objectcategory=person)(objectclass=user)(samAccountname=$sAMAccountname))"
+				If($SearchRoot) 
+				{
+					If($Server) 
+					{
+						$searchPath = "LDAP://$server/$SearchRoot"
+					}
+					Else 
+					{
+						$searchPath = "LDAP://$SearchRoot"
+					}
+					$r = New-Object System.DirectoryServices.DirectoryEntry $SearchPath
+
+					$searcher.SearchRoot = $r
+				}
+				$user = $searcher.FindOne().GetDirectoryEntry()
+			} 
+			"DN" 
+			{
+				If($server) 
+				{
+					[ADSI]$User = "LDAP://$Server/$DistinguishedName"
+				}
+				Else 
+				{
+					[ADSI]$User = "LDAP://$DistinguishedName"
+				}
+			}
+		} #close Switch
+	 
+		If($user.path) 
+		{
+			#initialize a hashtable
+			Try 
+			{
+				$hash=[ordered]@{
+					DistinguishedName = $User.DistinguishedName.Value
+					Name = $user.name.Value
+					samAccountName = $user.samAccountName.value
+					AllowLogon = $user.psbase.InvokeGet("AllowLogon") -as [Boolean]
+				}
+
+				ForEach($property in $TSSettings) 
+				{
+					$hash.Add($property,$user.psbase.invokeGet($property))
+				} #foreach
+
+				#create an object
+				New-Object -TypeName PSObject -Property $hash
+			}
+			Catch 
+			{
+				#nothing
+			}
+		} #if user found
+		Else 
+		{
+			#nothing
+		}
+	 
+	} #Process
+	 
+	End 
+	{
+		#nothing
+	} #End
+ 
+} #end function
+
 Function ProcessMiscDataByDomain
 {
 	Write-Verbose "$(Get-Date): Writing miscellaneous data by domain"
@@ -13966,9 +14406,11 @@ Function ProcessMiscDataByDomain
 
 			Write-Verbose "$(Get-Date): `t`tGathering user misc data"
 			
+			#added for 2.16 HomeDrive, HomeDirectory, ProfilePath, ScriptPath, PrimaryGroup
 			$Users = Get-ADUser -Filter * -Server $Domain `
 			-Properties CannotChangePassword, Enabled, LockedOut, PasswordExpired, PasswordNeverExpires, `
-			PasswordNotRequired, lastLogonTimestamp, DistinguishedName -EA 0 
+			PasswordNotRequired, lastLogonTimestamp, DistinguishedName, SamAccountName, UserPrincipalName, `
+			HomeDrive, HomeDirectory, ProfilePath, ScriptPath, PrimaryGroup -EA 0 
 			
 			If($? -and $Null -ne $Users)
 			{
@@ -14110,6 +14552,57 @@ Function ProcessMiscDataByDomain
 					[int]$UserssWithSIDHistorycnt = 1
 				}
 
+				#2.16
+				Write-Verbose "$(Get-Date): `t`t`tAll users with Homedrive set in ADUC"
+				$HomeDriveUsers = $Users | Where {$_.HomeDrive -ne $Null}
+			
+				If($Null -eq $HomeDriveUsers)
+				{
+					[int]$UsersHomeDrivecnt = 0
+				}
+				ElseIf($HomeDriveUsers -is [array])
+				{
+					[int]$UsersHomeDrivecnt = $HomeDriveUsers.Count
+				}
+				Else
+				{
+					[int]$UsersHomeDrivecnt = 1
+				}
+				
+				#2.16
+				Write-Verbose "$(Get-Date): `t`t`tAll users whose Primary Group is not Domain Users"
+				$PrimaryGroupUsers = $Users | Where {$_.SamAccountName -ne 'Guest' -and $_.PrimaryGroup -notmatch 'Domain Users'}
+			
+				If($Null -eq $PrimaryGroupUsers)
+				{
+					[int]$UsersPrimaryGroupcnt = 0
+				}
+				ElseIf($PrimaryGroupUsers -is [array])
+				{
+					[int]$UsersPrimaryGroupcnt = $PrimaryGroupUsers.Count
+				}
+				Else
+				{
+					[int]$UsersPrimaryGroupcnt = 1
+				}
+
+				#2.16
+				Write-Verbose "$(Get-Date): `t`t`tAll users with RDS HomeDrive set in ADUC"
+				$RDSHomeDriveUsers = $users | Get-RDUserSetting | Where {$_.TerminalServicesHomeDrive -gt 0}
+			
+				If($Null -eq $RDSHomeDriveUsers)
+				{
+					[int]$UsersRDSHomeDrivecnt = 0
+				}
+				ElseIf($RDSHomeDriveUsers -is [array])
+				{
+					[int]$UsersRDSHomeDrivecnt = $RDSHomeDriveUsers.Count
+				}
+				Else
+				{
+					[int]$UsersRDSHomeDrivecnt = 1
+				}
+
 				#active users now
 				Write-Verbose "$(Get-Date): `t`t`tActive users"
 				$EnabledUsers = $Users | Where {$_.Enabled -eq $True}
@@ -14217,6 +14710,9 @@ Function ProcessMiscDataByDomain
 				[int]$UsersPasswordNotRequiredcnt = 0
 				[int]$UsersCannotChangePasswordcnt = 0
 				[int]$UsersWithSIDHistorycnt = 0
+				[int]$UsersHomeDrivecnt = 0
+				[int]$UsersPrimaryGroupcnt = 0
+				[int]$UsersRDSHomeDrivecnt = 0
 				[int]$ActiveUsersCountcnt = 0
 				[int]$ActiveUsersPasswordExpiredcnt = 0
 				[int]$ActiveUsersPasswordNeverExpirescnt = 0
@@ -14235,6 +14731,9 @@ Function ProcessMiscDataByDomain
 			[string]$UsersPasswordNotRequiredStr = "{0,7:N0}" -f $UsersPasswordNotRequiredcnt
 			[string]$UsersCannotChangePasswordStr = "{0,7:N0}" -f $UsersCannotChangePasswordcnt
 			[string]$UsersWithSIDHistoryStr = "{0,7:N0}" -f $UsersWithSIDHistorycnt
+			[string]$UsersHomeDriveStr = "{0,7:N0}" -f $UsersHomeDrivecnt
+			[string]$UsersPrimaryGroupStr = "{0,7:N0}" -f $UsersPrimaryGroupcnt
+			[string]$UsersRDSHomeDriveStr = "{0,7:N0}" -f $UsersRDSHomeDrivecnt
 			[string]$ActiveUsersCountStr = "{0,7:N0}" -f $ActiveUsersCount
 			[string]$ActiveUsersPasswordExpiredStr = "{0,7:N0}" -f $ActiveUsersPasswordExpired
 			[string]$ActiveUsersPasswordNeverExpiresStr = "{0,7:N0}" -f $ActiveUsersPasswordNeverExpires
@@ -14248,7 +14747,7 @@ Function ProcessMiscDataByDomain
 				WriteWordLine 3 0 "All Users"
 				$TableRange   = $Script:doc.Application.Selection.Range
 				[int]$Columns = 3
-				[int]$Rows = 9
+				[int]$Rows = 12
 				$Table = $Script:doc.Tables.Add($TableRange, $Rows, $Columns)
 				$Table.Style = $Script:MyHash.Word_TableGrid
 			
@@ -14331,6 +14830,33 @@ Function ProcessMiscDataByDomain
 				$pctstr = "{0,5:N2}" -f $pct
 				$Table.Cell(9,3).Range.ParagraphFormat.Alignment = $wdAlignParagraphRight
 				$Table.Cell(9,3).Range.Text = "$($pctstr)% of Total Users"
+				$Table.Cell(10,1).Shading.BackgroundPatternColor = $wdColorGray15
+				$Table.Cell(10,1).Range.Font.Bold = $True
+				$Table.Cell(10,1).Range.Text = "HomeDrive users"
+				$Table.Cell(10,2).Range.ParagraphFormat.Alignment = $wdAlignParagraphRight
+				$Table.Cell(10,2).Range.Text = $UsersHomeDriveStr
+				[single]$pct = (($UsersHomeDrivecnt / $UsersCount)*100)
+				$pctstr = "{0,5:N2}" -f $pct
+				$Table.Cell(10,3).Range.ParagraphFormat.Alignment = $wdAlignParagraphRight
+				$Table.Cell(10,3).Range.Text = "$($pctstr)% of Total Users"
+				$Table.Cell(11,1).Shading.BackgroundPatternColor = $wdColorGray15
+				$Table.Cell(11,1).Range.Font.Bold = $True
+				$Table.Cell(11,1).Range.Text = "PrimaryGroup users"
+				$Table.Cell(11,2).Range.ParagraphFormat.Alignment = $wdAlignParagraphRight
+				$Table.Cell(11,2).Range.Text = $UsersPrimaryGroupStr
+				[single]$pct = (($UsersPrimaryGroupcnt / $UsersCount)*100)
+				$pctstr = "{0,5:N2}" -f $pct
+				$Table.Cell(11,3).Range.ParagraphFormat.Alignment = $wdAlignParagraphRight
+				$Table.Cell(11,3).Range.Text = "$($pctstr)% of Total Users"
+				$Table.Cell(12,1).Shading.BackgroundPatternColor = $wdColorGray15
+				$Table.Cell(12,1).Range.Font.Bold = $True
+				$Table.Cell(12,1).Range.Text = "RDS HomeDrive users"
+				$Table.Cell(12,2).Range.ParagraphFormat.Alignment = $wdAlignParagraphRight
+				$Table.Cell(12,2).Range.Text = $UsersRDSHomeDriveStr
+				[single]$pct = (($UsersRDSHomeDrivecnt / $UsersCount)*100)
+				$pctstr = "{0,5:N2}" -f $pct
+				$Table.Cell(12,3).Range.ParagraphFormat.Alignment = $wdAlignParagraphRight
+				$Table.Cell(12,3).Range.Text = "$($pctstr)% of Total Users"
 
 				$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustNone)
 				$Table.AutoFitBehavior($wdAutoFitContent)
@@ -14466,6 +14992,17 @@ Function ProcessMiscDataByDomain
 				$pctstr = "{0,5:N2}" -f $pct
 				Line 1 "With SID History`t: $($UsersWithSIDHistoryStr)`t$($pctstr)% of Total Users"
 
+				[single]$pct = (($UsersHomeDrivecnt / $UsersCount)*100)
+				$pctstr = "{0,5:N2}" -f $pct
+				Line 1 "With HomeDrive`t`t: $($UsersHomeDriveStr)`t$($pctstr)% of Total Users"
+
+				[single]$pct = (($UsersPrimaryGroupcnt / $UsersCount)*100)
+				$pctstr = "{0,5:N2}" -f $pct
+				Line 1 "With Primary Group`t: $($UsersPrimaryGroupStr)`t$($pctstr)% of Total Users"
+
+				[single]$pct = (($UsersRDSHomeDrivecnt / $UsersCount)*100)
+				$pctstr = "{0,5:N2}" -f $pct
+				Line 1 "With RDS HomeDrive`t: $($UsersRDSHomeDriveStr)`t$($pctstr)% of Total Users"
 
 				Line 1 "*Unknown users are user accounts with no Enabled property"
 				If($Script:DARights -eq $False)
@@ -14561,6 +15098,24 @@ Function ProcessMiscDataByDomain
 				$UsersWithSIDHistoryStr,($htmlwhite),
 				"$($pctstr)% of Total Users",($htmlwhite)))
 				
+				[single]$pct = (($UsersHomeDrivecnt / $UsersCount)*100)
+				$pctstr = "{0,5:N2}" -f $pct
+				$rowdata += @(,('With HomeDrive',($htmlsilver -bor $htmlbold),
+				$UsersHomeDriveStr,($htmlwhite),
+				"$($pctstr)% of Total Users",($htmlwhite)))
+				
+				[single]$pct = (($UsersPrimaryGroupcnt / $UsersCount)*100)
+				$pctstr = "{0,5:N2}" -f $pct
+				$rowdata += @(,('With PrimaryGroup',($htmlsilver -bor $htmlbold),
+				$UsersPrimaryGroupStr,($htmlwhite),
+				"$($pctstr)% of Total Users",($htmlwhite)))
+				
+				[single]$pct = (($UsersRDSHomeDrivecnt / $UsersCount)*100)
+				$pctstr = "{0,5:N2}" -f $pct
+				$rowdata += @(,('With RDS HomeDrive',($htmlsilver -bor $htmlbold),
+				$UsersRDSHomeDriveStr,($htmlwhite),
+				"$($pctstr)% of Total Users",($htmlwhite)))
+				
 				$msg = ""
 				$columnWidths = @("150","50","150")
 				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "350"
@@ -14577,6 +15132,8 @@ Function ProcessMiscDataByDomain
 				
 				Write-Verbose "$(Get-Date): `t`tBuild table for Active Users"
 				WriteHTMLLine 3 0 "Active Users"
+
+				$rowdata = @()
 				$rowdata += @(,('Total Active Users',($htmlsilver -bor $htmlbold),
 				$ActiveUsersCountStr,($htmlwhite),
 				"",($htmlwhite)))
@@ -14657,6 +15214,21 @@ Function ProcessMiscDataByDomain
 				OutputUserInfo $AllUsersWithSIDHistory "All users with SID History"
 			}
 
+			If($UsersHomeDrivecnt -gt 0 -and $IncludeUserInfo -eq $True)
+			{
+				OutputHDUserInfo $HomeDriveUsers "All users with HomeDrive set in ADUC"
+			}
+
+			If($UsersPrimaryGroupcnt -gt 0 -and $IncludeUserInfo -eq $True)
+			{
+				OutputPGUserInfo $PrimaryGroupUsers "All users whose Primary Group is not Domain Users"
+			}
+
+			If($UsersRDSHomeDrivecnt -gt 0 -and $IncludeUserInfo -eq $True)
+			{
+				OutputRDSHDUserInfo $RDSHomeDriveUsers "All users with RDS HomeDrive set in ADUC"
+			}
+
 			Get-ComputerCountByOS $Domain
 		}
 		ElseIf(!$?)
@@ -14706,8 +15278,6 @@ Function OutputUserInfo
 	
 	If($MSWORD -or $PDF)
 	{
-		WriteWordLine 0 1 "Services ($NumServices Services found)"
-
 		[System.Collections.Hashtable[]] $UsersWordTable = @();
 		[int] $CurrentServiceIndex = 2;
 
@@ -14771,6 +15341,291 @@ Function OutputUserInfo
 		
 		$columnHeaders = @('SamAccountName',($htmlsilver -bor $htmlbold),'DistinguishedName',($htmlsilver -bor $htmlbold))
 		$columnWidths = @("150px","350px")
+		$msg = ""
+		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "500"
+		WriteHTMLLine 0 0 " "
+	}
+}
+
+Function OutputHDUserInfo
+{
+	#new for 2.16
+	Param([object] $Users, [string] $title)
+	
+	Write-Verbose "$(Get-Date): `t`t`t`tOutput $($title)"
+	$Users = $Users | Sort samAccountName
+	
+	If($MSWORD -or $PDF)
+	{
+		[System.Collections.Hashtable[]] $UsersWordTable = @();
+		[int] $CurrentServiceIndex = 2;
+
+		WriteWordLine 4 0 $title
+
+		ForEach($User in $Users)
+		{
+			$WordTableRowHash = @{ 
+			SamAccountName = $User.SamAccountName; 
+			DN = $User.DistinguishedName;
+			HomeDrive = $User.HomeDrive;
+			HomeDir = $User.HomeDirectory;
+			ProfilePath = $User.ProfilePath;
+			ScriptPath = $User.ScriptPath
+			}
+
+			## Add the hash to the array
+			$UsersWordTable += $WordTableRowHash;
+
+			$CurrentServiceIndex++;
+		}
+		
+		## Add the table to the document, using the hashtable (-Alt is short for -AlternateBackgroundColor!)
+		$Table = AddWordTable -Hashtable $UsersWordTable `
+		-Columns SamAccountName, DN, HomeDrive, HomeDir, ProfilePath, ScriptPath `
+		-Headers "SamAccountName", "DistinguishedName", "Home drive", "Home folder", "Profile path", "Login script" `
+		-Format $wdTableGrid `
+		-AutoFit $wdAutoFitFixed;
+
+		SetWordCellFormat -Collection $Table -Size 9
+		SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+		$Table.Columns.Item(1).Width = 100;
+		$Table.Columns.Item(2).Width = 110;
+		$Table.Columns.Item(3).Width = 35;
+		$Table.Columns.Item(4).Width = 85;
+		$Table.Columns.Item(5).Width = 85;
+		$Table.Columns.Item(6).Width = 85;
+
+		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustNone)
+
+		FindWordDocumentEnd
+		$Table = $Null
+		WriteWordLine 0 0 ""
+	}
+	ElseIf($Text)
+	{
+		Line 0 $title
+		Line 0 ""
+
+		ForEach($User in $Users)
+		{
+			Line 1 "SamAccountName`t`t: " $User.samAccountName
+			Line 1 "DistinguishedName`t: " $User.DistinguishedName
+			Line 1 "Home drive`t`t: " $User.HomeDrive
+			Line 1 "Home folder`t`t: " $User.HomeDirectory
+			Line 1 "Profile path`t`t: " $User.ProfilePath
+			Line 1 "Login script`t`t: " $User.ScriptPath
+			Line 0 ""
+		}
+	}
+	ElseIf($HTML)
+	{
+		WriteHTMLLine 4 0 $title
+		$rowdata = @()
+		
+		ForEach($User in $Users)
+		{
+			$rowdata += @(,($User.SamAccountName,$htmlwhite,
+							$User.DistinguishedName,$htmlwhite,
+							$User.HomeDrive,$htmlwhite,
+							$User.HomeDirectory,$htmlwhite,
+							$User.ProfilePath,$htmlwhite,
+							$User.ScriptPath,$htmlwhite))
+		}
+		
+		$columnHeaders = @(
+		'SamAccountName',($htmlsilver -bor $htmlbold),
+		'DistinguishedName',($htmlsilver -bor $htmlbold),
+		'Home Drive',($htmlsilver -bor $htmlbold),
+		'Home folder',($htmlsilver -bor $htmlbold),
+		'Profile path',($htmlsilver -bor $htmlbold),
+		'Login script',($htmlsilver -bor $htmlbold))
+		$columnWidths = @("100px","100px","75px","75px","75px","75px")
+		$msg = ""
+		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "500"
+		WriteHTMLLine 0 0 " "
+	}
+}
+
+Function OutputPGUserInfo
+{
+	#new for 2.16
+	Param([object] $Users, [string] $title)
+	
+	Write-Verbose "$(Get-Date): `t`t`t`tOutput $($title)"
+	$Users = $Users | Sort samAccountName
+	
+	If($MSWORD -or $PDF)
+	{
+		[System.Collections.Hashtable[]] $UsersWordTable = @();
+		[int] $CurrentServiceIndex = 2;
+
+		WriteWordLine 4 0 $title
+
+		ForEach($User in $Users)
+		{
+			$WordTableRowHash = @{ 
+			SamAccountName = $User.SamAccountName; 
+			DN = $User.DistinguishedName;
+			PG = $User.PrimaryGroup
+			}
+
+			## Add the hash to the array
+			$UsersWordTable += $WordTableRowHash;
+
+			$CurrentServiceIndex++;
+		}
+		
+		## Add the table to the document, using the hashtable (-Alt is short for -AlternateBackgroundColor!)
+		$Table = AddWordTable -Hashtable $UsersWordTable `
+		-Columns SamAccountName, DN, PG `
+		-Headers "SamAccountName", "DistinguishedName", "Primary Group" `
+		-Format $wdTableGrid `
+		-AutoFit $wdAutoFitFixed;
+
+		SetWordCellFormat -Collection $Table -Size 9
+		SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+		$Table.Columns.Item(1).Width = 100;
+		$Table.Columns.Item(2).Width = 200;
+		$Table.Columns.Item(3).Width = 200;
+
+		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustNone)
+
+		FindWordDocumentEnd
+		$Table = $Null
+		WriteWordLine 0 0 ""
+	}
+	ElseIf($Text)
+	{
+		Line 0 $title
+		Line 0 ""
+
+		ForEach($User in $Users)
+		{
+			Line 1 "samAccountName`t`t: " $User.samAccountName
+			Line 1 "DistinguishedName`t: " $User.DistinguishedName
+			Line 1 "Primary Group`t`t: " $User.PrimaryGroup
+			Line 0 ""
+		}
+	}
+	ElseIf($HTML)
+	{
+		WriteHTMLLine 4 0 $title
+		$rowdata = @()
+		
+		ForEach($User in $Users)
+		{
+			$rowdata += @(,($User.SamAccountName,$htmlwhite,
+							$User.DistinguishedName,$htmlwhite,
+							$User.PrimaryGroup,$htmlwhite))
+		}
+		
+		$columnHeaders = @(
+		'SamAccountName',($htmlsilver -bor $htmlbold),
+		'DistinguishedName',($htmlsilver -bor $htmlbold),
+		'Primary Group',($htmlsilver -bor $htmlbold))
+		$columnWidths = @("100px","200px","200px")
+		$msg = ""
+		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "500"
+		WriteHTMLLine 0 0 " "
+	}
+}
+
+Function OutputRDSHDUserInfo
+{
+	#new for 2.16
+	Param([object] $Users, [string] $title)
+	
+	Write-Verbose "$(Get-Date): `t`t`t`tOutput $($title)"
+	$Users = $Users | Sort samAccountName
+	
+	If($MSWORD -or $PDF)
+	{
+		[System.Collections.Hashtable[]] $UsersWordTable = @();
+		[int] $CurrentServiceIndex = 2;
+
+		WriteWordLine 4 0 $title
+
+		ForEach($User in $Users)
+		{
+			$WordTableRowHash = @{ 
+			SamAccountName = $User.SamAccountName; 
+			DN = $User.DistinguishedName;
+			HomeDrive = $User.TerminalServicesHomeDrive;
+			HomeDir = $User.TerminalServicesHomeDirectory;
+			ProfilePath = $User.TerminalServicesProfilePath;
+			AllowLogon = $User.AllowLogon
+			}
+
+			## Add the hash to the array
+			$UsersWordTable += $WordTableRowHash;
+
+			$CurrentServiceIndex++;
+		}
+		
+		## Add the table to the document, using the hashtable (-Alt is short for -AlternateBackgroundColor!)
+		$Table = AddWordTable -Hashtable $UsersWordTable `
+		-Columns SamAccountName, DN, HOmeDrive, HomeDir, ProfilePath, ALlowLogon `
+		-Headers "SamAccountName", "DistinguishedName", "RDS Home drive", "RDS Home folder", "RDS Profile path", "Allow Logon" `
+		-Format $wdTableGrid `
+		-AutoFit $wdAutoFitFixed;
+
+		SetWordCellFormat -Collection $Table -Size 9
+		SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+		$Table.Columns.Item(1).Width = 100;
+		$Table.Columns.Item(2).Width = 140;
+		$Table.Columns.Item(3).Width = 35;
+		$Table.Columns.Item(4).Width = 75;
+		$Table.Columns.Item(5).Width = 90;
+		$Table.Columns.Item(6).Width = 60;
+
+		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustNone)
+
+		FindWordDocumentEnd
+		$Table = $Null
+		WriteWordLine 0 0 ""
+	}
+	ElseIf($Text)
+	{
+		Line 0 $title
+		Line 0 ""
+
+		ForEach($User in $Users)
+		{
+			Line 1 "SamAccountName`t`t: " $User.samAccountName
+			Line 1 "DistinguishedName`t: " $User.DistinguishedName
+			Line 1 "RDS Home drive`t`t: " $User.TerminalServicesHomeDrive
+			Line 1 "RDS Home folder`t`t: " $User.TerminalServicesHomeDirectory
+			Line 1 "RDS Profile path`t: " $User.TerminalServicesProfilePath
+			Line 1 "Allow Logon`t`t: " $User.AllowLogon
+			Line 0 ""
+		}
+	}
+	ElseIf($HTML)
+	{
+		WriteHTMLLine 4 0 $title
+		$rowdata = @()
+		
+		ForEach($User in $Users)
+		{
+			$rowdata += @(,($User.SamAccountName,$htmlwhite,
+							$User.DistinguishedName,$htmlwhite,
+							$User.TerminalServicesHomeDrive,$htmlwhite,
+							$User.TerminalServicesHomeDirectory,$htmlwhite,
+							$User.TerminalServicesProfilePath,$htmlwhite,
+							$User.AllowLogon,$htmlwhite))
+		}
+		
+		$columnHeaders = @(
+		'SamAccountName',($htmlsilver -bor $htmlbold),
+		'DistinguishedName',($htmlsilver -bor $htmlbold),
+		'RDS Home Drive',($htmlsilver -bor $htmlbold),
+		'RDS Home folder',($htmlsilver -bor $htmlbold),
+		'RDS Profile path',($htmlsilver -bor $htmlbold),
+		'Allow Logon',($htmlsilver -bor $htmlbold))
+		$columnWidths = @("100px","100px","75px","75px","90px","60px")
 		$msg = ""
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "500"
 		WriteHTMLLine 0 0 " "
@@ -15148,66 +16003,68 @@ Function ProcessScriptEnd
 	{
 		$SIFile = "$($pwd.Path)\ADInventoryScriptInfo_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
 		Out-File -FilePath $SIFile -InputObject "" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Add DateTime   : $($AddDateTime)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Add DateTime   : $AddDateTime" 4>$Null
 		If($MSWORD -or $PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "Company Name   : $($Script:CoName)" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Name   : $Script:CoName" 4>$Null		
 		}
-		Out-File -FilePath $SIFile -Append -InputObject "ComputerName   : $($ComputerName)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "ComputerName   : $ComputerName" 4>$Null
 		If($MSWORD -or $PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "Company Address: $($CompanyAddress)" 4>$Null		
-			Out-File -FilePath $SIFile -Append -InputObject "Company Email  : $($CompanyEmail)" 4>$Null		
-			Out-File -FilePath $SIFile -Append -InputObject "Company Fax    : $($CompanyFax)" 4>$Null		
-			Out-File -FilePath $SIFile -Append -InputObject "Company Phone  : $($CompanyPhone)" 4>$Null		
-			Out-File -FilePath $SIFile -Append -InputObject "Cover Page     : $($CoverPage)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "Company Address: $CompanyAddress" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Email  : $CompanyEmail" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Fax    : $CompanyFax" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Phone  : $CompanyPhone" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Cover Page     : $CoverPage" 4>$Null
 		}
-		Out-File -FilePath $SIFile -Append -InputObject "DCDNSInfo      : $($DCDNSInfo)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Dev            : $($Dev)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "DCDNSInfo      : $DCDNSInfo" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Dev            : $Dev" 4>$Null
 		If($Dev)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "DevErrorFile   : $($Script:DevErrorFile)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "DevErrorFile   : $Script:DevErrorFile" 4>$Null
 		}
-		Out-File -FilePath $SIFile -Append -InputObject "Elevated       : $($Script:Elevated)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Filename1      : $($Script:FileName1)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Domain name    : $ADDomain" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Elevated       : $Script:Elevated" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Filename1      : $Script:FileName1" 4>$Null
 		If($PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "Filename2      : $($Script:FileName2)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "Filename2      : $Script:FileName2" 4>$Null
 		}
-		Out-File -FilePath $SIFile -Append -InputObject "Folder         : $($Folder)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "From           : $($From)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "GPOInheritance : $($GPOInheritance)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "HW Inventory   : $($Hardware)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "IncludeUserInfo: $($IncludeUserInfo)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "MaxDetails     : $($MaxDetails)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Save As HTML   : $($HTML)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Save As PDF    : $($PDF)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Save As TEXT   : $($TEXT)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Save As WORD   : $($MSWORD)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Script Info    : $($ScriptInfo)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Services       : $($Services)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Smtp Port      : $($SmtpPort)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Smtp Server    : $($SmtpServer)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Title          : $($Script:Title)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "To             : $($To)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Use SSL        : $($UseSSL)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Folder         : $Folder" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Forest name    : $ADForest" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "From           : $From" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "GPOInheritance : $GPOInheritance" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "HW Inventory   : $Hardware" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "IncludeUserInfo: $IncludeUserInfo" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "MaxDetails     : $MaxDetails" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As HTML   : $HTML" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As PDF    : $PDF" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As TEXT   : $TEXT" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As WORD   : $MSWORD" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Script Info    : $ScriptInfo" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Services       : $Services" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Smtp Port      : $SmtpPort" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Smtp Server    : $SmtpServer" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Title          : $Script:Title" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "To             : $To" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Use SSL        : $UseSSL" 4>$Null
 		If($MSWORD -or $PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "User Name      : $($UserName)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "User Name      : $UserName" 4>$Null
 		}
 		Out-File -FilePath $SIFile -Append -InputObject "" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "OS Detected    : $($Script:RunningOS)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "OS Detected    : $Script:RunningOS" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "PoSH version   : $($Host.Version)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "PSCulture      : $($PSCulture)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "PSUICulture    : $($PSUICulture)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "PSCulture      : $PSCulture" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "PSUICulture    : $PSUICulture" 4>$Null
 		If($MSWORD -or $PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "Word language  : $($Script:WordLanguageValue)" 4>$Null
-			Out-File -FilePath $SIFile -Append -InputObject "Word version   : $($Script:WordProduct)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "Word language  : $Script:WordLanguageValue" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "Word version   : $Script:WordProduct" 4>$Null
 		}
 		Out-File -FilePath $SIFile -Append -InputObject "" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Script start   : $($Script:StartTime)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Elapsed time   : $($Str)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Script start   : $Script:StartTime" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Elapsed time   : $Str" 4>$Null
 	}
 
 	$ErrorActionPreference = $SaveEAPreference
@@ -15221,7 +16078,14 @@ ProcessScriptStart
 
 ProcessScriptSetup
 
-SetFilename1andFilename2 "$($Script:ForestRootDomain)"
+If($ADDomain -ne "")
+{
+	SetFilename1andFilename2 "$Script:DomainDNSRoot"
+}
+Else
+{
+	SetFilename1andFilename2 "$Script:ForestRootDomain"
+}
 
 If($Section -eq "All" -or $Section -eq "Forest")
 {
@@ -15232,6 +16096,8 @@ If($Section -eq "All" -or $Section -eq "Forest")
 	ProcessCAInformation
 	
 	ProcessADOptionalFeatures
+	
+	ProcessADSchemaItems
 	[gc]::collect()
 }
 
@@ -15299,8 +16165,8 @@ If($Script:Elevated -and ($Section -eq "All" -or $Section -eq "Domains"))
 Write-Verbose "$(Get-Date): Finishing up document"
 #end of document processing
 
-$AbstractTitle = "Microsoft Active Directory Inventory Report V2.14"
-$SubjectTitle = "Active Directory Inventory Report V2.14"
+$AbstractTitle = "Microsoft Active Directory Inventory Report V2.16"
+$SubjectTitle = "Active Directory Inventory Report V2.16"
 UpdateDocumentProperties $AbstractTitle $SubjectTitle
 
 ProcessDocumentOutput
