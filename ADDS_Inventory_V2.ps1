@@ -800,9 +800,9 @@
 	No objects are output from this script.  This script creates a Word or PDF document.
 .NOTES
 	NAME: ADDS_Inventory_V2.ps1
-	VERSION: 2.16
+	VERSION: 2.17
 	AUTHOR: Carl Webster, Sr. Solutions Architect, Choice Solutions, LLC and Michael B. Smith
-	LASTEDIT: December 3, 2017
+	LASTEDIT: December 8, 2017
 #>
 
 
@@ -1098,6 +1098,8 @@ Param(
 #		Revise testing for $ComputerName 
 #		Revise variable $ADContext in Function ProcessAllDCsInTheForest
 #
+#Version 2.17 8-Dec-2017
+#	Updated Function WriteHTMLLine with fixes from the script template
 
 Set-StrictMode -Version 2
 
@@ -4109,25 +4111,23 @@ Function WriteHTMLLine
 #Function created by Ken Avram
 #Function created to make output to HTML easy in this script
 #headings fixed 12-Oct-2016 by Webster
+#errors with $HTMLStyle fixed 7-Dec-2017 by Webster
 {
 	Param([int]$style=0, 
 	[int]$tabs = 0, 
 	[string]$name = '', 
 	[string]$value = '', 
 	[string]$fontName="Calibri",
-	[int]$fontSize=2,
+	[int]$fontSize=1,
 	[int]$options=$htmlblack)
 
 
 	#Build output style
 	[string]$output = ""
-	[string]$HTMLStyle1 = ""
-	[string]$HTMLStyle2 = ""
-	
+
 	If([String]::IsNullOrEmpty($Name))	
 	{
-		#$HTMLBody = "<p></p>"
-		$HTMLBody = ""
+		$HTMLBody = "<p></p>"
 	}
 	Else
 	{
@@ -4159,25 +4159,28 @@ Function WriteHTMLLine
 
 		Switch ($style)
 		{
-			1 {$HTMLStyle1 = "<h1>"; Break}
-			2 {$HTMLStyle1 = "<h2>"; Break}
-			3 {$HTMLStyle1 = "<h3>"; Break}
-			4 {$HTMLStyle1 = "<h4>"; Break}
-			Default {$HTMLStyle1 = ""; Break}
+			1 {$HTMLStyle = "<h1>"; Break}
+			2 {$HTMLStyle = "<h2>"; Break}
+			3 {$HTMLStyle = "<h3>"; Break}
+			4 {$HTMLStyle = "<h4>"; Break}
+			Default {$HTMLStyle = ""; Break}
 		}
+
+		$HTMLBody += $HTMLStyle + $output
 
 		Switch ($style)
 		{
-			1 {$HTMLStyle2 = "</h1>"; Break}
-			2 {$HTMLStyle2 = "</h2>"; Break}
-			3 {$HTMLStyle2 = "</h3>"; Break}
-			4 {$HTMLStyle2 = "</h4>"; Break}
-			Default {$HTMLStyle2 = ""; Break}
+			1 {$HTMLStyle = "</h1>"; Break}
+			2 {$HTMLStyle = "</h2>"; Break}
+			3 {$HTMLStyle = "</h3>"; Break}
+			4 {$HTMLStyle = "</h4>"; Break}
+			Default {$HTMLStyle = ""; Break}
 		}
 
 		#added by webster 12-oct-2016
 		#if a heading, don't add the <br>
-		If($HTMLStyle1 -eq "")
+		#moved to after the two switch statements on 7-Dec-2017 to fix $HTMLStyle has not been set error
+		If($HTMLStyle -eq "")
 		{
 			$HTMLBody += "<br><font face='" + $HTMLFontName + "' " + "color='" + $color + "' size='"  + $fontsize + "'>"
 		}
@@ -4186,9 +4189,7 @@ Function WriteHTMLLine
 			$HTMLBody += "<font face='" + $HTMLFontName + "' " + "color='" + $color + "' size='"  + $fontsize + "'>"
 		}
 		
-		$HTMLBody += $HTMLStyle1 + $output
-
-		$HTMLBody += $HTMLStyle2 +  "</font>"
+		$HTMLBody += $HTMLStyle +  "</font>"
 
 		If($options -band $htmlitalics) 
 		{
@@ -4199,8 +4200,16 @@ Function WriteHTMLLine
 		{
 			$HTMLBody += "</b>"
 		} 
+
+		#added by webster 12-oct-2016
+		#if a heading, don't add the <br />
+		#moved to inside the Else statement on 7-Dec-2017 to fix $HTMLStyle has not been set error
+		If($HTMLStyle -eq "")
+		{
+			$HTMLBody += "<br />"
+		}
 	}
-	
+
 	out-file -FilePath $Script:FileName1 -Append -InputObject $HTMLBody 4>$Null
 }
 #endregion
