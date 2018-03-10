@@ -361,6 +361,8 @@
 	
 	This parameter is disabled by default.
 	This parameter has an alias of SI.
+.PARAMETER Log
+	Generates a log file for troubleshooting.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1
 	
@@ -732,8 +734,8 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 	
-	The script will use the email server smtp.office365.com on port 587 using SSL, sending from 
-	webster@carlwebster.com, sending to ITGroup@carlwebster.com.
+	The script will use the email server smtp.office365.com on port 587 using SSL, sending 
+	from webster@carlwebster.com, sending to ITGroup@carlwebster.com.
 	If the current user's credentials are not valid to send email, the user will be prompted 
 	to enter valid credentials.
 .EXAMPLE
@@ -800,9 +802,9 @@
 	No objects are output from this script.  This script creates a Word or PDF document.
 .NOTES
 	NAME: ADDS_Inventory_V2.ps1
-	VERSION: 2.17
+	VERSION: 2.18
 	AUTHOR: Carl Webster, Sr. Solutions Architect, Choice Solutions, LLC and Michael B. Smith
-	LASTEDIT: December 8, 2017
+	LASTEDIT: March 10, 2017
 #>
 
 
@@ -934,7 +936,10 @@ Param(
 	
 	[parameter(Mandatory=$False)] 
 	[Alias("SI")]
-	[Switch]$ScriptInfo=$False
+	[Switch]$ScriptInfo=$False,
+	
+	[parameter(Mandatory=$False)] 
+	[Switch]$Log=$False
 	
 	)
 
@@ -1100,6 +1105,10 @@ Param(
 #
 #Version 2.17 8-Dec-2017
 #	Updated Function WriteHTMLLine with fixes from the script template
+#
+#Version 2.18 10-Mar-2017
+#	Added Log switch to create a transcript log
+
 
 Set-StrictMode -Version 2
 
@@ -1107,6 +1116,26 @@ Set-StrictMode -Version 2
 $PSDefaultParameterValues = @{"*:Verbose"=$True}
 $SaveEAPreference = $ErrorActionPreference
 $ErrorActionPreference = 'SilentlyContinue'
+
+#V2.18 added
+If($Log) 
+{
+	#start transcript logging
+	$Script:ThisScriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
+	$Script:LogPath = "$Script:ThisScriptPath\ADDSDocScriptTranscript_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
+	
+	try 
+	{
+		Start-Transcript -Path $Script:LogPath -Force -Verbose:$false | Out-Null
+		Write-Verbose "$(Get-Date): Transcript/log started at $Script:LogPath"
+		$Script:StartLog = $true
+	} 
+	catch 
+	{
+		Write-Verbose "$(Get-Date): Transcript/log failed at $Script:LogPath"
+		$Script:StartLog = $false
+	}
+}
 
 If($Dev)
 {
@@ -6011,6 +6040,7 @@ Function ShowScriptOptions
 	Write-Verbose "$(Get-Date): GPOInheritance  : $GPOInheritance"
 	Write-Verbose "$(Get-Date): HW Inventory    : $Hardware"
 	Write-Verbose "$(Get-Date): IncludeUserInfo : $IncludeUserInfo"
+	Write-Verbose "$(Get-Date): Log             : $($Log)"
 	Write-Verbose "$(Get-Date): MaxDetail       : $MaxDetails"
 	Write-Verbose "$(Get-Date): Save As HTML    : $HTML"
 	Write-Verbose "$(Get-Date): Save As PDF     : $PDF"
@@ -16045,6 +16075,7 @@ Function ProcessScriptEnd
 		Out-File -FilePath $SIFile -Append -InputObject "GPOInheritance : $GPOInheritance" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "HW Inventory   : $Hardware" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "IncludeUserInfo: $IncludeUserInfo" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Log            : $($Log)" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "MaxDetails     : $MaxDetails" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "Save As HTML   : $HTML" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "Save As PDF    : $PDF" 4>$Null
@@ -16076,6 +16107,23 @@ Function ProcessScriptEnd
 		Out-File -FilePath $SIFile -Append -InputObject "Elapsed time   : $Str" 4>$Null
 	}
 
+	#V2.18 added
+	#stop transcript logging
+	If($Log -eq $True) 
+	{
+		If($Script:StartLog -eq $true) 
+		{
+			try 
+			{
+				Stop-Transcript | Out-Null
+				Write-Verbose "$(Get-Date): $Script:LogPath is ready for use"
+			} 
+			catch 
+			{
+				Write-Verbose "$(Get-Date): Transcript/log stop failed"
+			}
+		}
+	}
 	$ErrorActionPreference = $SaveEAPreference
 }
 #endregion
