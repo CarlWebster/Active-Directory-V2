@@ -1,0 +1,4 @@
+#Version 2.19
+#	Added Event Log information to each domain controller and an appendix
+#	Added Operating System information to Function OutputComputerItem
+#	Code clean up for most recommendations made by Visual Studio Code
