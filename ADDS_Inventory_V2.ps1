@@ -802,9 +802,9 @@
 	No objects are output from this script.  This script creates a Word or PDF document.
 .NOTES
 	NAME: ADDS_Inventory_V2.ps1
-	VERSION: 2.18
+	VERSION: 2.19
 	AUTHOR: Carl Webster, Sr. Solutions Architect, Choice Solutions, LLC and Michael B. Smith
-	LASTEDIT: March 10, 2017
+	LASTEDIT: April 5, 2018
 #>
 
 
@@ -1106,9 +1106,14 @@ Param(
 #Version 2.17 8-Dec-2017
 #	Updated Function WriteHTMLLine with fixes from the script template
 #
-#Version 2.18 10-Mar-2017
+#Version 2.18 10-Mar-2018
 #	Added Log switch to create a transcript log
-
+#
+#Version 2.19 5-Apr-2018
+#	Added Event Log information to each domain controller and an appendix
+#		If the script is run from an elevated PowerShell session by a user with Domain Admin rights
+#	Added Operating System information to Functions GetComputerWMIInfo and OutputComputerItem
+#	Code clean-up for most recommendations made by Visual Studio Code
 
 Set-StrictMode -Version 2
 
@@ -1356,43 +1361,43 @@ If($MSWord -or $PDF)
 
 If($HTML)
 {
-    Set htmlredmask         -Option AllScope -Value "#FF0000" 4>$Null
-    Set htmlcyanmask        -Option AllScope -Value "#00FFFF" 4>$Null
-    Set htmlbluemask        -Option AllScope -Value "#0000FF" 4>$Null
-    Set htmldarkbluemask    -Option AllScope -Value "#0000A0" 4>$Null
-    Set htmllightbluemask   -Option AllScope -Value "#ADD8E6" 4>$Null
-    Set htmlpurplemask      -Option AllScope -Value "#800080" 4>$Null
-    Set htmlyellowmask      -Option AllScope -Value "#FFFF00" 4>$Null
-    Set htmllimemask        -Option AllScope -Value "#00FF00" 4>$Null
-    Set htmlmagentamask     -Option AllScope -Value "#FF00FF" 4>$Null
-    Set htmlwhitemask       -Option AllScope -Value "#FFFFFF" 4>$Null
-    Set htmlsilvermask      -Option AllScope -Value "#C0C0C0" 4>$Null
-    Set htmlgraymask        -Option AllScope -Value "#808080" 4>$Null
-    Set htmlblackmask       -Option AllScope -Value "#000000" 4>$Null
-    Set htmlorangemask      -Option AllScope -Value "#FFA500" 4>$Null
-    Set htmlmaroonmask      -Option AllScope -Value "#800000" 4>$Null
-    Set htmlgreenmask       -Option AllScope -Value "#008000" 4>$Null
-    Set htmlolivemask       -Option AllScope -Value "#808000" 4>$Null
+    Set-Variable htmlredmask         -Option AllScope -Value "#FF0000" 4>$Null
+    Set-Variable htmlcyanmask        -Option AllScope -Value "#00FFFF" 4>$Null
+    Set-Variable htmlbluemask        -Option AllScope -Value "#0000FF" 4>$Null
+    Set-Variable htmldarkbluemask    -Option AllScope -Value "#0000A0" 4>$Null
+    Set-Variable htmllightbluemask   -Option AllScope -Value "#ADD8E6" 4>$Null
+    Set-Variable htmlpurplemask      -Option AllScope -Value "#800080" 4>$Null
+    Set-Variable htmlyellowmask      -Option AllScope -Value "#FFFF00" 4>$Null
+    Set-Variable htmllimemask        -Option AllScope -Value "#00FF00" 4>$Null
+    Set-Variable htmlmagentamask     -Option AllScope -Value "#FF00FF" 4>$Null
+    Set-Variable htmlwhitemask       -Option AllScope -Value "#FFFFFF" 4>$Null
+    Set-Variable htmlsilvermask      -Option AllScope -Value "#C0C0C0" 4>$Null
+    Set-Variable htmlgraymask        -Option AllScope -Value "#808080" 4>$Null
+    Set-Variable htmlblackmask       -Option AllScope -Value "#000000" 4>$Null
+    Set-Variable htmlorangemask      -Option AllScope -Value "#FFA500" 4>$Null
+    Set-Variable htmlmaroonmask      -Option AllScope -Value "#800000" 4>$Null
+    Set-Variable htmlgreenmask       -Option AllScope -Value "#008000" 4>$Null
+    Set-Variable htmlolivemask       -Option AllScope -Value "#808000" 4>$Null
 
-    Set htmlbold        -Option AllScope -Value 1 4>$Null
-    Set htmlitalics     -Option AllScope -Value 2 4>$Null
-    Set htmlred         -Option AllScope -Value 4 4>$Null
-    Set htmlcyan        -Option AllScope -Value 8 4>$Null
-    Set htmlblue        -Option AllScope -Value 16 4>$Null
-    Set htmldarkblue    -Option AllScope -Value 32 4>$Null
-    Set htmllightblue   -Option AllScope -Value 64 4>$Null
-    Set htmlpurple      -Option AllScope -Value 128 4>$Null
-    Set htmlyellow      -Option AllScope -Value 256 4>$Null
-    Set htmllime        -Option AllScope -Value 512 4>$Null
-    Set htmlmagenta     -Option AllScope -Value 1024 4>$Null
-    Set htmlwhite       -Option AllScope -Value 2048 4>$Null
-    Set htmlsilver      -Option AllScope -Value 4096 4>$Null
-    Set htmlgray        -Option AllScope -Value 8192 4>$Null
-    Set htmlolive       -Option AllScope -Value 16384 4>$Null
-    Set htmlorange      -Option AllScope -Value 32768 4>$Null
-    Set htmlmaroon      -Option AllScope -Value 65536 4>$Null
-    Set htmlgreen       -Option AllScope -Value 131072 4>$Null
-    Set htmlblack       -Option AllScope -Value 262144 4>$Null
+    Set-Variable htmlbold        -Option AllScope -Value 1 4>$Null
+    Set-Variable htmlitalics     -Option AllScope -Value 2 4>$Null
+    Set-Variable htmlred         -Option AllScope -Value 4 4>$Null
+    Set-Variable htmlcyan        -Option AllScope -Value 8 4>$Null
+    Set-Variable htmlblue        -Option AllScope -Value 16 4>$Null
+    Set-Variable htmldarkblue    -Option AllScope -Value 32 4>$Null
+    Set-Variable htmllightblue   -Option AllScope -Value 64 4>$Null
+    Set-Variable htmlpurple      -Option AllScope -Value 128 4>$Null
+    Set-Variable htmlyellow      -Option AllScope -Value 256 4>$Null
+    Set-Variable htmllime        -Option AllScope -Value 512 4>$Null
+    Set-Variable htmlmagenta     -Option AllScope -Value 1024 4>$Null
+    Set-Variable htmlwhite       -Option AllScope -Value 2048 4>$Null
+    Set-Variable htmlsilver      -Option AllScope -Value 4096 4>$Null
+    Set-Variable htmlgray        -Option AllScope -Value 8192 4>$Null
+    Set-Variable htmlolive       -Option AllScope -Value 16384 4>$Null
+    Set-Variable htmlorange      -Option AllScope -Value 32768 4>$Null
+    Set-Variable htmlmaroon      -Option AllScope -Value 65536 4>$Null
+    Set-Variable htmlgreen       -Option AllScope -Value 131072 4>$Null
+    Set-Variable htmlblack       -Option AllScope -Value 262144 4>$Null
 }
 
 If($TEXT)
@@ -1497,6 +1502,7 @@ Function GetComputerWMIInfo
 	# http://blog.myvirtualvision.com
 	# modified 1-May-2014 to work in trusted AD Forests and using different domain admin credentials	
 	# modified 17-Aug-2016 to fix a few issues with Text and HTML output
+	# modified 2-Aug-2018 to add ComputerOS information
 
 	#Get Computer info
 	Write-Verbose "$(Get-Date): `t`tProcessing WMI Computer information"
@@ -1531,14 +1537,15 @@ Function GetComputerWMIInfo
 	
 	If($? -and $Null -ne $Results)
 	{
-		$ComputerItems = $Results | Select Manufacturer, Model, Domain, `
+		$ComputerItems = $Results | Select-Object Manufacturer, Model, Domain, `
 		@{N="TotalPhysicalRam"; E={[math]::round(($_.TotalPhysicalMemory / 1GB),0)}}, `
 		NumberOfProcessors, NumberOfLogicalProcessors
 		$Results = $Null
+		[string]$ComputerOS = (Get-WmiObject -class Win32_OperatingSystem -computername $RemoteComputerName -EA 0).Caption
 
 		ForEach($Item in $ComputerItems)
 		{
-			OutputComputerItem $Item
+			OutputComputerItem $Item $ComputerOS
 		}
 	}
 	ElseIf(!$?)
@@ -1615,7 +1622,7 @@ Function GetComputerWMIInfo
 
 	If($? -and $Null -ne $Results)
 	{
-		$drives = $Results | Select caption, @{N="drivesize"; E={[math]::round(($_.size / 1GB),0)}}, 
+		$drives = $Results | Select-Object caption, @{N="drivesize"; E={[math]::round(($_.size / 1GB),0)}}, 
 		filesystem, @{N="drivefreespace"; E={[math]::round(($_.freespace / 1GB),0)}}, 
 		volumename, drivetype, volumedirty, volumeserialnumber
 		$Results = $Null
@@ -1701,7 +1708,7 @@ Function GetComputerWMIInfo
 
 	If($? -and $Null -ne $Results)
 	{
-		$Processors = $Results | Select availability, name, description, maxclockspeed, 
+		$Processors = $Results | Select-Object availability, name, description, maxclockspeed, 
 		l2cachesize, l3cachesize, numberofcores, numberoflogicalprocessors
 		$Results = $Null
 		ForEach($processor in $processors)
@@ -1782,7 +1789,7 @@ Function GetComputerWMIInfo
 
 	If($? -and $Null -ne $Results)
 	{
-		$Nics = $Results | Where {$Null -ne $_.ipaddress}
+		$Nics = $Results | Where-Object {$Null -ne $_.ipaddress}
 		$Results = $Null
 
 		If($Nics -eq $Null ) 
@@ -1800,7 +1807,7 @@ Function GetComputerWMIInfo
 			{
 				Try
 				{
-					$ThisNic = Get-WmiObject -computername $RemoteComputerName win32_networkadapter | Where {$_.index -eq $nic.index}
+					$ThisNic = Get-WmiObject -computername $RemoteComputerName win32_networkadapter | Where-Object {$_.index -eq $nic.index}
 				}
 				
 				Catch 
@@ -1918,19 +1925,22 @@ Function GetComputerWMIInfo
 	}
 	ElseIf($HTML)
 	{
-		WriteHTMLLine 0 0 " "
+		WriteHTMLLine 0 0 ""
 	}
 }
 
 Function OutputComputerItem
 {
-	Param([object]$Item)
+	Param([object]$Item, [string]$OS)
+	# modified 2-Aug-2018 to add Operating System information
+	
 	If($MSWord -or $PDF)
 	{
 		[System.Collections.Hashtable[]] $ItemInformation = @()
 		$ItemInformation += @{ Data = "Manufacturer"; Value = $Item.manufacturer; }
 		$ItemInformation += @{ Data = "Model"; Value = $Item.model; }
 		$ItemInformation += @{ Data = "Domain"; Value = $Item.domain; }
+		$ItemInformation += @{ Data = "Operating System"; Value = $OS; }
 		$ItemInformation += @{ Data = "Total Ram"; Value = "$($Item.totalphysicalram) GB"; }
 		$ItemInformation += @{ Data = "Physical Processors (sockets)"; Value = $Item.NumberOfProcessors; }
 		$ItemInformation += @{ Data = "Logical Processors (cores w/HT)"; Value = $Item.NumberOfLogicalProcessors; }
@@ -1957,6 +1967,7 @@ Function OutputComputerItem
 		Line 2 "Manufacturer`t`t`t: " $Item.manufacturer
 		Line 2 "Model`t`t`t`t: " $Item.model
 		Line 2 "Domain`t`t`t`t: " $Item.domain
+		Line 2 "Operating System`t`t: " $OS
 		Line 2 "Total Ram`t`t`t: $($Item.totalphysicalram) GB"
 		Line 2 "Physical Processors (sockets)`t: " $Item.NumberOfProcessors
 		Line 2 "Logical Processors (cores w/HT)`t: " $Item.NumberOfLogicalProcessors
@@ -1968,14 +1979,15 @@ Function OutputComputerItem
 		$columnHeaders = @("Manufacturer",($htmlsilver -bor $htmlbold),$Item.manufacturer,$htmlwhite)
 		$rowdata += @(,('Model',($htmlsilver -bor $htmlbold),$Item.model,$htmlwhite))
 		$rowdata += @(,('Domain',($htmlsilver -bor $htmlbold),$Item.domain,$htmlwhite))
+		$rowdata += @(,('Operating System',($htmlsilver -bor $htmlbold),$OS,$htmlwhite))
 		$rowdata += @(,('Total Ram',($htmlsilver -bor $htmlbold),"$($Item.totalphysicalram) GB",$htmlwhite))
 		$rowdata += @(,('Physical Processors (sockets)',($htmlsilver -bor $htmlbold),$Item.NumberOfProcessors,$htmlwhite))
 		$rowdata += @(,('Logical Processors (cores w/HT)',($htmlsilver -bor $htmlbold),$Item.NumberOfLogicalProcessors,$htmlwhite))
 
 		$msg = ""
 		$columnWidths = @("150px","200px")
-		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths -tablewidth "350"
-		WriteHTMLLine 0 0 " "
+		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths
+		WriteHTMLLine 0 0 ""
 	}
 }
 
@@ -2236,7 +2248,7 @@ Function OutputNicItem
 {
 	Param([object]$Nic, [object]$ThisNic)
 	
-	$powerMgmt = Get-WmiObject MSPower_DeviceEnable -Namespace root\wmi | where {$_.InstanceName -match [regex]::Escape($ThisNic.PNPDeviceID)}
+	$powerMgmt = Get-WmiObject MSPower_DeviceEnable -Namespace root\wmi | Where-Object {$_.InstanceName -match [regex]::Escape($ThisNic.PNPDeviceID)}
 
 	If($? -and $Null -ne $powerMgmt)
 	{
@@ -2677,7 +2689,7 @@ Function GetComputerServices
 		#Replaced with a single call to retrieve services via WMI. The repeated
 		## "Get-WMIObject Win32_Service -Filter" calls were the major delays in the script.
 		## If we need to retrieve the StartUp type might as well just use WMI.
-		$Services = Get-WMIObject Win32_Service -ComputerName $RemoteComputerName | Sort DisplayName
+		$Services = Get-WMIObject Win32_Service -ComputerName $RemoteComputerName | Sort-Object DisplayName
 	}
 	
 	Catch
@@ -2886,7 +2898,7 @@ Function BuildDCDNSIPConfigTable
 
 	If($? -and $Null -ne $Results)
 	{
-		$Nics = $Results | Where {$Null -ne $_.ipaddress}
+		$Nics = $Results | Where-Object {$Null -ne $_.ipaddress}
 		$Results = $Null
 
 		If($Nics -eq $Null ) 
@@ -2904,7 +2916,7 @@ Function BuildDCDNSIPConfigTable
 			{
 				Try
 				{
-					$ThisNic = Get-WmiObject -computername $RemoteComputerName win32_networkadapter | Where {$_.index -eq $nic.index}
+					$ThisNic = Get-WmiObject -computername $RemoteComputerName win32_networkadapter | Where-Object {$_.index -eq $nic.index}
 				}
 				
 				Catch 
@@ -3393,7 +3405,7 @@ Function CheckWordPrereq
 	$SessionID = (Get-Process -PID $PID).SessionId
 	
 	#Find out if winword is running in our session
-	[bool]$wordrunning = ((Get-Process 'WinWord' -ea 0)|?{$_.SessionId -eq $SessionID}) -ne $Null
+	[bool]$wordrunning = ((Get-Process 'WinWord' -ea 0)|Where-Object {$_.SessionId -eq $SessionID}) -ne $Null
 	If($wordrunning)
 	{
 		$ErrorActionPreference = $SaveEAPreference
@@ -3690,13 +3702,13 @@ Function SetupWord
 
 	$Script:Word.Templates.LoadBuildingBlocks()
 	#word 2010/2013/2016
-	$BuildingBlocksCollection = $Script:Word.Templates | Where {$_.name -eq "Built-In Building Blocks.dotx"}
+	$BuildingBlocksCollection = $Script:Word.Templates | Where-Object {$_.name -eq "Built-In Building Blocks.dotx"}
 
 	Write-Verbose "$(Get-Date): Attempt to load cover page $($CoverPage)"
 	$part = $Null
 
 	$BuildingBlocksCollection | 
-	ForEach{
+	ForEach-Object{
 		If ($_.BuildingBlockEntries.Item($CoverPage).Name -eq $CoverPage) 
 		{
 			$BuildingBlocks = $_
@@ -3837,10 +3849,10 @@ Function UpdateDocumentProperties
             Set-DocumentProperty -Document $Script:Doc -DocProperty Title -Value $Script:title
 
 			#Get the Coverpage XML part
-			$cp = $Script:Doc.CustomXMLParts | Where {$_.NamespaceURI -match "coverPageProps$"}
+			$cp = $Script:Doc.CustomXMLParts | Where-Object {$_.NamespaceURI -match "coverPageProps$"}
 
 			#get the abstract XML part
-			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "Abstract"}
+			$ab = $cp.documentelement.ChildNodes | Where-Object {$_.basename -eq "Abstract"}
 			#set the text
 			If([String]::IsNullOrEmpty($Script:CoName))
 			{
@@ -3853,30 +3865,30 @@ Function UpdateDocumentProperties
 			$ab.Text = $abstract
 
 			#added 8-Jun-2017
-			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "CompanyAddress"}
+			$ab = $cp.documentelement.ChildNodes | Where-Object {$_.basename -eq "CompanyAddress"}
 			#set the text
 			[string]$abstract = $CompanyAddress
 			$ab.Text = $abstract
 
 			#added 8-Jun-2017
-			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "CompanyEmail"}
+			$ab = $cp.documentelement.ChildNodes | Where-Object {$_.basename -eq "CompanyEmail"}
 			#set the text
 			[string]$abstract = $CompanyEmail
 			$ab.Text = $abstract
 
 			#added 8-Jun-2017
-			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "CompanyFax"}
+			$ab = $cp.documentelement.ChildNodes | Where-Object {$_.basename -eq "CompanyFax"}
 			#set the text
 			[string]$abstract = $CompanyFax
 			$ab.Text = $abstract
 
 			#added 8-Jun-2017
-			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "CompanyPhone"}
+			$ab = $cp.documentelement.ChildNodes | Where-Object {$_.basename -eq "CompanyPhone"}
 			#set the text
 			[string]$abstract = $CompanyPhone
 			$ab.Text = $abstract
 
-			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "PublishDate"}
+			$ab = $cp.documentelement.ChildNodes | Where-Object {$_.basename -eq "PublishDate"}
 			#set the text
 			[string]$abstract = (Get-Date -Format d).ToString()
 			$ab.Text = $abstract
@@ -4264,8 +4276,6 @@ Function AddHTMLTable
 		$htmlbody = $htmlbody + "<tr>"
 		For($columnIndex = 0; $columnIndex -lt $colCount; $columnindex+=2)
 		{
-			$fontitalics = $False
-			$fontbold = $false
 			$tmp = CheckHTMLColor $rd[$columnIndex+1]
 
 			If($fixedInfo.Length -eq 0)
@@ -4507,7 +4517,6 @@ Function FormatHTMLTable
 				}
 				Else
 				{
-					$found = $false
 					For($i=0;$i -lt $columnArray[$columnIndex].length;$i+=2)
 					{
 						If($columnArray[$columnIndex][$i] -eq " ")
@@ -4790,7 +4799,7 @@ Function AddWordTable
 					}
 					## Use the ordered list to add each column in specified order
 					[ref] $Null = $WordRangeString.AppendFormat("{0}`n", [string]::Join("`t", $OrderedValues));
-				} ## end foreach
+				} ## end ForEach
 				Write-Debug ("$(Get-Date): `t`t`tAdded '{0}' table rows" -f ($CustomObject.Count));
 			} ## end CustomObject
 
@@ -4829,7 +4838,7 @@ Function AddWordTable
 					}
 					## Use the ordered list to add each column in specified order
 					[ref] $Null = $WordRangeString.AppendFormat("{0}`n", [string]::Join("`t", $OrderedValues));
-				} ## end foreach
+				} ## end ForEach
 
 				Write-Debug ("$(Get-Date): `t`t`tAdded '{0}' table rows" -f $Hashtable.Count);
 			} ## end default
@@ -5003,7 +5012,7 @@ Function SetWordCellFormat
 					If($Null -ne $Color) { $Cell.Range.Font.Color = $Color; }
 					If($Size -ne 0) { $Cell.Range.Font.Size = $Size; }
 					If($Solid) { $Cell.Shading.Texture = 0; } ## wdTextureNone
-				} # end foreach
+				} # end ForEach
 			} # end Collection
 			'Cell' 
 			{
@@ -5155,9 +5164,9 @@ Function validStateProp( [object] $object, [string] $topLevel, [string] $secondL
 	#function created 8-jan-2014 by Michael B. Smith
 	If( $object )
 	{
-		If((gm -Name $topLevel -InputObject $object))
+		If((Get-Member -Name $topLevel -InputObject $object))
 		{
-			If((gm -Name $secondLevel -InputObject $object.$topLevel))
+			If((Get-Member -Name $secondLevel -InputObject $object.$topLevel))
 			{
 				Return $True
 			}
@@ -5171,7 +5180,7 @@ Function validObject( [object] $object, [string] $topLevel )
 	#function created 8-jan-2014 by Michael B. Smith
 	If( $object )
 	{
-		If((gm -Name $topLevel -InputObject $object))
+		If((Get-Member -Name $topLevel -InputObject $object))
 		{
 			Return $True
 		}
@@ -5407,11 +5416,6 @@ Function Get-ComputerCountByOS
 
 	#-------------------------------------------------------------
 
-	# Set this to the OU structure where the you want to search to
-	# start from. Do not add the Domain DN. If you leave it blank,
-	# the script will start from the root of the domain.
-	$OUStructureToProcess = ""
-
 	# Set this to true to include service pack level. This makes the
 	# output more ganular, as the counts are then based on Operating
 	# System + Service Pack.
@@ -5453,7 +5457,7 @@ Function Get-ComputerCountByOS
 	}
 
 	# Get AD Distinguished Name
-	$DomainDistinguishedName = $Domain.GetDirectoryEntry() | select -ExpandProperty DistinguishedName  
+	$DomainDistinguishedName = $Domain.GetDirectoryEntry() | Select-Object -ExpandProperty DistinguishedName  
 
 	$ADSearchBase = $DomainDistinguishedName
 
@@ -5819,7 +5823,7 @@ Function Get-ComputerCountByOS
 		# Dispose of the search and results properly to avoid a memory leak
 		$colResults.Dispose()
 
-		$Output = $ComputersHashTable.values | ForEach {$_ } | ForEach {$_ } | Sort-Object OperatingSystem -descending
+		$Output = $ComputersHashTable.values | ForEach-Object {$_ } | ForEach-Object {$_ } | Sort-Object OperatingSystem -descending
 		
 		If($MSWORD -or $PDF)
 		{
@@ -6163,7 +6167,7 @@ Function SaveandCloseDocumentandShutdownWord
 					$SessionID = (Get-Process -PID $PID).SessionId
 					
 					#Find out if winword is running in our session
-					$wordprocess = ((Get-Process 'WinWord' -ea 0)|?{$_.SessionId -eq $SessionID}).Id
+					$wordprocess = ((Get-Process 'WinWord' -ea 0)|Where-Object {$_.SessionId -eq $SessionID}).Id
 					If($wordprocess -gt 0)
 					{
 						Write-Verbose "$(Get-Date): Attempting to stop WinWord process # $($wordprocess)"
@@ -6192,7 +6196,7 @@ Function SaveandCloseDocumentandShutdownWord
 
 	#Find out if winword is running in our session
 	$wordprocess = $Null
-	$wordprocess = ((Get-Process 'WinWord' -ea 0)|?{$_.SessionId -eq $SessionID}).Id
+	$wordprocess = ((Get-Process 'WinWord' -ea 0)|Where-Object {$_.SessionId -eq $SessionID}).Id
 	If($null -ne $wordprocess -and $wordprocess -gt 0)
 	{
 		Write-Verbose "$(Get-Date): WinWord process is still running. Attempting to stop WinWord process # $($wordprocess)"
@@ -6285,11 +6289,6 @@ Function SetFileName1andFileName2
 #region script setup function
 Function ProcessScriptSetup
 {
-	If($TEXT)
-	{
-		$global:output = ""
-	}
-
 	#If hardware inventory or services are requested, make sure user is running the script with Domain Admin rights
 	Write-Verbose "$(Get-Date): `tTesting to see if $env:username has Domain Admin rights"
 	$Script:DARights = $False
@@ -6535,8 +6534,8 @@ Function ProcessScriptSetup
 			}
 		}
 		Write-Verbose "$(Get-Date): $ADForest is a valid forest name"
-		[string]$Script:Title = "AD Inventory Report for the $Script:ForestName Forest"
-		$Script:Domains       = $Script:Forest.Domains | Sort
+		[string]$Script:Title = "AD Inventory Report for the $ADForest Forest"
+		$Script:Domains       = $Script:Forest.Domains | Sort-Object 
 		$Script:ConfigNC      = (Get-ADRootDSE -Server $ADForest -EA 0).ConfigurationNamingContext
 	}
 	
@@ -6648,11 +6647,11 @@ Function ProcessForestInformation
 		Default                    {$ForestMode = "Unable to determine Forest Mode: $($Script:Forest.ForestMode)"; Break}
 	}
 
-	$AppPartitions         = $Script:Forest.ApplicationPartitions | Sort
-	$CrossForestReferences = $Script:Forest.CrossForestReferences | Sort
-	$SPNSuffixes           = $Script:Forest.SPNSuffixes | Sort
-	$UPNSuffixes           = $Script:Forest.UPNSuffixes | Sort
-	$Sites                 = $Script:Forest.Sites | Sort
+	$AppPartitions         = $Script:Forest.ApplicationPartitions | Sort-Object 
+	$CrossForestReferences = $Script:Forest.CrossForestReferences | Sort-Object 
+	$SPNSuffixes           = $Script:Forest.SPNSuffixes | Sort-Object 
+	$UPNSuffixes           = $Script:Forest.UPNSuffixes | Sort-Object 
+	$Sites                 = $Script:Forest.Sites | Sort-Object 
 	
 	#added 9-oct-2016
 	#https://adsecurity.org/?p=81
@@ -7274,7 +7273,7 @@ Function ProcessAllDCsInTheForest
 	Write-Verbose "$(Get-Date): `t`tBuild list of Domain controllers in the Forest"
 	$AllDCs = $Forest2.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
 	Write-Verbose "$(Get-Date): `t`tSort list of all Domain controllers"
-	$AllDCs = $AllDCs | Sort
+	$AllDCs = $AllDCs | Sort-Object 
 	$ADContext = $Null
 	$Forest2 = $Null
 
@@ -7752,7 +7751,7 @@ Function ProcessADOptionalFeatures
 			If($Item.EnabledScopes.Count -gt 0)
 			{
 				$Enabled = "Yes"
-				$EnabledScopes = $Item.EnabledScopes | Sort
+				$EnabledScopes = $Item.EnabledScopes | Sort-Object 
 			}
 			
 			If($MSWORD -or $PDF)
@@ -8138,7 +8137,7 @@ Function ProcessSiteInformation
 	$tmp = $Script:Forest.PartitionsContainer
 	$ConfigurationBase = $tmp.SubString($tmp.IndexOf(",") + 1)
 	$Sites = $Null
-	$Sites = Get-ADObject -Filter 'ObjectClass -eq "site"' -SearchBase $ConfigurationBase -Properties Name, SiteObjectBl -Server $ADForest -EA 0 | Sort Name
+	$Sites = Get-ADObject -Filter 'ObjectClass -eq "site"' -SearchBase $ConfigurationBase -Properties Name, SiteObjectBl -Server $ADForest -EA 0 | Sort-Object Name
 
 	$siteContainerDN = ("CN=Sites," + $Script:ConfigNC)
 
@@ -8280,7 +8279,7 @@ Function ProcessSiteInformation
 					$subnetArray[$i] = $subnetName
 					$i++
 				}
-				$subnetArray = $subnetArray | Sort
+				$subnetArray = $subnetArray | Sort-Object 
 				If($Null -eq $subnetArray)
 				{
 					WriteWordLine 0 0 "<None>"
@@ -8350,7 +8349,7 @@ Function ProcessSiteInformation
 
 				If($Null -ne $Connections)
 				{
-					$Connections = $Connections | Sort Name, ToServer, FromServer
+					$Connections = $Connections | Sort-Object Name, ToServer, FromServer
 				}
 				
 				#list each server
@@ -8358,7 +8357,7 @@ Function ProcessSiteInformation
 				$SiteServers = $Null
 				$SiteServers = Get-ADObject -SearchBase $serverContainerDN -SearchScope OneLevel `
 				-Filter { objectClass -eq "Server" } -Properties "DNSHostName" -Server $ADForest -EA 0 | `
-				Select DNSHostName, Name | Sort DNSHostName
+				Select-Object DNSHostName, Name | Sort-Object DNSHostName
 				
 				If($? -and $Null -ne $SiteServers)
 				{
@@ -8373,7 +8372,7 @@ Function ProcessSiteInformation
 						#for each server list each connection object
 						If($Null -ne $Connections)
 						{
-							$Results = $Connections | Where {$_.ToServer -eq $SiteServer.Name}
+							$Results = $Connections | Where-Object {$_.ToServer -eq $SiteServer.Name}
 
 							If($? -and $Null -ne $Results)
 							{
@@ -8536,7 +8535,7 @@ Function ProcessSiteInformation
 					$subnetArray[$i] = $subnetName
 					$i++
 				}
-				$subnetArray = $subnetArray | Sort
+				$subnetArray = $subnetArray | Sort-Object 
 				If($Null -eq $subnetArray)
 				{
 					Line 2 "<None>"
@@ -8612,7 +8611,7 @@ Function ProcessSiteInformation
 
 				If($Null -ne $Connections)
 				{
-					$Connections = $Connections | Sort Name, ToServer, FromServer
+					$Connections = $Connections | Sort-Object Name, ToServer, FromServer
 				}
 				
 				#list each server
@@ -8620,7 +8619,7 @@ Function ProcessSiteInformation
 				$SiteServers = $Null
 				$SiteServers = Get-ADObject -SearchBase $serverContainerDN -SearchScope OneLevel `
 				-Filter { objectClass -eq "Server" } -Properties "DNSHostName" -Server $ADForest -EA 0 | `
-				Select DNSHostName, Name | Sort DNSHostName
+				Select-Object DNSHostName, Name | Sort-Object DNSHostName
 				
 				If($? -and $Null -ne $SiteServers)
 				{
@@ -8631,7 +8630,7 @@ Function ProcessSiteInformation
 						#for each server list each connection object
 						If($Null -ne $Connections)
 						{
-							$Results = $Connections | Where {$_.ToServer -eq $SiteServer.Name}
+							$Results = $Connections | Where-Object {$_.ToServer -eq $SiteServer.Name}
 
 							If($? -and $Null -ne $Results)
 							{
@@ -8782,7 +8781,7 @@ Function ProcessSiteInformation
 					$subnetArray[$i] = $subnetName
 					$i++
 				}
-				$subnetArray = $subnetArray | Sort
+				$subnetArray = $subnetArray | Sort-Object 
 				If($Null -eq $subnetArray)
 				{
 					WriteHTMLLine 0 0 "None"
@@ -8862,7 +8861,7 @@ Function ProcessSiteInformation
 
 				If($Null -ne $Connections)
 				{
-					$Connections = $Connections | Sort Name, ToServer, FromServer
+					$Connections = $Connections | Sort-Object Name, ToServer, FromServer
 				}
 				
 				#list each server
@@ -8870,7 +8869,7 @@ Function ProcessSiteInformation
 				$SiteServers = $Null
 				$SiteServers = Get-ADObject -SearchBase $serverContainerDN -SearchScope OneLevel `
 				-Filter { objectClass -eq "Server" } -Properties "DNSHostName" -Server $ADForest -EA 0 | `
-				Select DNSHostName, Name | Sort DNSHostName
+				Select-Object DNSHostName, Name | Sort-Object DNSHostName
 				
 				If($? -and $Null -ne $SiteServers)
 				{
@@ -8881,7 +8880,7 @@ Function ProcessSiteInformation
 						#for each server list each connection object
 						If($Null -ne $Connections)
 						{
-							$Results = $Connections | Where {$_.ToServer -eq $SiteServer.Name}
+							$Results = $Connections | Where-Object {$_.ToServer -eq $SiteServer.Name}
 
 							If($? -and $Null -ne $Results)
 							{
@@ -9167,7 +9166,7 @@ Function ProcessDomains
 				}
 
 				Write-Verbose "$(Get-Date): `t`tGetting Allowed DNS Suffixes"
-				$DNSSuffixes = $DomainInfo.AllowedDNSSuffixes | Sort
+				$DNSSuffixes = $DomainInfo.AllowedDNSSuffixes | Sort-Object 
 				If($Null -eq $DNSSuffixes)
 				{
 					$ScriptInformation += @{ Data = "Allowed DNS Suffixes"; Value = "<None>"; }
@@ -9192,7 +9191,7 @@ Function ProcessDomains
 				$DNSSuffixes = $Null
 
 				Write-Verbose "$(Get-Date): `t`tGetting Child domains"
-				$ChildDomains = $DomainInfo.ChildDomains | Sort
+				$ChildDomains = $DomainInfo.ChildDomains | Sort-Object 
 				If($Null -eq $ChildDomains)
 				{
 					$ScriptInformation += @{ Data = "Child domains"; Value = "<None>"; }
@@ -9217,7 +9216,7 @@ Function ProcessDomains
 				$ChildDomains = $Null
 
 				Write-Verbose "$(Get-Date): `t`tGetting Read-only replica directory servers"
-				$ReadOnlyReplicas = $DomainInfo.ReadOnlyReplicaDirectoryServers | Sort
+				$ReadOnlyReplicas = $DomainInfo.ReadOnlyReplicaDirectoryServers | Sort-Object 
 				If($Null -eq $ReadOnlyReplicas)
 				{
 					$ScriptInformation += @{ Data = "Read-only replica directory servers"; Value = "<None>"; }
@@ -9242,7 +9241,7 @@ Function ProcessDomains
 				$ReadOnlyReplicas = $Null
 
 				Write-Verbose "$(Get-Date): `t`tGetting Replica directory servers"
-				$Replicas = $DomainInfo.ReplicaDirectoryServers | Sort
+				$Replicas = $DomainInfo.ReplicaDirectoryServers | Sort-Object 
 				If($Replicas -eq $Null)
 				{
 					$ScriptInformation += @{ Data = "Replica directory servers"; Value = "<None>"; }
@@ -9267,7 +9266,7 @@ Function ProcessDomains
 				$Replicas = $Null
 
 				Write-Verbose "$(Get-Date): `t`tGetting Subordinate references"
-				$SubordinateReferences = $DomainInfo.SubordinateReferences | Sort
+				$SubordinateReferences = $DomainInfo.SubordinateReferences | Sort-Object 
 				If($Null -eq $SubordinateReferences)
 				{
 					$ScriptInformation += @{ Data = "Subordinate references"; Value = "<None>"; }
@@ -9384,7 +9383,7 @@ Function ProcessDomains
 				
 				Write-Verbose "$(Get-Date): `t`tProcessing domain controllers"
 				$DomainControllers = $Null
-				$DomainControllers = Get-ADDomainController -Filter * -Server $DomainInfo.DNSRoot -EA 0 | Sort Name
+				$DomainControllers = Get-ADDomainController -Filter * -Server $DomainInfo.DNSRoot -EA 0 | Sort-Object Name
 				
 				If($? -and $Null -ne $DomainControllers)
 				{
@@ -9430,7 +9429,7 @@ Function ProcessDomains
 				If(Get-Command -Name "Get-ADFineGrainedPasswordPolicy" -ea 0)
 				{
 					$FGPPs = $Null
-					$FGPPs = Get-ADFineGrainedPasswordPolicy -Searchbase $DomainInfo.DistinguishedName -Filter * -Properties * -Server $DomainInfo.DNSRoot -EA 0 | Sort Precedence, ObjectGUID
+					$FGPPs = Get-ADFineGrainedPasswordPolicy -Searchbase $DomainInfo.DistinguishedName -Filter * -Properties * -Server $DomainInfo.DNSRoot -EA 0 | Sort-Object Precedence, ObjectGUID
 					
 					If($? -and $Null -ne $FGPPs)
 					{
@@ -9533,7 +9532,7 @@ Function ProcessDomains
 							
 							$ScriptInformation += @{ Data = "Description"; Value = $FGPP.Description; }
 							
-							$results = Get-ADFineGrainedPasswordPolicySubject -Identity $FGPP.Name -EA 0 | Sort Name
+							$results = Get-ADFineGrainedPasswordPolicySubject -Identity $FGPP.Name -EA 0 | Sort-Object Name
 							
 							If($? -and $Null -ne $results)
 							{
@@ -9622,7 +9621,7 @@ Function ProcessDomains
 
 				Write-Verbose "$(Get-Date): `t`tGetting Allowed DNS Suffixes"
 				Line 1 "Allowed DNS Suffixes`t`t`t: " -NoNewLine
-				$DNSSuffixes = $DomainInfo.AllowedDNSSuffixes | Sort
+				$DNSSuffixes = $DomainInfo.AllowedDNSSuffixes | Sort-Object 
 				If($Null -eq $DNSSuffixes)
 				{
 					 Line 0 "<None>"
@@ -9648,7 +9647,7 @@ Function ProcessDomains
 
 				Write-Verbose "$(Get-Date): `t`tGetting Child domains"
 				Line 1 "Child domains`t`t`t`t: " -NoNewLine
-				$ChildDomains = $DomainInfo.ChildDomains | Sort
+				$ChildDomains = $DomainInfo.ChildDomains | Sort-Object 
 				If($Null -eq $ChildDomains)
 				{
 					Line 0 "<None>"
@@ -9674,7 +9673,7 @@ Function ProcessDomains
 
 				Write-Verbose "$(Get-Date): `t`tGetting Read-only replica directory servers"
 				Line 1 "Read-only replica directory servers`t: " -NoNewLine
-				$ReadOnlyReplicas = $DomainInfo.ReadOnlyReplicaDirectoryServers | Sort
+				$ReadOnlyReplicas = $DomainInfo.ReadOnlyReplicaDirectoryServers | Sort-Object 
 				If($Null -eq $ReadOnlyReplicas)
 				{
 					Line 0 "<None>"
@@ -9700,7 +9699,7 @@ Function ProcessDomains
 
 				Write-Verbose "$(Get-Date): `t`tGetting Replica directory servers"
 				Line 1 "Replica directory servers`t`t: " -NoNewLine
-				$Replicas = $DomainInfo.ReplicaDirectoryServers | Sort
+				$Replicas = $DomainInfo.ReplicaDirectoryServers | Sort-Object 
 				If($Replicas -eq $Null)
 				{
 					Line 0 "<None>"
@@ -9726,7 +9725,7 @@ Function ProcessDomains
 
 				Write-Verbose "$(Get-Date): `t`tGetting Subordinate references"
 				Line 1 "Subordinate references`t`t`t: " -NoNewLine
-				$SubordinateReferences = $DomainInfo.SubordinateReferences | Sort
+				$SubordinateReferences = $DomainInfo.SubordinateReferences | Sort-Object 
 				If($Null -eq $SubordinateReferences)
 				{
 					Line 0 "<None>"
@@ -9809,7 +9808,7 @@ Function ProcessDomains
 				
 				Write-Verbose "$(Get-Date): `t`tProcessing domain controllers"
 				$DomainControllers = $Null
-				$DomainControllers = Get-ADDomainController -Filter * -Server $DomainInfo.DNSRoot -EA 0 | Sort Name
+				$DomainControllers = Get-ADDomainController -Filter * -Server $DomainInfo.DNSRoot -EA 0 | Sort-Object Name
 				
 				If($? -and $Null -ne $DomainControllers)
 				{
@@ -9837,7 +9836,7 @@ Function ProcessDomains
 				If(Get-Command -Name "Get-ADFineGrainedPasswordPolicy" -ea 0)
 				{
 					$FGPPs = $Null
-					$FGPPs = Get-ADFineGrainedPasswordPolicy -Searchbase $DomainInfo.DistinguishedName -Filter * -Properties * -Server $DomainInfo.DNSRoot -EA 0 | Sort Precedence, ObjectGUID
+					$FGPPs = Get-ADFineGrainedPasswordPolicy -Searchbase $DomainInfo.DistinguishedName -Filter * -Properties * -Server $DomainInfo.DNSRoot -EA 0 | Sort-Object Precedence, ObjectGUID
 					
 					If($? -and $Null -ne $FGPPs)
 					{
@@ -9945,7 +9944,7 @@ Function ProcessDomains
 							
 							Line 1 "Description`t`t`t`t`t`t`t: " $FGPP.Description
 							
-							$results = Get-ADFineGrainedPasswordPolicySubject -Identity $FGPP.Name -EA 0 | Sort Name
+							$results = Get-ADFineGrainedPasswordPolicySubject -Identity $FGPP.Name -EA 0 | Sort-Object Name
 							
 							If($? -and $Null -ne $results)
 							{
@@ -10020,7 +10019,7 @@ Function ProcessDomains
 				}
 
 				Write-Verbose "$(Get-Date): `t`tGetting Allowed DNS Suffixes"
-				$DNSSuffixes = $DomainInfo.AllowedDNSSuffixes | Sort
+				$DNSSuffixes = $DomainInfo.AllowedDNSSuffixes | Sort-Object 
 				If($Null -eq $DNSSuffixes)
 				{
 					$rowdata += @(,('Allowed DNS Suffixes',($htmlsilver -bor $htmlbold),"None",$htmlwhite))
@@ -10045,7 +10044,7 @@ Function ProcessDomains
 				$DNSSuffixes = $Null
 
 				Write-Verbose "$(Get-Date): `t`tGetting Child domains"
-				$ChildDomains = $DomainInfo.ChildDomains | Sort
+				$ChildDomains = $DomainInfo.ChildDomains | Sort-Object 
 				If($Null -eq $ChildDomains)
 				{
 					$rowdata += @(,('Child domains',($htmlsilver -bor $htmlbold),"None",$htmlwhite))
@@ -10070,7 +10069,7 @@ Function ProcessDomains
 				$ChildDomains = $Null
 
 				Write-Verbose "$(Get-Date): `t`tGetting Read-only replica directory servers"
-				$ReadOnlyReplicas = $DomainInfo.ReadOnlyReplicaDirectoryServers | Sort
+				$ReadOnlyReplicas = $DomainInfo.ReadOnlyReplicaDirectoryServers | Sort-Object 
 				If($Null -eq $ReadOnlyReplicas)
 				{
 					$rowdata += @(,('Read-only replica directory servers',($htmlsilver -bor $htmlbold),"None",$htmlwhite))
@@ -10095,7 +10094,7 @@ Function ProcessDomains
 				$ReadOnlyReplicas = $Null
 
 				Write-Verbose "$(Get-Date): `t`tGetting Replica directory servers"
-				$Replicas = $DomainInfo.ReplicaDirectoryServers | Sort
+				$Replicas = $DomainInfo.ReplicaDirectoryServers | Sort-Object 
 				If($Replicas -eq $Null)
 				{
 					$rowdata += @(,('Replica directory servers',($htmlsilver -bor $htmlbold),"None",$htmlwhite))
@@ -10120,7 +10119,7 @@ Function ProcessDomains
 				$Replicas = $Null
 
 				Write-Verbose "$(Get-Date): `t`tGetting Subordinate references"
-				$SubordinateReferences = $DomainInfo.SubordinateReferences | Sort
+				$SubordinateReferences = $DomainInfo.SubordinateReferences | Sort-Object 
 				If($Null -eq $SubordinateReferences)
 				{
 					$rowdata += @(,('Subordinate references',($htmlsilver -bor $htmlbold),"None",$htmlwhite))
@@ -10213,7 +10212,7 @@ Function ProcessDomains
 				
 				Write-Verbose "$(Get-Date): `t`tProcessing domain controllers"
 				$DomainControllers = $Null
-				$DomainControllers = Get-ADDomainController -Filter * -Server $DomainInfo.DNSRoot -EA 0 | Sort Name
+				$DomainControllers = Get-ADDomainController -Filter * -Server $DomainInfo.DNSRoot -EA 0 | Sort-Object Name
 				
 				If($? -and $Null -ne $DomainControllers)
 				{
@@ -10247,7 +10246,7 @@ Function ProcessDomains
 				If(Get-Command -Name "Get-ADFineGrainedPasswordPolicy" -ea 0)
 				{
 					$FGPPs = $Null
-					$FGPPs = Get-ADFineGrainedPasswordPolicy -Searchbase $DomainInfo.DistinguishedName -Filter * -Properties * -Server $DomainInfo.DNSRoot -EA 0 | Sort Precedence, ObjectGUID
+					$FGPPs = Get-ADFineGrainedPasswordPolicy -Searchbase $DomainInfo.DistinguishedName -Filter * -Properties * -Server $DomainInfo.DNSRoot -EA 0 | Sort-Object Precedence, ObjectGUID
 					
 					If($? -and $Null -ne $FGPPs)
 					{
@@ -10349,7 +10348,7 @@ Function ProcessDomains
 							
 							$rowdata += @(,("Description",($htmlsilver -bor $htmlbold),$FGPP.Description,$htmlwhite))
 							
-							$results = Get-ADFineGrainedPasswordPolicySubject -Identity $FGPP.Name -EA 0 | Sort Name
+							$results = Get-ADFineGrainedPasswordPolicySubject -Identity $FGPP.Name -EA 0 | Sort-Object Name
 							
 							If($? -and $Null -ne $results)
 							{
@@ -10396,7 +10395,6 @@ Function ProcessDomains
 			}
 
 			$DomainControllers = $Null
-			$LinkedGPOs = $Null
 			$SubordinateReferences = $Null
 			$Replicas = $Null
 			$ReadOnlyReplicas = $Null
@@ -10462,15 +10460,17 @@ Function ProcessDomainControllers
 	}
 
 	$Script:DCDNSIPInfo = New-Object System.Collections.ArrayList
+	#V2.19 added
+	$Script:DCEventLogInfo = New-Object System.Collections.ArrayList
 	$Script:TimeServerInfo = New-Object System.Collections.ArrayList
-	$Script:AllDomainControllers = $Script:AllDomainControllers | Sort Name
+	$Script:AllDomainControllers = $Script:AllDomainControllers | Sort-Object Name
 	$First = $True
 
 	ForEach($DC in $Script:AllDomainControllers)
 	{
 		Write-Verbose "$(Get-Date): `tProcessing domain controller $($DC.name)"
-		$FSMORoles = $DC.OperationMasterRoles | Sort
-		$Partitions = $DC.Partitions | Sort
+		$FSMORoles = $DC.OperationMasterRoles | Sort-Object 
+		$Partitions = $DC.Partitions | Sort-Object 
 		
 		If(($MSWORD -or $PDF) -and !$First)
 		{
@@ -10838,6 +10838,8 @@ Function ProcessDomainControllers
 			OutputTimeServerRegistryKeys $DC.HostName
 		
 			OutputADFileLocations $DC.HostName
+			
+			OutputEventLogInfo $DC.HostName
 		}
 		
 		If($Hardware -or $Services -or $DCDNSInfo)
@@ -11006,7 +11008,6 @@ Function OutputTimeServerRegistryKeys
 		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
 		FindWordDocumentEnd
-		$TableRange = $Null
 		$Table = $Null
 		WriteWordLine 0 0 ""
 	}
@@ -11090,7 +11091,6 @@ Function OutputADFileLocations
 		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
 		FindWordDocumentEnd
-		$TableRange = $Null
 		$Table = $Null
 		WriteWordLine 0 0 ""
 	}
@@ -11117,6 +11117,153 @@ Function OutputADFileLocations
 		$msg = ""
 		$columnWidths = @("335","130")
 		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths -tablewidth "465"
+		WriteHTMLLine 0 0 " "
+	}
+}
+
+Function OutputEventLogInfo
+{
+	Param( [string] $DCName )
+	#V2.19 added
+	
+	Write-Verbose "$(Get-Date): `tEvent Log Information"
+	$ELInfo = New-Object System.Collections.ArrayList
+	
+	$EventLogs = Get-EventLog -List -ComputerName $DCName | Select-Object MaximumKilobytes, Log | Sort-Object Log 
+	
+	If($? -and $Null -ne $EventLogs)
+	{
+		ForEach($EventLog in $EventLogs)
+		{
+			[string]$ELSize = "{0,10:N0}" -f $EventLog.MaximumKilobytes
+			
+			$obj = New-Object -TypeName PSObject
+			$obj | Add-Member -MemberType NoteProperty -Name DCName                -Value $DCName
+			$obj | Add-Member -MemberType NoteProperty -Name EventLogName          -Value $EventLog.Log
+			$obj | Add-Member -MemberType NoteProperty -Name EventLogSize          -Value $ELSize
+			
+			[void]$Script:DCEventLogInfo.Add($obj)
+			[void]$ELInfo.Add($obj)
+		}
+	}
+	Else
+	{
+		[string]$ELSize = "{0,10:N0}" -f 0
+	
+		$obj = New-Object -TypeName PSObject
+		$obj | Add-Member -MemberType NoteProperty -Name DCName                -Value $DCName
+		$obj | Add-Member -MemberType NoteProperty -Name EventLogName          -Value "Unable to retrieve Event Log data"
+		$obj | Add-Member -MemberType NoteProperty -Name EventLogSize          -Value $ELSize
+		
+		[void]$Script:DCEventLogInfo.Add($obj)
+		[void]$ELInfo.Add($obj)
+	}
+	
+	$xEventLogInfo = $ELInfo | Sort-Object EventLogName
+	
+	If($MSWord -or $PDF)
+	{
+		WriteWordLine 3 0 "Event Log Information"
+		$TableRange = $doc.Application.Selection.Range
+		[int]$Columns = 2
+		If($xEventLogInfo -is [array])
+		{
+			[int]$Rows = $xEventLogInfo.Count + 1
+		}
+		Else
+		{
+			[int]$Rows = 2
+		}
+		[int]$xRow = 1
+		
+		$Table = $doc.Tables.Add($TableRange, $Rows, $Columns)
+		$Table.AutoFitBehavior($wdAutoFitFixed)
+		$Table.Style = $Script:MyHash.Word_TableGrid
+	
+		$Table.rows.first.headingformat = $wdHeadingFormatTrue
+		$Table.Borders.InsideLineStyle = $wdLineStyleSingle
+		$Table.Borders.OutsideLineStyle = $wdLineStyleSingle
+
+		$Table.Rows.First.Shading.BackgroundPatternColor = $wdColorGray15
+		$Table.Cell($xRow,1).Range.Font.Bold = $True
+		$Table.Cell($xRow,1).Range.Text = "Event Log Name"
+		
+		$Table.Cell($xRow,2).Range.Font.Bold = $True
+		$Table.Cell($xRow,2).Range.Text = "Event Log Size (KB)"
+	}
+	ElseIf($Text)
+	{
+		Line 0 "Event Log Information"
+		Line 0 ""
+	}
+	ElseIf($HTML)
+	{
+		WriteHTMLLine 3 0 "Event Log Information"
+		$rowdata = @()
+	}
+
+	ForEach($Item in $xEventLogInfo)
+	{
+		If($MSWord -or $PDF)
+		{
+			$xRow++
+			$Table.Cell($xRow,1).Range.Text = $Item.EventLogName
+			$Table.Cell($xRow,2).Range.ParagraphFormat.Alignment = $wdCellAlignVerticalTop
+			$Table.Cell($xRow,2).Range.ParagraphFormat.Alignment = $wdAlignParagraphRight
+			$Table.Cell($xRow,2).Range.Text = $Item.EventLogSize
+		}
+		ElseIf($Text)
+		{
+			Line 1 "Event Log Name`t`t: " $Item.EventLogName
+			Line 1 "Event Log Size (KB)`t: " $Item.EventLogSize
+			Line 0 ""
+		}
+		ElseIf($HTML)
+		{
+			$rowdata += @(,(
+				$Item.EventLogName,$htmlwhite,
+				$Item.EventLogSize,$htmlwhite
+			))
+		}
+	}
+
+	If($MSWord -or $PDF)
+	{
+		#set column widths
+		$xcols = $table.columns
+
+		ForEach($xcol in $xcols)
+		{
+			switch ($xcol.Index)
+			{
+			  1 {$xcol.width = 150; Break}
+			  2 {$xcol.width = 100; Break}
+			}
+		}
+		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustNone)
+		$Table.AutoFitBehavior($wdAutoFitFixed)
+
+		#return focus back to document
+		$doc.ActiveWindow.ActivePane.view.SeekView = $wdSeekMainDocument
+
+		#move to the end of the current document
+		$selection.EndKey($wdStory,$wdMove) | Out-Null
+		WriteWordLine 0 0 ""
+	}
+	ElseIf($Text)
+	{
+		#nothing to do
+	}
+	ElseIf($HTML)
+	{
+		$columnHeaders = @(
+		'Event Log Name',($htmlsilver -bor $htmlbold),
+		'Event Log Size (KB)',($htmlsilver -bor $htmlbold)
+		)
+
+		$msg = ""
+		$columnWidths = @("175px","125px")
+		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "300"
 		WriteHTMLLine 0 0 " "
 	}
 }
@@ -11189,8 +11336,8 @@ Function ProcessOrganizationalUnits
 		$OUs = $Null
 		$OUs = Get-ADOrganizationalUnit -Filter * -Server $Domain `
 		-Properties CanonicalName, DistinguishedName, Name, Created, ProtectedFromAccidentalDeletion -EA 0 | `
-		Select CanonicalName, DistinguishedName, Name, Created, ProtectedFromAccidentalDeletion | `
-		Sort CanonicalName
+		Select-Object CanonicalName, DistinguishedName, Name, Created, ProtectedFromAccidentalDeletion | `
+		Sort-Object CanonicalName
 		
 		If($? -and $Null -ne $OUs)
 		{
@@ -11687,7 +11834,7 @@ Function ProcessGroupInformation
 
 		#get all Groups for the domain
 		$Groups = $Null
-		$Groups = Get-ADGroup -Filter * -Server $Domain -Properties Name, GroupCategory, GroupType -EA 0 | Sort Name
+		$Groups = Get-ADGroup -Filter * -Server $Domain -Properties Name, GroupCategory, GroupType -EA 0 | Sort-Object Name
 
 		If($? -and $Null -ne $Groups)
 		{
@@ -11704,7 +11851,7 @@ Function ProcessGroupInformation
 			[int]$GroupsWithSIDHistory = 0
 			
 			Write-Verbose "$(Get-Date): `t`t`tSecurity Groups"
-			$Results = $groups | Where {$_.groupcategory -eq "Security"}
+			$Results = $groups | Where-Object {$_.groupcategory -eq "Security"}
 			
 			If($Null -eq $Results)
 			{
@@ -11720,7 +11867,7 @@ Function ProcessGroupInformation
 			}
 			
 			Write-Verbose "$(Get-Date): `t`t`tDistribution Groups"
-			$Results = $groups | Where {$_.groupcategory -eq "Distribution"}
+			$Results = $groups | Where-Object {$_.groupcategory -eq "Distribution"}
 			
 			If($Null -ne $Results)
 			{
@@ -11736,7 +11883,7 @@ Function ProcessGroupInformation
 			}
 
 			Write-Verbose "$(Get-Date): `t`t`tGlobal Groups"
-			$Results = $groups | Where {$_.groupscope -eq "Global"}
+			$Results = $groups | Where-Object {$_.groupscope -eq "Global"}
 
 			If($Null -eq $Results)
 			{
@@ -11752,7 +11899,7 @@ Function ProcessGroupInformation
 			}
 
 			Write-Verbose "$(Get-Date): `t`t`tUniversal Groups"
-			$Results = $groups | Where {$_.groupscope -eq "Universal"}
+			$Results = $groups | Where-Object {$_.groupscope -eq "Universal"}
 
 			If($Null -eq $Results)
 			{
@@ -11768,7 +11915,7 @@ Function ProcessGroupInformation
 			}
 			
 			Write-Verbose "$(Get-Date): `t`t`tDomain Local Groups"
-			$Results = $groups | Where {$_.groupscope -eq "DomainLocal"}
+			$Results = $groups | Where-Object {$_.groupscope -eq "DomainLocal"}
 
 			If($Null -eq $Results)
 			{
@@ -11793,7 +11940,7 @@ Function ProcessGroupInformation
 			}
 			ElseIf($Results -is [array])
 			{
-				[int]$GroupsWithSIDHistory = ($Results | Where {$_.objectClass -eq 'group'}).Count
+				[int]$GroupsWithSIDHistory = ($Results | Where-Object {$_.objectClass -eq 'group'}).Count
 			}
 			Else
 			{
@@ -11950,7 +12097,7 @@ Function ProcessGroupInformation
 				{
 					[int]$AdminsCount = 1
 				}
-				$Admins = $Admins | Sort Name
+				$Admins = $Admins | Sort-Object Name
 				[string]$AdminsCountStr = "{0:N0}" -f $AdminsCount
 				
 				If($MSWORD -or $PDF)
@@ -12218,7 +12365,7 @@ Function ProcessGroupInformation
 					{
 						[int]$AdminsCount = 1
 					}
-					$Admins = $Admins | Sort Name
+					$Admins = $Admins | Sort-Object Name
 					[string]$AdminsCountStr = "{0:N0}" -f $AdminsCount
 					
 					If($MSWORD -or $PDF)
@@ -12590,7 +12737,7 @@ Function ProcessGroupInformation
 					{
 						[int]$AdminsCount = 1
 					}
-					$Admins = $Admins | Sort Name
+					$Admins = $Admins | Sort-Object Name
 					[string]$AdminsCountStr = "{0:N0}" -f $AdminsCount
 					
 					If($MSWORD -or $PDF)
@@ -12953,7 +13100,7 @@ Function ProcessGroupInformation
 			
 			If($? -and $Null -ne $AdminCounts)
 			{
-				$AdminCounts = $AdminCounts | Sort Name
+				$AdminCounts = $AdminCounts | Sort-Object Name
 				If($AdminCounts -is [array])
 				{
 					[int]$AdminsCount = $AdminCounts.Count
@@ -13208,11 +13355,11 @@ Function ProcessGroupInformation
 			}
 			
 			Write-Verbose "$(Get-Date): `t`tListing groups with AdminCount = 1"
-			$AdminCounts = Get-ADGroup -LDAPFilter "(admincount=1)" -Server $Domain -EA 0 | Select Name
+			$AdminCounts = Get-ADGroup -LDAPFilter "(admincount=1)" -Server $Domain -EA 0 | Select-Object Name
 			
 			If($? -and $Null -ne $AdminCounts)
 			{
-				$AdminCounts = $AdminCounts | Sort Name
+				$AdminCounts = $AdminCounts | Sort-Object Name
 				If($AdminCounts -is [array])
 				{
 					[int]$AdminsCount = $AdminCounts.Count
@@ -13246,7 +13393,7 @@ Function ProcessGroupInformation
 					{
 						Write-Verbose "$(Get-Date): `t`t`t$($Admin.Name)"
 						$xRow++
-						$Members = Get-ADGroupMember -Identity $Admin.Name -Server $Domain -EA 0 | Sort Name
+						$Members = Get-ADGroupMember -Identity $Admin.Name -Server $Domain -EA 0 | Sort-Object Name
 						
 						If($? -and $Null -ne $Members)
 						{
@@ -13306,7 +13453,7 @@ Function ProcessGroupInformation
 					ForEach($Admin in $AdminCounts)
 					{
 						Write-Verbose "$(Get-Date): `t`t`t$($Admin.Name)"
-						$Members = Get-ADGroupMember -Identity $Admin.Name -Server $Domain -EA 0 | Sort Name
+						$Members = Get-ADGroupMember -Identity $Admin.Name -Server $Domain -EA 0 | Sort-Object Name
 						
 						If($? -and $Null -ne $Members)
 						{
@@ -13359,7 +13506,7 @@ Function ProcessGroupInformation
 					ForEach($Admin in $AdminCounts)
 					{
 						Write-Verbose "$(Get-Date): `t`t`t$($Admin.Name)"
-						$Members = Get-ADGroupMember -Identity $Admin.Name -Server $Domain -EA 0 | Sort Name
+						$Members = Get-ADGroupMember -Identity $Admin.Name -Server $Domain -EA 0 | Sort-Object Name
 						
 						If($? -and $Null -ne $Members)
 						{
@@ -13576,7 +13723,7 @@ Function ProcessGPOsByDomain
 				WriteHTMLLine 3 0 "Linked Group Policy Objects" 
 			}
 
-			$LinkedGPOs = $DomainInfo.LinkedGroupPolicyObjects | Sort
+			$LinkedGPOs = $DomainInfo.LinkedGroupPolicyObjects | Sort-Object 
 			If($Null -eq $LinkedGpos)
 			{
 				If($MSWORD -or $PDF)
@@ -13614,7 +13761,7 @@ Function ProcessGPOsByDomain
 					$GPOArray += $tmp
 				}
 
-				$GPOArray = $GPOArray | Sort
+				$GPOArray = $GPOArray | Sort-Object 
 
 				If($MSWORD -or $PDF)
 				{
@@ -13787,7 +13934,7 @@ Function ProcessgGPOsByOUOld
 		#get all OUs for the domain
 		$OUs = Get-ADOrganizationalUnit -Filter * -Server $Domain `
 		-Properties CanonicalName, DistinguishedName, Name -EA 0 | `
-		Select CanonicalName, DistinguishedName, Name | Sort CanonicalName
+		Select-Object CanonicalName, DistinguishedName, Name | Sort-Object CanonicalName
 		
 		If($? -and $Null -ne $OUs)
 		{
@@ -13813,7 +13960,7 @@ Function ProcessgGPOsByOUOld
 				If($? -and $Null -ne $OUInfo)
 				{
 					Write-Verbose "$(Get-Date): `t`t`tGetting linked GPOs"
-					$LinkedGPOs = $OUInfo.LinkedGroupPolicyObjects | Sort
+					$LinkedGPOs = $OUInfo.LinkedGroupPolicyObjects | Sort-Object 
 					If($Null -eq $LinkedGpos)
 					{
 						# do nothing
@@ -13840,7 +13987,7 @@ Function ProcessgGPOsByOUOld
 							$GPOArray += $tmp
 						}
 
-						$GPOArray = $GPOArray | Sort
+						$GPOArray = $GPOArray | Sort-Object 
 
 						If($LinkedGpos -is [array])
 						{
@@ -14035,7 +14182,7 @@ Function ProcessgGPOsByOUNew
 		#get all OUs for the domain
 		$OUs = Get-ADOrganizationalUnit -Filter * -Server $Domain `
 		-Properties CanonicalName, DistinguishedName, Name -EA 0 | `
-		Select CanonicalName, DistinguishedName, Name | Sort CanonicalName
+		Select-Object CanonicalName, DistinguishedName, Name | Sort-Object CanonicalName
 		
 		If($? -and $Null -ne $OUs)
 		{
@@ -14111,7 +14258,7 @@ Function ProcessgGPOsByOUNew
 							$AllGPOs += $obj
 						}
 
-						$AllGPOS = $AllGPOs | Sort GPOName						
+						$AllGPOS = $AllGPOs | Sort-Object GPOName						
 
 						[int]$Rows = 0
 						If($AllGPOS -is [array])
@@ -14204,7 +14351,6 @@ Function ProcessgGPOsByOUNew
 							FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "415"
 							WriteHTMLLine 0 0 " "
 						}
-						$GPOArray = $Null
 					}
 				}
 				ElseIf(!$?)
@@ -14352,7 +14498,7 @@ Function Get-RDUserSetting
 				ForEach($property in $TSSettings) 
 				{
 					$hash.Add($property,$user.psbase.invokeGet($property))
-				} #foreach
+				} #ForEach
 
 				#create an object
 				New-Object -TypeName PSObject -Property $hash
@@ -14463,7 +14609,7 @@ Function ProcessMiscDataByDomain
 				}
 				
 				Write-Verbose "$(Get-Date): `t`t`tDisabled users"
-				$DisabledUsers = $Users | Where {$_.Enabled -eq $False}
+				$DisabledUsers = $Users | Where-Object {$_.Enabled -eq $False}
 			
 				If($Null -eq $DisabledUsers)
 				{
@@ -14479,7 +14625,7 @@ Function ProcessMiscDataByDomain
 				}
 				
 				Write-Verbose "$(Get-Date): `t`t`tUnknown users"
-				$UnknownUsers = $Users | Where {$_.Enabled -eq $Null}
+				$UnknownUsers = $Users | Where-Object {$_.Enabled -eq $Null}
 			
 				If($Null -eq $UnknownUsers)
 				{
@@ -14495,7 +14641,7 @@ Function ProcessMiscDataByDomain
 				}
 
 				Write-Verbose "$(Get-Date): `t`t`tLocked out users"
-				$LockedOutUsers = $Users | Where {$_.LockedOut -eq $True}
+				$LockedOutUsers = $Users | Where-Object {$_.LockedOut -eq $True}
 			
 				If($Null -eq $LockedOutUsers)
 				{
@@ -14511,7 +14657,7 @@ Function ProcessMiscDataByDomain
 				}
 
 				Write-Verbose "$(Get-Date): `t`t`tAll users with password expired"
-				$AllUsersWithPasswordExpired = $Users | Where {$_.PasswordExpired -eq $True}
+				$AllUsersWithPasswordExpired = $Users | Where-Object {$_.PasswordExpired -eq $True}
 			
 				If($Null -eq $AllUsersWithPasswordExpired)
 				{
@@ -14527,7 +14673,7 @@ Function ProcessMiscDataByDomain
 				}
 
 				Write-Verbose "$(Get-Date): `t`t`tAll users whose password never expires"
-				$AllUsersWhosePasswordNeverExpires = $Users | Where {$_.PasswordNeverExpires -eq $True}
+				$AllUsersWhosePasswordNeverExpires = $Users | Where-Object {$_.PasswordNeverExpires -eq $True}
 			
 				If($Null -eq $AllUsersWhosePasswordNeverExpires)
 				{
@@ -14543,7 +14689,7 @@ Function ProcessMiscDataByDomain
 				}
 
 				Write-Verbose "$(Get-Date): `t`t`tAll users with password not required"
-				$AllUsersWithPasswordNotRequired = $Users | Where {$_.PasswordNotRequired -eq $True}
+				$AllUsersWithPasswordNotRequired = $Users | Where-Object {$_.PasswordNotRequired -eq $True}
 			
 				If($Null -eq $AllUsersWithPasswordNotRequired)
 				{
@@ -14559,7 +14705,7 @@ Function ProcessMiscDataByDomain
 				}
 
 				Write-Verbose "$(Get-Date): `t`t`tAll users who cannot change password"
-				$AllUsersWhoCannotChangePassword = $Users | Where {$_.CannotChangePassword -eq $True}
+				$AllUsersWhoCannotChangePassword = $Users | Where-Object {$_.CannotChangePassword -eq $True}
 			
 				If($Null -eq $AllUsersWhoCannotChangePassword)
 				{
@@ -14584,7 +14730,7 @@ Function ProcessMiscDataByDomain
 				}
 				ElseIf($AllUsersWithSIDHistory -is [array])
 				{
-					[int]$UsersWithSIDHistorycnt = ($AllUsersWithSIDHistory | Where {$_.objectClass -eq 'user'}).Count
+					[int]$UsersWithSIDHistorycnt = ($AllUsersWithSIDHistory | Where-Object {$_.objectClass -eq 'user'}).Count
 				}
 				Else
 				{
@@ -14593,7 +14739,7 @@ Function ProcessMiscDataByDomain
 
 				#2.16
 				Write-Verbose "$(Get-Date): `t`t`tAll users with Homedrive set in ADUC"
-				$HomeDriveUsers = $Users | Where {$_.HomeDrive -ne $Null}
+				$HomeDriveUsers = $Users | Where-Object {$_.HomeDrive -ne $Null}
 			
 				If($Null -eq $HomeDriveUsers)
 				{
@@ -14610,7 +14756,7 @@ Function ProcessMiscDataByDomain
 				
 				#2.16
 				Write-Verbose "$(Get-Date): `t`t`tAll users whose Primary Group is not Domain Users"
-				$PrimaryGroupUsers = $Users | Where {$_.SamAccountName -ne 'Guest' -and $_.PrimaryGroup -notmatch 'Domain Users'}
+				$PrimaryGroupUsers = $Users | Where-Object {$_.SamAccountName -ne 'Guest' -and $_.PrimaryGroup -notmatch 'Domain Users'}
 			
 				If($Null -eq $PrimaryGroupUsers)
 				{
@@ -14627,7 +14773,7 @@ Function ProcessMiscDataByDomain
 
 				#2.16
 				Write-Verbose "$(Get-Date): `t`t`tAll users with RDS HomeDrive set in ADUC"
-				$RDSHomeDriveUsers = $users | Get-RDUserSetting | Where {$_.TerminalServicesHomeDrive -gt 0}
+				$RDSHomeDriveUsers = $users | Get-RDUserSetting | Where-Object {$_.TerminalServicesHomeDrive -gt 0}
 			
 				If($Null -eq $RDSHomeDriveUsers)
 				{
@@ -14644,7 +14790,7 @@ Function ProcessMiscDataByDomain
 
 				#active users now
 				Write-Verbose "$(Get-Date): `t`t`tActive users"
-				$EnabledUsers = $Users | Where {$_.Enabled -eq $True}
+				$EnabledUsers = $Users | Where-Object {$_.Enabled -eq $True}
 			
 				If($Null -eq $EnabledUsers)
 				{
@@ -14660,7 +14806,7 @@ Function ProcessMiscDataByDomain
 				}
 
 				Write-Verbose "$(Get-Date): `t`t`tActive users password expired"
-				$Results = $EnabledUsers | Where {$_.PasswordExpired -eq $True}
+				$Results = $EnabledUsers | Where-Object {$_.PasswordExpired -eq $True}
 			
 				If($Null -eq $Results)
 				{
@@ -14676,7 +14822,7 @@ Function ProcessMiscDataByDomain
 				}
 
 				Write-Verbose "$(Get-Date): `t`t`tActive users password never expires"
-				$Results = $EnabledUsers | Where {$_.PasswordNeverExpires -eq $True}
+				$Results = $EnabledUsers | Where-Object {$_.PasswordNeverExpires -eq $True}
 			
 				If($Null -eq $Results)
 				{
@@ -14692,7 +14838,7 @@ Function ProcessMiscDataByDomain
 				}
 
 				Write-Verbose "$(Get-Date): `t`t`tActive users password not required"
-				$Results = $EnabledUsers | Where {$_.PasswordNotRequired -eq $True}
+				$Results = $EnabledUsers | Where-Object {$_.PasswordNotRequired -eq $True}
 			
 				If($Null -eq $Results)
 				{
@@ -14708,7 +14854,7 @@ Function ProcessMiscDataByDomain
 				}
 
 				Write-Verbose "$(Get-Date): `t`t`tActive Users cannot change password"
-				$Results = $EnabledUsers | Where {$_.CannotChangePassword -eq $True}
+				$Results = $EnabledUsers | Where-Object {$_.CannotChangePassword -eq $True}
 			
 				If($Null -eq $Results)
 				{
@@ -14724,7 +14870,7 @@ Function ProcessMiscDataByDomain
 				}
 
 				Write-Verbose "$(Get-Date): `t`t`tActive Users no lastLogonTimestamp"
-				$Results = $EnabledUsers | Where {$_.lastLogonTimestamp -eq $Null}
+				$Results = $EnabledUsers | Where-Object {$_.lastLogonTimestamp -eq $Null}
 			
 				If($Null -eq $Results)
 				{
@@ -15313,7 +15459,7 @@ Function OutputUserInfo
 	Param([object] $Users, [string] $title)
 	
 	Write-Verbose "$(Get-Date): `t`t`t`tOutput $($title)"
-	$Users = $Users | Sort samAccountName
+	$Users = $Users | Sort-Object samAccountName
 	
 	If($MSWORD -or $PDF)
 	{
@@ -15392,7 +15538,7 @@ Function OutputHDUserInfo
 	Param([object] $Users, [string] $title)
 	
 	Write-Verbose "$(Get-Date): `t`t`t`tOutput $($title)"
-	$Users = $Users | Sort samAccountName
+	$Users = $Users | Sort-Object samAccountName
 	
 	If($MSWORD -or $PDF)
 	{
@@ -15492,7 +15638,7 @@ Function OutputPGUserInfo
 	Param([object] $Users, [string] $title)
 	
 	Write-Verbose "$(Get-Date): `t`t`t`tOutput $($title)"
-	$Users = $Users | Sort samAccountName
+	$Users = $Users | Sort-Object samAccountName
 	
 	If($MSWORD -or $PDF)
 	{
@@ -15577,7 +15723,7 @@ Function OutputRDSHDUserInfo
 	Param([object] $Users, [string] $title)
 	
 	Write-Verbose "$(Get-Date): `t`t`t`tOutput $($title)"
-	$Users = $Users | Sort samAccountName
+	$Users = $Users | Sort-Object samAccountName
 	
 	If($MSWORD -or $PDF)
 	{
@@ -15682,7 +15828,7 @@ Function ProcessDCDNSInfo
 		Write-Verbose "$(Get-Date): `tAdd Domain Controller DNS IP Configuration table to doc"
 		
 		#sort by site then by DC
-		$xDCDNSIPInfo = $Script:DCDNSIPInfo | Sort DCSite, DCName
+		$xDCDNSIPInfo = $Script:DCDNSIPInfo | Sort-Object DCSite, DCName
 		
 		$txt = "Domain Controller DNS IP Configuration"
 		If($MSWord -or $PDF)
@@ -15773,7 +15919,6 @@ Function ProcessDCDNSInfo
 			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
 			FindWordDocumentEnd
-			$TableRange = $Null
 			$Table = $Null
 		}
 		ElseIf($Text)
@@ -15811,8 +15956,8 @@ Function ProcessTimeServerInfo
 	Write-Verbose "$(Get-Date): Create Domain Controller Time Server Configuration"
 	Write-Verbose "$(Get-Date): `tAdd Domain Controller Time Server Configuration table to doc"
 	
-	#sort by site then by DC
-	$xTimeServerInfo = $Script:TimeServerInfo | Sort DCName
+	#sort by DC
+	$xTimeServerInfo = $Script:TimeServerInfo | Sort-Object DCName
 	$txt = "Domain Controller Time Server Configuration"
 	
 	If($MSWord -or $PDF)
@@ -15908,7 +16053,6 @@ Function ProcessTimeServerInfo
 		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
 		FindWordDocumentEnd
-		$TableRange = $Null
 		$Table = $Null
 	}
 	ElseIf($Text)
@@ -15936,6 +16080,137 @@ Function ProcessTimeServerInfo
 	}
 
 	Write-Verbose "$(Get-Date): Finished Create Domain Controller Time Server Configuration"
+	Write-Verbose "$(Get-Date): "
+}
+#endregion
+
+#region EventLogInfo
+Function ProcessEventLogInfo
+{
+	#Domain Controller Event Log Data
+	Write-Verbose "$(Get-Date): Create Domain Controller Event Log Data"
+	Write-Verbose "$(Get-Date): `tAdd Domain Controller Event Log Data table to doc"
+	
+	#sort by DC and then event log name
+	$xEventLogInfo = $Script:DCEventLogInfo | Sort-Object EventLogName, DCName
+	$txt = "Domain Controller Event Log Data"
+	
+	If($MSWord -or $PDF)
+	{
+		$Script:selection.InsertNewPage()
+		WriteWordLine 1 0 $txt
+		$TableRange = $doc.Application.Selection.Range
+		[int]$Columns = 3
+		If($xEventLogInfo -is [array])
+		{
+			[int]$Rows = $xEventLogInfo.Count + 1
+		}
+		Else
+		{
+			[int]$Rows = 2
+		}
+		[int]$xRow = 1
+		
+		$Table = $doc.Tables.Add($TableRange, $Rows, $Columns)
+		$Table.AutoFitBehavior($wdAutoFitFixed)
+		$Table.Style = $Script:MyHash.Word_TableGrid
+	
+		$Table.rows.first.headingformat = $wdHeadingFormatTrue
+		$Table.Borders.InsideLineStyle = $wdLineStyleSingle
+		$Table.Borders.OutsideLineStyle = $wdLineStyleSingle
+
+		$Table.Rows.First.Shading.BackgroundPatternColor = $wdColorGray15
+		$Table.Cell($xRow,1).Range.Font.Bold = $True
+		$Table.Cell($xRow,1).Range.Text = "Event Log Name"
+		
+		$Table.Cell($xRow,2).Range.Font.Bold = $True
+		$Table.Cell($xRow,2).Range.Text = "DC Name"
+		
+		$Table.Cell($xRow,3).Range.Font.Bold = $True
+		$Table.Cell($xRow,3).Range.Text = "Event Log Size (KB)"
+	}
+	ElseIf($Text)
+	{
+		Line 0 $txt
+		Line 0 ""
+	}
+	ElseIf($HTML)
+	{
+		WriteHTMLLine 1 0 $txt
+		$rowdata = @()
+	}
+
+	ForEach($Item in $xEventLogInfo)
+	{
+		If($MSWord -or $PDF)
+		{
+			$xRow++
+			$Table.Cell($xRow,1).Range.Text = $Item.EventLogName
+			$Table.Cell($xRow,2).Range.Text = $Item.DCName
+			$Table.Cell($xRow,3).Range.ParagraphFormat.Alignment = $wdCellAlignVerticalTop
+			$Table.Cell($xRow,3).Range.ParagraphFormat.Alignment = $wdAlignParagraphRight
+			$Table.Cell($xRow,3).Range.Text = $Item.EventLogSize
+		}
+		ElseIf($Text)
+		{
+			Line 1 "Event Log Name`t`t: " $Item.EventLogName
+			Line 1 "DC Name`t`t`t: " $Item.DCName
+			Line 1 "Event Log Size (KB)`t: " $Item.EventLogSize
+			Line 0 ""
+		}
+		ElseIf($HTML)
+		{
+			$rowdata += @(,(
+				$Item.EventLogName,$htmlwhite,
+				$Item.DCName,$htmlwhite,
+				$Item.EventLogSize,$htmlwhite
+			))
+		}
+	}
+
+	If($MSWord -or $PDF)
+	{
+		#set column widths
+		$xcols = $table.columns
+
+		ForEach($xcol in $xcols)
+		{
+			switch ($xcol.Index)
+			{
+			  1 {$xcol.width = 150; Break}
+			  2 {$xcol.width = 150; Break}
+			  3 {$xcol.width = 100; Break}
+			}
+		}
+		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustNone)
+		$Table.AutoFitBehavior($wdAutoFitFixed)
+
+		#return focus back to document
+		$doc.ActiveWindow.ActivePane.view.SeekView = $wdSeekMainDocument
+
+		#move to the end of the current document
+		$selection.EndKey($wdStory,$wdMove) | Out-Null
+		WriteWordLine 0 0 ""
+	}
+	ElseIf($Text)
+	{
+		#nothing to do
+	}
+	ElseIf($HTML)
+	{
+		$columnHeaders = @(
+		'Event Log Name',($htmlsilver -bor $htmlbold),
+		'DC Name',($htmlsilver -bor $htmlbold),
+		'Event Log Size (KB)',($htmlsilver -bor $htmlbold)
+		)
+
+		$msg = ""
+		$columnWidths = @("150px","150px","100px")
+		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "400"
+		WriteHTMLLine 0 0 " "
+	}
+
+	Write-Verbose "$(Get-Date): Finished Create Domain Controller Event Log Data"
 	Write-Verbose "$(Get-Date): "
 }
 #endregion
@@ -16213,6 +16488,12 @@ If($Section -eq "All" -or $Section -eq "Domains")
 If($Script:Elevated -and ($Section -eq "All" -or $Section -eq "Domains"))
 {
 	ProcessTimeServerInfo
+	[gc]::collect()
+}
+
+If($Script:Elevated -and ($Section -eq "All" -or $Section -eq "Domains"))
+{
+	ProcessEventLogInfo
 	[gc]::collect()
 }
 
