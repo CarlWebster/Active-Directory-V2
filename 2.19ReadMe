@@ -1,4 +1,5 @@
-#Version 2.19
+#Version 2.19 5-Apr-2018
 #	Added Event Log information to each domain controller and an appendix
-#	Added Operating System information to Function OutputComputerItem
-#	Code clean up for most recommendations made by Visual Studio Code
+#		If the script is run from an elevated PowerShell session by a user with Domain Admin rights
+#	Added Operating System information to Functions GetComputerWMIInfo and OutputComputerItem
+#	Code clean-up for most recommendations made by Visual Studio Code

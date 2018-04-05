@@ -804,7 +804,7 @@
 	NAME: ADDS_Inventory_V2.ps1
 	VERSION: 2.19
 	AUTHOR: Carl Webster, Sr. Solutions Architect, Choice Solutions, LLC and Michael B. Smith
-	LASTEDIT: April 3, 2018
+	LASTEDIT: April 5, 2018
 #>
 
 
@@ -1106,13 +1106,14 @@ Param(
 #Version 2.17 8-Dec-2017
 #	Updated Function WriteHTMLLine with fixes from the script template
 #
-#Version 2.18 10-Mar-2017
+#Version 2.18 10-Mar-2018
 #	Added Log switch to create a transcript log
 #
-#Version 2.19
+#Version 2.19 5-Apr-2018
 #	Added Event Log information to each domain controller and an appendix
-#	Added Operating System information to Function OutputComputerItem
-#	Code clean up for most recommendations made by Visual Studio Code
+#		If the script is run from an elevated PowerShell session by a user with Domain Admin rights
+#	Added Operating System information to Functions GetComputerWMIInfo and OutputComputerItem
+#	Code clean-up for most recommendations made by Visual Studio Code
 
 Set-StrictMode -Version 2
 
@@ -1501,6 +1502,7 @@ Function GetComputerWMIInfo
 	# http://blog.myvirtualvision.com
 	# modified 1-May-2014 to work in trusted AD Forests and using different domain admin credentials	
 	# modified 17-Aug-2016 to fix a few issues with Text and HTML output
+	# modified 2-Aug-2018 to add ComputerOS information
 
 	#Get Computer info
 	Write-Verbose "$(Get-Date): `t`tProcessing WMI Computer information"
@@ -1539,10 +1541,11 @@ Function GetComputerWMIInfo
 		@{N="TotalPhysicalRam"; E={[math]::round(($_.TotalPhysicalMemory / 1GB),0)}}, `
 		NumberOfProcessors, NumberOfLogicalProcessors
 		$Results = $Null
+		[string]$ComputerOS = (Get-WmiObject -class Win32_OperatingSystem -computername $RemoteComputerName -EA 0).Caption
 
 		ForEach($Item in $ComputerItems)
 		{
-			OutputComputerItem $Item
+			OutputComputerItem $Item $ComputerOS
 		}
 	}
 	ElseIf(!$?)
@@ -1922,13 +1925,14 @@ Function GetComputerWMIInfo
 	}
 	ElseIf($HTML)
 	{
-		WriteHTMLLine 0 0 " "
+		WriteHTMLLine 0 0 ""
 	}
 }
 
 Function OutputComputerItem
 {
 	Param([object]$Item, [string]$OS)
+	# modified 2-Aug-2018 to add Operating System information
 	
 	If($MSWord -or $PDF)
 	{
