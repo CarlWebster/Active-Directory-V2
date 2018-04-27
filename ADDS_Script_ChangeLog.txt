@@ -4,6 +4,12 @@
 #@carlwebster on Twitter
 #http://www.CarlWebster.com
 
+#Version 2.20
+#	Added Domain Functional Level of 7 for Windows Server 2016
+#	Added Forest Functional Level of 7 for Windows Server 2016
+#	Change "renamed" to "changed" as it was freaking people out thinking I was renaming their domain or computer
+#	
+
 #Version 2.19 5-Apr-2018
 #	Added Event Log information to each domain controller and an appendix
 #		If the script is run from an elevated PowerShell session by a user with Domain Admin rights

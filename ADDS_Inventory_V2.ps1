@@ -1114,7 +1114,12 @@ Param(
 #		If the script is run from an elevated PowerShell session by a user with Domain Admin rights
 #	Added Operating System information to Functions GetComputerWMIInfo and OutputComputerItem
 #	Code clean-up for most recommendations made by Visual Studio Code
-
+#
+#Version 2.20
+#	Added Domain Functional Level of 7 for Windows Server 2016
+#	Added Forest Functional Level of 7 for Windows Server 2016
+#	Change "renamed" to "changed" as it was freaking people out thinking I was renaming their domain or computer
+#	
 Set-StrictMode -Version 2
 
 #force  on
@@ -6411,7 +6416,8 @@ Function ProcessScriptSetup
 	If($ComputerName -eq "localhost")
 	{
 		$Script:ComputerName = $env:ComputerName
-		Write-Verbose "$(Get-Date): Server name has been renamed from localhost to $($ComputerName)"
+		#V2.20 change from "renamed" to "changed"
+		Write-Verbose "$(Get-Date): Server name has been changed from localhost to $($ComputerName)"
 	}
 	
 	#see if default value of $Env:USERDNSDOMAIN was used
@@ -6423,7 +6429,8 @@ Function ProcessScriptSetup
 		If($? -and $Null -ne $Results)
 		{
 			$Script:ComputerName = $Results
-			Write-Verbose "$(Get-Date): Server name has been renamed from $Env:USERDNSDOMAIN to $ComputerName"
+			#V2.20 change from "renamed" to "changed"
+			Write-Verbose "$(Get-Date): Server name has been changed from $Env:USERDNSDOMAIN to $ComputerName"
 		}
 		ElseIf(!$?) #changed for 2.16
 		{
@@ -6433,7 +6440,8 @@ Function ProcessScriptSetup
 			If($? -and $Null -ne $Results)
 			{
 				$Script:ComputerName = $Results
-				Write-Verbose "$(Get-Date): Server name has been renamed from $Env:USERDNSDOMAIN to $ComputerName"
+				#V2.20 change from "renamed" to "changed"
+				Write-Verbose "$(Get-Date): Server name has been changed from $Env:USERDNSDOMAIN to $ComputerName"
 			}
 		}
 	}
@@ -6449,7 +6457,8 @@ Function ProcessScriptSetup
 		If($? -and $Null -ne $Result)
 		{
 			$Script:ComputerName = $Result.HostName
-			Write-Verbose "$(Get-Date): Server name has been renamed from $ip to $ComputerName"
+			#V2.20 change from "renamed" to "changed"
+			Write-Verbose "$(Get-Date): Server name has been changed from $ip to $ComputerName"
 		}
 		Else
 		{
@@ -6634,6 +6643,7 @@ Function ProcessForestInformation
 		"4" {$ForestMode = "Windows Server 2008 R2"; Break}
 		"5" {$ForestMode = "Windows Server 2012"; Break}
 		"6" {$ForestMode = "Windows Server 2012 R2"; Break}
+		"7" {$ForestMode = "Windows Server 2016"; Break}	#added V2.20
 		"Windows2000Forest"        {$ForestMode = "Windows 2000"; Break}
 		"Windows2003InterimForest" {$ForestMode = "Windows Server 2003 interim"; Break}
 		"Windows2003Forest"        {$ForestMode = "Windows Server 2003"; Break}
@@ -9078,6 +9088,7 @@ Function ProcessDomains
 				"4" {$DomainMode = "Windows Server 2008 R2"; Break}
 				"5" {$DomainMode = "Windows Server 2012"; Break}
 				"6" {$DomainMode = "Windows Server 2012 R2"; Break}
+				"7" {$DomainMode = "Windows Server 2016"; Break}	#added V2.20
 				"Windows2000Domain"   		{$DomainMode = "Windows 2000"; Break}
 				"Windows2003Mixed"    		{$DomainMode = "Windows Server 2003 mixed"; Break}
 				"Windows2003Domain"   		{$DomainMode = "Windows Server 2003"; Break}
