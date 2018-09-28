@@ -802,9 +802,9 @@
 	No objects are output from this script.  This script creates a Word or PDF document.
 .NOTES
 	NAME: ADDS_Inventory_V2.ps1
-	VERSION: 2.19
+	VERSION: 2.20
 	AUTHOR: Carl Webster, Sr. Solutions Architect, Choice Solutions, LLC and Michael B. Smith
-	LASTEDIT: April 5, 2018
+	LASTEDIT: September 28, 2018
 #>
 
 
@@ -953,6 +953,143 @@ Param(
 #Version 1.0 released to the community on May 31, 2014
 #
 #Version 2.0 is based on version 1.20
+#
+#Version 2.20 28-Sep-2018
+#	Added Domain Functional Level of 7 for Windows Server 2016
+#	Added Forest Functional Level of 7 for Windows Server 2016
+#	Added Domain Schema version 88 for Server 2019 Preview
+#	Added to Domain Information:
+#		Last logon replication interval
+#		Public key required password rolling (2012+)
+#	Added to Forest Information, Domain Controllers:
+#		Operation System
+#		Server Core (Y/N)
+#	Changed "renamed" to "changed" as it was freaking people out thinking I was renaming their domain or computer
+#	Changed all but the Word and HTML arrays from "@() +=" to "New-Object System.Collections.ArrayList .Add()"
+#	Changed the code where I checked for Singletons and -is [array] to use @() around the cmdlets so the result
+#		is always an array. Thanks to fellow CTP Sam Jacobs for the tip. This reduced the code by almost 500 lines.
+#	Changed the functions getting the computer WMI hardware and service info to use 
+#		"New-Object System.Collections.ArrayList .Add()" for Word and HTML tables
+#	Changed the width of the Domain Controllers table to accommodate the new columns
+#	Change the width of the AD Schema Items table to match the other tables
+#	Remove all the duplicate $VarName = $Null from Function ProcessDomains
+#	Reorder Change Log so the most recent is on top and the oldest is at the bottom
+#	Reorder most of the domain properties to be in alphabetical order
+#	Reorder most of the forest properties to be in alphabetical order
+#	Updated Exchange schema version information
+#
+#Version 2.19 5-Apr-2018
+#	Added Event Log information to each domain controller and an appendix
+#		If the script is run from an elevated PowerShell session by a user with Domain Admin rights
+#	Added Operating System information to Functions GetComputerWMIInfo and OutputComputerItem
+#	Code clean-up for most recommendations made by Visual Studio Code
+#
+#Version 2.18 10-Mar-2018
+#	Added Log switch to create a transcript log
+#
+#Version 2.17 8-Dec-2017
+#	Updated Function WriteHTMLLine with fixes from the script template
+#
+#Version 2.16 4-Dec-2017
+#	Add checking for users with home drive set in Active Directory Users and Computers (ADUC)
+#		Added function OutputHDUserInfo
+#	Add checking for users with RDS home drive set in ADUC
+#		Added function from Jeff Hicks Get-RDUserSetting
+#		Added function OutputRDSHDUserInfo
+#	Add checking for users whose Primary Group is not Domain Users
+#		Added function OutputPGUserInfo
+#	Add "DC: " in fron tof the domain controller name, in text output, for domain controller information
+#	Add new parameter ADDomain to restrict report to a single domain in a multi-domain Forest
+#	Add schema extension checking for the following items and add to Forest section:
+#		'User-Account-Control', #Flags that control the behavior of a user account
+#		'msNPAllowDialin', #RAS Server
+#		'ms-Mcs-AdmPwd', #LAPS
+#		'ms-Mcs-AdmPwdExpirationTime', #LAPS
+#		'ms-SMS-Assignment-Site-Code', #SCCM
+#		'ms-SMS-Capabilities', #SCCM
+#		'msRTCSIP-UserRoutingGroupId', #Lync/SfB
+#		'msRTCSIP-MirrorBackEndServer' #Lync/SfB
+#		'ms-exch-schema-version-pt' #Exchange
+#	Add "Site: " in front of Site name when listing Subnets, Servers, and Connection Objects
+#	Remove several large blocks of code that had been commented out
+#	Revise how $LinkedGPOs and $InheritedGPOs variables are set to work around invalid property 
+#		name DisplayName when collection is empty
+#	Sort Enabled Scopes in AD Optional Features
+#	Text output changes to tabular data:
+#		Domain Controllers (in Forest section)
+#		AD Schema Items (in Forest section)
+#		Services
+#		Organizational Units
+#		Domain Admins
+#		Enterprise Admins
+#		Schema Admins
+#		Users with AdminCount=1
+#	Updated Exchange schema versions
+#	Updated help text
+#	When reporting on the domain controllers in the Forest, if unable to get data from a domain controller,
+#		instead of reporting "Unknown", use:
+#		Unable to retrieve Global Catalog status on <DCName>
+#		Unable to retrieve Read-only status on <DCName>
+#	When run for a single domain in a multi-domain forest
+#		Revise gathering list of domains
+#		Revise testing for $ComputerName 
+#		Revise variable $ADContext in Function ProcessAllDCsInTheForest
+#
+#Version 2.15 26-Jun-2017
+#	Added new parameter MaxDetails:
+#		This is the same as using the following parameters:
+#			DCDNSInfo
+#			GPOInheritance
+#			HardWare
+#			IncludeUserInfo
+#			Services
+#	Fixed wrong loop variable for CA
+#	Removed code that made sure all Parameters were set to default values if for some reason they did exist or values were $Null
+#	Reordered the parameters in the help text and parameter list so they match and are grouped better
+#	Replaced _SetDocumentProperty function with Jim Moyle's Set-DocumentProperty function
+#	Updated Function ProcessScriptEnd for the new Cover Page properties and Parameters
+#	Updated Function ShowScriptOptions for the new Cover Page properties and Parameters
+#	Updated Function UpdateDocumentProperties for the new Cover Page properties and Parameters
+#	Updated help text
+#
+#Version 2.14 12-May-2017
+#	Add Certificate Authority Information section to Forest Information
+#		Check for the following CA related errors:
+#			Possible error: There are more than one Certification Authority Root(s)
+#			Error: Certification Authority Root(s) exist, but no Certification Authority Issuers(s) (also known as Enrollment Agents) exist
+#			Error: More Certification Authority Root(s) exist than there are Certification Authority Issuers(s) (also known as Enrollment Agents)
+#			Error: Certification Authority Issuers(s) (also known as Enrollment Agents) exist, but no Certification Authority Root(s) exist
+#	Change "Users with AdminCount=1 ($($AdminsCountStr) members):" to "Users with AdminCount=1 ($($AdminsCountStr) users):"
+#	Reorder the Forest Information section
+#
+#Version 2.13 13-Feb-2017
+#	Fix French wording for Table of Contents 2
+#
+#Version 2.12 10-Nov-2016
+#	Add Chinese language support
+#	Add table for Time Server information if script is run from an elevated PowerShell session
+#	Remove "Appendix A" from DC DNS Info table
+#
+#Version 2.11 6-Nov-2016
+#	Fixed Domain Trust Attributes (thanks GT)
+#	Fixed several Write-Warning statements that had no message
+#	Fixed using -AddDateTime with -HTML
+#	Remove duplicate setting for $Script:Title
+#	Reworked the use of [gc]::Collect()
+#
+#Version 2.10 released on 19-Oct-2016 (Happy Birthday Linz)
+#	Add a new parameter, IncludeUserInfo
+#		Add to the User Miscellaneous Data section, outputs a table with the SamAccountName
+#		and DistinguishedName of the users in the All Users counts
+#	Add to the Domain section, listing Fine Grained Password Policies
+#	Add to the Forest section, Tombstone Lifetime
+#	Changed the HTML header for AD Optional Features from a table header to a section header
+#	Changed "Site and Services" heading to "Sites and Services"
+#	Fixed formatting issues with HTML headings output
+#	The $AdminsCountStr variable was used, when it should not have been used, 
+#		when privileged groups had no members or members could not be retrieved
+#	Update Forest and Domain schema tables for the released Server 2016 product
+#
 #Version 2.0 released 26-Sep-2016
 #
 #	Added a parameter, GPOInheritance, to set whether to use the new GPOs by OU with linked and inherited GPOs
@@ -1003,117 +1140,7 @@ Param(
 #	Update Verbose messages for testing to see if -ComputerName is a domain controller
 #	Worked around Get-ADDomainController issue when run from a child domain
 #
-#Version 2.10 released on 19-Oct-2016 (Happy Birthday Linz)
-#	Add a new parameter, IncludeUserInfo
-#		Add to the User Miscellaneous Data section, outputs a table with the SamAccountName
-#		and DistinguishedName of the users in the All Users counts
-#	Add to the Domain section, listing Fine Grained Password Policies
-#	Add to the Forest section, Tombstone Lifetime
-#	Changed the HTML header for AD Optional Features from a table header to a section header
-#	Changed "Site and Services" heading to "Sites and Services"
-#	Fixed formatting issues with HTML headings output
-#	The $AdminsCountStr variable was used, when it should not have been used, 
-#		when privileged groups had no members or members could not be retrieved
-#	Update Forest and Domain schema tables for the released Server 2016 product
-#
-#Version 2.11 6-Nov-2016
-#	Fixed Domain Trust Attributes (thanks GT)
-#	Fixed several Write-Warning statements that had no message
-#	Fixed using -AddDateTime with -HTML
-#	Remove duplicate setting for $Script:Title
-#	Reworked the use of [gc]::Collect()
-#
-#Version 2.12
-#	Add Chinese language support
-#	Add table for Time Server information if script is run from an elevated PowerShell session
-#	Remove "Appendix A" from DC DNS Info table
-#
-#Version 2.13
-#	Fix French wording for Table of Contents 2
-#
-#Version 2.14
-#	Add Certificate Authority Information section to Forest Information
-#		Check for the following CA related errors:
-#			Possible error: There are more than one Certification Authority Root(s)
-#			Error: Certification Authority Root(s) exist, but no Certification Authority Issuers(s) (also known as Enrollment Agents) exist
-#			Error: More Certification Authority Root(s) exist than there are Certification Authority Issuers(s) (also known as Enrollment Agents)
-#			Error: Certification Authority Issuers(s) (also known as Enrollment Agents) exist, but no Certification Authority Root(s) exist
-#	Change "Users with AdminCount=1 ($($AdminsCountStr) members):" to "Users with AdminCount=1 ($($AdminsCountStr) users):"
-#	Reorder the Forest Information section
-#
-#Version 2.15
-#	Added new parameter MaxDetails:
-#		This is the same as using the following parameters:
-#			DCDNSInfo
-#			GPOInheritance
-#			HardWare
-#			IncludeUserInfo
-#			Services
-#	Fixed wrong loop variable for CA
-#	Removed code that made sure all Parameters were set to default values if for some reason they did exist or values were $Null
-#	Reordered the parameters in the help text and parameter list so they match and are grouped better
-#	Replaced _SetDocumentProperty function with Jim Moyle's Set-DocumentProperty function
-#	Updated Function ProcessScriptEnd for the new Cover Page properties and Parameters
-#	Updated Function ShowScriptOptions for the new Cover Page properties and Parameters
-#	Updated Function UpdateDocumentProperties for the new Cover Page properties and Parameters
-#	Updated help text
-#
-#Version 2.16 4-Dec-2017
-#	Add checking for users with home drive set in Active Directory Users and Computers (ADUC)
-#		Added function OutputHDUserInfo
-#	Add checking for users with RDS home drive set in ADUC
-#		Added function from Jeff Hicks Get-RDUserSetting
-#		Added function OutputRDSHDUserInfo
-#	Add checking for users whose Primary Group is not Domain Users
-#		Added function OutputPGUserInfo
-#	Add "DC: " in fron tof the domain controller name, in text output, for domain controller information
-#	Add new parameter ADDomain to restrict report to a single domain in a multi-domain Forest
-#	Add schema extension checking for the following items and add to Forest section:
-#		'User-Account-Control', #Flags that control the behavior of a user account
-#		'msNPAllowDialin', #RAS Server
-#		'ms-Mcs-AdmPwd', #LAPS
-#		'ms-Mcs-AdmPwdExpirationTime', #LAPS
-#		'ms-SMS-Assignment-Site-Code', #SCCM
-#		'ms-SMS-Capabilities', #SCCM
-#		'msRTCSIP-UserRoutingGroupId', #Lync/SfB
-#		'msRTCSIP-MirrorBackEndServer' #Lync/SfB
-#		'ms-exch-schema-version-pt' #Exchange
-#	Add "Site: " in front of Site name when listing Subnets, Servers, and Connection Objects
-#	Remove several large blocks of code that had been commented out
-#	Revise how $LinkedGPOs and $InheritedGPOs variables are set to work around invalid property 
-#		name DisplayName when collection is empty
-#	Sort Enabled Scopes in AD Optional Features
-#	Text output changes to tabular data:
-#		Domain Controllers (in Forest section)
-#		AD Schema Items (in Forest section)
-#		Services
-#		Organizational Units
-#		Domain Admins
-#		Enterprise Admins
-#		Schema Admins
-#		Users with AdminCount=1
-#	Updated Exchange schema versions
-#	Updated help text
-#	When reporting on the domain controllers in the Forest, if unable to get data from a domain controller,
-#		instead of reporting "Unknown", use:
-#		Unable to retrieve Global Catalog status on <DCName>
-#		Unable to retrieve Read-only status on <DCName>
-#	When run for a single domain in a multi-domain forest
-#		Revise gathering list of domains
-#		Revise testing for $ComputerName 
-#		Revise variable $ADContext in Function ProcessAllDCsInTheForest
-#
-#Version 2.17 8-Dec-2017
-#	Updated Function WriteHTMLLine with fixes from the script template
-#
-#Version 2.18 10-Mar-2018
-#	Added Log switch to create a transcript log
-#
-#Version 2.19 5-Apr-2018
-#	Added Event Log information to each domain controller and an appendix
-#		If the script is run from an elevated PowerShell session by a user with Domain Admin rights
-#	Added Operating System information to Functions GetComputerWMIInfo and OutputComputerItem
-#	Code clean-up for most recommendations made by Visual Studio Code
+
 
 Set-StrictMode -Version 2
 
@@ -1502,7 +1529,7 @@ Function GetComputerWMIInfo
 	# http://blog.myvirtualvision.com
 	# modified 1-May-2014 to work in trusted AD Forests and using different domain admin credentials	
 	# modified 17-Aug-2016 to fix a few issues with Text and HTML output
-	# modified 2-Aug-2018 to add ComputerOS information
+	# modified 29-Apr-2018 to change from Arrays to New-Object System.Collections.ArrayList
 
 	#Get Computer info
 	Write-Verbose "$(Get-Date): `t`tProcessing WMI Computer information"
@@ -1932,18 +1959,17 @@ Function GetComputerWMIInfo
 Function OutputComputerItem
 {
 	Param([object]$Item, [string]$OS)
-	# modified 2-Aug-2018 to add Operating System information
 	
 	If($MSWord -or $PDF)
 	{
-		[System.Collections.Hashtable[]] $ItemInformation = @()
-		$ItemInformation += @{ Data = "Manufacturer"; Value = $Item.manufacturer; }
-		$ItemInformation += @{ Data = "Model"; Value = $Item.model; }
-		$ItemInformation += @{ Data = "Domain"; Value = $Item.domain; }
-		$ItemInformation += @{ Data = "Operating System"; Value = $OS; }
-		$ItemInformation += @{ Data = "Total Ram"; Value = "$($Item.totalphysicalram) GB"; }
-		$ItemInformation += @{ Data = "Physical Processors (sockets)"; Value = $Item.NumberOfProcessors; }
-		$ItemInformation += @{ Data = "Logical Processors (cores w/HT)"; Value = $Item.NumberOfLogicalProcessors; }
+		$ItemInformation = New-Object System.Collections.ArrayList
+		$ItemInformation.Add(@{ Data = "Manufacturer"; Value = $Item.manufacturer; }) > $Null
+		$ItemInformation.Add(@{ Data = "Model"; Value = $Item.model; }) > $Null
+		$ItemInformation.Add(@{ Data = "Domain"; Value = $Item.domain; }) > $Null
+		$ItemInformation.Add(@{ Data = "Operating System"; Value = $OS; }) > $Null
+		$ItemInformation.Add(@{ Data = "Total Ram"; Value = "$($Item.totalphysicalram) GB"; }) > $Null
+		$ItemInformation.Add(@{ Data = "Physical Processors (sockets)"; Value = $Item.NumberOfProcessors; }) > $Null
+		$ItemInformation.Add(@{ Data = "Logical Processors (cores w/HT)"; Value = $Item.NumberOfLogicalProcessors; }) > $Null
 		$Table = AddWordTable -Hashtable $ItemInformation `
 		-Columns Data,Value `
 		-List `
@@ -1975,14 +2001,14 @@ Function OutputComputerItem
 	}
 	ElseIf($HTML)
 	{
-		$rowdata = @()
+		$rowdata = New-Object System.Collections.ArrayList
 		$columnHeaders = @("Manufacturer",($htmlsilver -bor $htmlbold),$Item.manufacturer,$htmlwhite)
-		$rowdata += @(,('Model',($htmlsilver -bor $htmlbold),$Item.model,$htmlwhite))
-		$rowdata += @(,('Domain',($htmlsilver -bor $htmlbold),$Item.domain,$htmlwhite))
-		$rowdata += @(,('Operating System',($htmlsilver -bor $htmlbold),$OS,$htmlwhite))
-		$rowdata += @(,('Total Ram',($htmlsilver -bor $htmlbold),"$($Item.totalphysicalram) GB",$htmlwhite))
-		$rowdata += @(,('Physical Processors (sockets)',($htmlsilver -bor $htmlbold),$Item.NumberOfProcessors,$htmlwhite))
-		$rowdata += @(,('Logical Processors (cores w/HT)',($htmlsilver -bor $htmlbold),$Item.NumberOfLogicalProcessors,$htmlwhite))
+		$rowdata.Add(@(,('Model',($htmlsilver -bor $htmlbold),$Item.model,$htmlwhite))) > $Null
+		$rowdata.Add(@(,('Domain',($htmlsilver -bor $htmlbold),$Item.domain,$htmlwhite))) > $Null
+		$rowdata.Add(@(,('Operating System',($htmlsilver -bor $htmlbold),$OS,$htmlwhite))) > $Null
+		$rowdata.Add(@(,('Total Ram',($htmlsilver -bor $htmlbold),"$($Item.totalphysicalram) GB",$htmlwhite))) > $Null
+		$rowdata.Add(@(,('Physical Processors (sockets)',($htmlsilver -bor $htmlbold),$Item.NumberOfProcessors,$htmlwhite))) > $Null
+		$rowdata.Add(@(,('Logical Processors (cores w/HT)',($htmlsilver -bor $htmlbold),$Item.NumberOfLogicalProcessors,$htmlwhite))) > $Null
 
 		$msg = ""
 		$columnWidths = @("150px","200px")
@@ -2023,27 +2049,27 @@ Function OutputDriveItem
 
 	If($MSWORD -or $PDF)
 	{
-		[System.Collections.Hashtable[]] $DriveInformation = @()
-		$DriveInformation += @{ Data = "Caption"; Value = $Drive.caption; }
-		$DriveInformation += @{ Data = "Size"; Value = "$($drive.drivesize) GB"; }
+		$DriveInformation = New-Object System.Collections.ArrayList
+		$DriveInformation.Add(@{ Data = "Caption"; Value = $Drive.caption; }) > $Null
+		$DriveInformation.Add(@{ Data = "Size"; Value = "$($drive.drivesize) GB"; }) > $Null
 		If(![String]::IsNullOrEmpty($drive.filesystem))
 		{
-			$DriveInformation += @{ Data = "File System"; Value = $Drive.filesystem; }
+			$DriveInformation.Add(@{ Data = "File System"; Value = $Drive.filesystem; }) > $Null
 		}
-		$DriveInformation += @{ Data = "Free Space"; Value = "$($drive.drivefreespace) GB"; }
+		$DriveInformation.Add(@{ Data = "Free Space"; Value = "$($drive.drivefreespace) GB"; }) > $Null
 		If(![String]::IsNullOrEmpty($drive.volumename))
 		{
-			$DriveInformation += @{ Data = "Volume Name"; Value = $Drive.volumename; }
+			$DriveInformation.Add(@{ Data = "Volume Name"; Value = $Drive.volumename; }) > $Null
 		}
 		If(![String]::IsNullOrEmpty($drive.volumedirty))
 		{
-			$DriveInformation += @{ Data = "Volume is Dirty"; Value = $xVolumeDirty; }
+			$DriveInformation.Add(@{ Data = "Volume is Dirty"; Value = $xVolumeDirty; }) > $Null
 		}
 		If(![String]::IsNullOrEmpty($drive.volumeserialnumber))
 		{
-			$DriveInformation += @{ Data = "Volume Serial Number"; Value = $Drive.volumeserialnumber; }
+			$DriveInformation.Add(@{ Data = "Volume Serial Number"; Value = $Drive.volumeserialnumber; }) > $Null
 		}
-		$DriveInformation += @{ Data = "Drive Type"; Value = $xDriveType; }
+		$DriveInformation.Add(@{ Data = "Drive Type"; Value = $xDriveType; }) > $Null
 		$Table = AddWordTable -Hashtable $DriveInformation `
 		-Columns Data,Value `
 		-List `
@@ -2090,33 +2116,33 @@ Function OutputDriveItem
 	}
 	ElseIf($HTML)
 	{
-		$rowdata = @()
+		$rowdata = New-Object System.Collections.ArrayList
 		$columnHeaders = @("Caption",($htmlsilver -bor $htmlbold),$Drive.caption,$htmlwhite)
-		$rowdata += @(,('Size',($htmlsilver -bor $htmlbold),"$($drive.drivesize) GB",$htmlwhite))
+		$rowdata.Add(@(,('Size',($htmlsilver -bor $htmlbold),"$($drive.drivesize) GB",$htmlwhite))) > $Null
 
 		If(![String]::IsNullOrEmpty($drive.filesystem))
 		{
-			$rowdata += @(,('File System',($htmlsilver -bor $htmlbold),$Drive.filesystem,$htmlwhite))
+			$rowdata.Add(@(,('File System',($htmlsilver -bor $htmlbold),$Drive.filesystem,$htmlwhite))) > $Null
 		}
-		$rowdata += @(,('Free Space',($htmlsilver -bor $htmlbold),"$($drive.drivefreespace) GB",$htmlwhite))
+		$rowdata.Add(@(,('Free Space',($htmlsilver -bor $htmlbold),"$($drive.drivefreespace) GB",$htmlwhite))) > $Null
 		If(![String]::IsNullOrEmpty($drive.volumename))
 		{
-			$rowdata += @(,('Volume Name',($htmlsilver -bor $htmlbold),$Drive.volumename,$htmlwhite))
+			$rowdata.Add(@(,('Volume Name',($htmlsilver -bor $htmlbold),$Drive.volumename,$htmlwhite))) > $Null
 		}
 		If(![String]::IsNullOrEmpty($drive.volumedirty))
 		{
-			$rowdata += @(,('Volume is Dirty',($htmlsilver -bor $htmlbold),$xVolumeDirty,$htmlwhite))
+			$rowdata.Add(@(,('Volume is Dirty',($htmlsilver -bor $htmlbold),$xVolumeDirty,$htmlwhite))) > $Null
 		}
 		If(![String]::IsNullOrEmpty($drive.volumeserialnumber))
 		{
-			$rowdata += @(,('Volume Serial Number',($htmlsilver -bor $htmlbold),$Drive.volumeserialnumber,$htmlwhite))
+			$rowdata.Add(@(,('Volume Serial Number',($htmlsilver -bor $htmlbold),$Drive.volumeserialnumber,$htmlwhite))) > $Null
 		}
-		$rowdata += @(,('Drive Type',($htmlsilver -bor $htmlbold),$xDriveType,$htmlwhite))
+		$rowdata.Add(@(,('Drive Type',($htmlsilver -bor $htmlbold),$xDriveType,$htmlwhite))) > $Null
 
 		$msg = ""
 		$columnWidths = @("150px","200px")
-		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths -tablewidth "350"
-		WriteHTMLLine 0 0 " "
+		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths
+		WriteHTMLLine 0 0 ""
 	}
 }
 
@@ -2149,27 +2175,27 @@ Function OutputProcessorItem
 
 	If($MSWORD -or $PDF)
 	{
-		[System.Collections.Hashtable[]] $ProcessorInformation = @()
-		$ProcessorInformation += @{ Data = "Name"; Value = $Processor.name; }
-		$ProcessorInformation += @{ Data = "Description"; Value = $Processor.description; }
-		$ProcessorInformation += @{ Data = "Max Clock Speed"; Value = "$($processor.maxclockspeed) MHz"; }
+		$ProcessorInformation = New-Object System.Collections.ArrayList
+		$ProcessorInformation.Add(@{ Data = "Name"; Value = $Processor.name; }) > $Null
+		$ProcessorInformation.Add(@{ Data = "Description"; Value = $Processor.description; }) > $Null
+		$ProcessorInformation.Add(@{ Data = "Max Clock Speed"; Value = "$($processor.maxclockspeed) MHz"; }) > $Null
 		If($processor.l2cachesize -gt 0)
 		{
-			$ProcessorInformation += @{ Data = "L2 Cache Size"; Value = "$($processor.l2cachesize) KB"; }
+			$ProcessorInformation.Add(@{ Data = "L2 Cache Size"; Value = "$($processor.l2cachesize) KB"; }) > $Null
 		}
 		If($processor.l3cachesize -gt 0)
 		{
-			$ProcessorInformation += @{ Data = "L3 Cache Size"; Value = "$($processor.l3cachesize) KB"; }
+			$ProcessorInformation.Add(@{ Data = "L3 Cache Size"; Value = "$($processor.l3cachesize) KB"; }) > $Null
 		}
 		If($processor.numberofcores -gt 0)
 		{
-			$ProcessorInformation += @{ Data = "Number of Cores"; Value = $Processor.numberofcores; }
+			$ProcessorInformation.Add(@{ Data = "Number of Cores"; Value = $Processor.numberofcores; }) > $Null
 		}
 		If($processor.numberoflogicalprocessors -gt 0)
 		{
-			$ProcessorInformation += @{ Data = "Number of Logical Processors (cores w/HT)"; Value = $Processor.numberoflogicalprocessors; }
+			$ProcessorInformation.Add(@{ Data = "Number of Logical Processors (cores w/HT)"; Value = $Processor.numberoflogicalprocessors; }) > $Null
 		}
-		$ProcessorInformation += @{ Data = "Availability"; Value = $xAvailability; }
+		$ProcessorInformation.Add(@{ Data = "Availability"; Value = $xAvailability; }) > $Null
 		$Table = AddWordTable -Hashtable $ProcessorInformation `
 		-Columns Data,Value `
 		-List `
@@ -2214,33 +2240,33 @@ Function OutputProcessorItem
 	}
 	ElseIf($HTML)
 	{
-		$rowdata = @()
+		$rowdata = New-Object System.Collections.ArrayList
 		$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$Processor.name,$htmlwhite)
-		$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$Processor.description,$htmlwhite))
+		$rowdata.Add(@(,('Description',($htmlsilver -bor $htmlbold),$Processor.description,$htmlwhite))) > $Null
 
-		$rowdata += @(,('Max Clock Speed',($htmlsilver -bor $htmlbold),"$($processor.maxclockspeed) MHz",$htmlwhite))
+		$rowdata.Add(@(,('Max Clock Speed',($htmlsilver -bor $htmlbold),"$($processor.maxclockspeed) MHz",$htmlwhite))) > $Null
 		If($processor.l2cachesize -gt 0)
 		{
-			$rowdata += @(,('L2 Cache Size',($htmlsilver -bor $htmlbold),"$($processor.l2cachesize) KB",$htmlwhite))
+			$rowdata.Add(@(,('L2 Cache Size',($htmlsilver -bor $htmlbold),"$($processor.l2cachesize) KB",$htmlwhite))) > $Null
 		}
 		If($processor.l3cachesize -gt 0)
 		{
-			$rowdata += @(,('L3 Cache Size',($htmlsilver -bor $htmlbold),"$($processor.l3cachesize) KB",$htmlwhite))
+			$rowdata.Add(@(,('L3 Cache Size',($htmlsilver -bor $htmlbold),"$($processor.l3cachesize) KB",$htmlwhite))) > $Null
 		}
 		If($processor.numberofcores -gt 0)
 		{
-			$rowdata += @(,('Number of Cores',($htmlsilver -bor $htmlbold),$Processor.numberofcores,$htmlwhite))
+			$rowdata.Add(@(,('Number of Cores',($htmlsilver -bor $htmlbold),$Processor.numberofcores,$htmlwhite))) > $Null
 		}
 		If($processor.numberoflogicalprocessors -gt 0)
 		{
-			$rowdata += @(,('Number of Logical Processors (cores w/HT)',($htmlsilver -bor $htmlbold),$Processor.numberoflogicalprocessors,$htmlwhite))
+			$rowdata.Add(@(,('Number of Logical Processors (cores w/HT)',($htmlsilver -bor $htmlbold),$Processor.numberoflogicalprocessors,$htmlwhite))) > $Null
 		}
-		$rowdata += @(,('Availability',($htmlsilver -bor $htmlbold),$xAvailability,$htmlwhite))
+		$rowdata.Add(@(,('Availability',($htmlsilver -bor $htmlbold),$xAvailability,$htmlwhite))) > $Null
 
 		$msg = ""
 		$columnWidths = @("150px","200px")
-		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths -tablewidth "350"
-		WriteHTMLLine 0 0 " "
+		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths
+		WriteHTMLLine 0 0 ""
 	}
 }
 
@@ -2289,35 +2315,35 @@ Function OutputNicItem
 		Default	{$xAvailability = "Unknown"; Break}
 	}
 
-	$xIPAddress = @()
+	$xIPAddress = New-Object System.Collections.ArrayList
 	ForEach($IPAddress in $Nic.ipaddress)
 	{
-		$xIPAddress += "$($IPAddress)"
+		$xIPAddress.Add("$($IPAddress)") > $Null
 	}
 
-	$xIPSubnet = @()
+	$xIPSubnet = New-Object System.Collections.ArrayList
 	ForEach($IPSubnet in $Nic.ipsubnet)
 	{
-		$xIPSubnet += "$($IPSubnet)"
+		$xIPSubnet.Add("$($IPSubnet)") > $Null
 	}
 
 	If($Null -ne $nic.dnsdomainsuffixsearchorder -and $nic.dnsdomainsuffixsearchorder.length -gt 0)
 	{
 		$nicdnsdomainsuffixsearchorder = $nic.dnsdomainsuffixsearchorder
-		$xnicdnsdomainsuffixsearchorder = @()
+		$xnicdnsdomainsuffixsearchorder = New-Object System.Collections.ArrayList
 		ForEach($DNSDomain in $nicdnsdomainsuffixsearchorder)
 		{
-			$xnicdnsdomainsuffixsearchorder += "$($DNSDomain)"
+			$xnicdnsdomainsuffixsearchorder.Add("$($DNSDomain)") > $Null
 		}
 	}
 	
 	If($Null -ne $nic.dnsserversearchorder -and $nic.dnsserversearchorder.length -gt 0)
 	{
 		$nicdnsserversearchorder = $nic.dnsserversearchorder
-		$xnicdnsserversearchorder = @()
+		$xnicdnsserversearchorder = New-Object System.Collections.ArrayList
 		ForEach($DNSServer in $nicdnsserversearchorder)
 		{
-			$xnicdnsserversearchorder += "$($DNSServer)"
+			$xnicdnsserversearchorder.Add("$($DNSServer)") > $Null
 		}
 	}
 
@@ -2352,99 +2378,99 @@ Function OutputNicItem
 
 	If($MSWORD -or $PDF)
 	{
-		[System.Collections.Hashtable[]] $NicInformation = @()
-		$NicInformation += @{ Data = "Name"; Value = $ThisNic.Name; }
+		$NicInformation = New-Object System.Collections.ArrayList
+		$NicInformation.Add(@{ Data = "Name"; Value = $ThisNic.Name; }) > $Null
 		If($ThisNic.Name -ne $nic.description)
 		{
-			$NicInformation += @{ Data = "Description"; Value = $Nic.description; }
+			$NicInformation.Add(@{ Data = "Description"; Value = $Nic.description; }) > $Null
 		}
-		$NicInformation += @{ Data = "Connection ID"; Value = $ThisNic.NetConnectionID; }
+		$NicInformation.Add(@{ Data = "Connection ID"; Value = $ThisNic.NetConnectionID; }) > $Null
 		If(validObject $Nic Manufacturer)
 		{
-			$NicInformation += @{ Data = "Manufacturer"; Value = $Nic.manufacturer; }
+			$NicInformation.Add(@{ Data = "Manufacturer"; Value = $Nic.manufacturer; }) > $Null
 		}
-		$NicInformation += @{ Data = "Availability"; Value = $xAvailability; }
-		$NicInformation += @{ Data = "Allow the computer to turn off this device to save power"; Value = $PowerSaving; }
-		$NicInformation += @{ Data = "Physical Address"; Value = $Nic.macaddress; }
+		$NicInformation.Add(@{ Data = "Availability"; Value = $xAvailability; }) > $Null
+		$NicInformation.Add(@{ Data = "Allow the computer to turn off this device to save power"; Value = $PowerSaving; }) > $Null
+		$NicInformation.Add(@{ Data = "Physical Address"; Value = $Nic.macaddress; }) > $Null
 		If($xIPAddress.Count -gt 1)
 		{
-			$NicInformation += @{ Data = "IP Address"; Value = $xIPAddress[0]; }
-			$NicInformation += @{ Data = "Default Gateway"; Value = $Nic.Defaultipgateway; }
-			$NicInformation += @{ Data = "Subnet Mask"; Value = $xIPSubnet[0]; }
+			$NicInformation.Add(@{ Data = "IP Address"; Value = $xIPAddress[0]; }) > $Null
+			$NicInformation.Add(@{ Data = "Default Gateway"; Value = $Nic.Defaultipgateway; }) > $Null
+			$NicInformation.Add(@{ Data = "Subnet Mask"; Value = $xIPSubnet[0]; }) > $Null
 			$cnt = -1
 			ForEach($tmp in $xIPAddress)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$NicInformation += @{ Data = "IP Address"; Value = $tmp; }
-					$NicInformation += @{ Data = "Subnet Mask"; Value = $xIPSubnet[$cnt]; }
+					$NicInformation.Add(@{ Data = "IP Address"; Value = $tmp; }) > $Null
+					$NicInformation.Add(@{ Data = "Subnet Mask"; Value = $xIPSubnet[$cnt]; }) > $Null
 				}
 			}
 		}
 		Else
 		{
-			$NicInformation += @{ Data = "IP Address"; Value = $xIPAddress; }
-			$NicInformation += @{ Data = "Default Gateway"; Value = $Nic.Defaultipgateway; }
-			$NicInformation += @{ Data = "Subnet Mask"; Value = $xIPSubnet; }
+			$NicInformation.Add(@{ Data = "IP Address"; Value = $xIPAddress; }) > $Null
+			$NicInformation.Add(@{ Data = "Default Gateway"; Value = $Nic.Defaultipgateway; }) > $Null
+			$NicInformation.Add(@{ Data = "Subnet Mask"; Value = $xIPSubnet; }) > $Null
 		}
 		If($nic.dhcpenabled)
 		{
 			$DHCPLeaseObtainedDate = $nic.ConvertToDateTime($nic.dhcpleaseobtained)
 			$DHCPLeaseExpiresDate = $nic.ConvertToDateTime($nic.dhcpleaseexpires)
-			$NicInformation += @{ Data = "DHCP Enabled"; Value = $Nic.dhcpenabled; }
-			$NicInformation += @{ Data = "DHCP Lease Obtained"; Value = $dhcpleaseobtaineddate; }
-			$NicInformation += @{ Data = "DHCP Lease Expires"; Value = $dhcpleaseexpiresdate; }
-			$NicInformation += @{ Data = "DHCP Server"; Value = $Nic.dhcpserver; }
+			$NicInformation.Add(@{ Data = "DHCP Enabled"; Value = $Nic.dhcpenabled; }) > $Null
+			$NicInformation.Add(@{ Data = "DHCP Lease Obtained"; Value = $dhcpleaseobtaineddate; }) > $Null
+			$NicInformation.Add(@{ Data = "DHCP Lease Expires"; Value = $dhcpleaseexpiresdate; }) > $Null
+			$NicInformation.Add(@{ Data = "DHCP Server"; Value = $Nic.dhcpserver; }) > $Null
 		}
 		If(![String]::IsNullOrEmpty($nic.dnsdomain))
 		{
-			$NicInformation += @{ Data = "DNS Domain"; Value = $Nic.dnsdomain; }
+			$NicInformation.Add(@{ Data = "DNS Domain"; Value = $Nic.dnsdomain; }) > $Null
 		}
 		If($Null -ne $nic.dnsdomainsuffixsearchorder -and $nic.dnsdomainsuffixsearchorder.length -gt 0)
 		{
-			$NicInformation += @{ Data = "DNS Search Suffixes"; Value = $xnicdnsdomainsuffixsearchorder[0]; }
+			$NicInformation.Add(@{ Data = "DNS Search Suffixes"; Value = $xnicdnsdomainsuffixsearchorder[0]; }) > $Null
 			$cnt = -1
 			ForEach($tmp in $xnicdnsdomainsuffixsearchorder)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$NicInformation += @{ Data = ""; Value = $tmp; }
+					$NicInformation.Add(@{ Data = ""; Value = $tmp; }) > $Null
 				}
 			}
 		}
-		$NicInformation += @{ Data = "DNS WINS Enabled"; Value = $xdnsenabledforwinsresolution; }
+		$NicInformation.Add(@{ Data = "DNS WINS Enabled"; Value = $xdnsenabledforwinsresolution; }) > $Null
 		If($Null -ne $nic.dnsserversearchorder -and $nic.dnsserversearchorder.length -gt 0)
 		{
-			$NicInformation += @{ Data = "DNS Servers"; Value = $xnicdnsserversearchorder[0]; }
+			$NicInformation.Add(@{ Data = "DNS Servers"; Value = $xnicdnsserversearchorder[0]; }) > $Null
 			$cnt = -1
 			ForEach($tmp in $xnicdnsserversearchorder)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$NicInformation += @{ Data = ""; Value = $tmp; }
+					$NicInformation.Add(@{ Data = ""; Value = $tmp; }) > $Null
 				}
 			}
 		}
-		$NicInformation += @{ Data = "NetBIOS Setting"; Value = $xTcpipNetbiosOptions; }
-		$NicInformation += @{ Data = "WINS: Enabled LMHosts"; Value = $xwinsenablelmhostslookup; }
+		$NicInformation.Add(@{ Data = "NetBIOS Setting"; Value = $xTcpipNetbiosOptions; }) > $Null
+		$NicInformation.Add(@{ Data = "WINS: Enabled LMHosts"; Value = $xwinsenablelmhostslookup; }) > $Null
 		If(![String]::IsNullOrEmpty($nic.winshostlookupfile))
 		{
-			$NicInformation += @{ Data = "Host Lookup File"; Value = $Nic.winshostlookupfile; }
+			$NicInformation.Add(@{ Data = "Host Lookup File"; Value = $Nic.winshostlookupfile; }) > $Null
 		}
 		If(![String]::IsNullOrEmpty($nic.winsprimaryserver))
 		{
-			$NicInformation += @{ Data = "Primary Server"; Value = $Nic.winsprimaryserver; }
+			$NicInformation.Add(@{ Data = "Primary Server"; Value = $Nic.winsprimaryserver; }) > $Null
 		}
 		If(![String]::IsNullOrEmpty($nic.winssecondaryserver))
 		{
-			$NicInformation += @{ Data = "Secondary Server"; Value = $Nic.winssecondaryserver; }
+			$NicInformation.Add(@{ Data = "Secondary Server"; Value = $Nic.winssecondaryserver; }) > $Null
 		}
 		If(![String]::IsNullOrEmpty($nic.winsscopeid))
 		{
-			$NicInformation += @{ Data = "Scope ID"; Value = $Nic.winsscopeid; }
+			$NicInformation.Add(@{ Data = "Scope ID"; Value = $Nic.winsscopeid; }) > $Null
 		}
 		$Table = AddWordTable -Hashtable $NicInformation -Columns Data,Value -List -AutoFit $wdAutoFitFixed;
 
@@ -2459,6 +2485,7 @@ Function OutputNicItem
 
 		FindWordDocumentEnd
 		$Table = $Null
+		WriteWordLine 0 0 ""
 	}
 	ElseIf($Text)
 	{
@@ -2558,107 +2585,108 @@ Function OutputNicItem
 		{
 			Line 3 "Scope ID`t`t: " $nic.winsscopeid
 		}
+		Line 0 ""
 	}
 	ElseIf($HTML)
 	{
-		$rowdata = @()
+		$rowdata = New-Object System.Collections.ArrayList
 		$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$ThisNic.Name,$htmlwhite)
 		If($ThisNic.Name -ne $nic.description)
 		{
-			$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$Nic.description,$htmlwhite))
+			$rowdata.Add(@(,('Description',($htmlsilver -bor $htmlbold),$Nic.description,$htmlwhite))) > $Null
 		}
-		$rowdata += @(,('Connection ID',($htmlsilver -bor $htmlbold),$ThisNic.NetConnectionID,$htmlwhite))
+		$rowdata.Add(@(,('Connection ID',($htmlsilver -bor $htmlbold),$ThisNic.NetConnectionID,$htmlwhite))) > $Null
 		If(validObject $Nic Manufacturer)
 		{
-			$rowdata += @(,('Manufacturer',($htmlsilver -bor $htmlbold),$Nic.manufacturer,$htmlwhite))
+			$rowdata.Add(@(,('Manufacturer',($htmlsilver -bor $htmlbold),$Nic.manufacturer,$htmlwhite))) > $Null
 		}
-		$rowdata += @(,('Availability',($htmlsilver -bor $htmlbold),$xAvailability,$htmlwhite))
-		$rowdata += @(,('Allow the computer to turn off this device to save power',($htmlsilver -bor $htmlbold),$PowerSaving,$htmlwhite))
-		$rowdata += @(,('Physical Address',($htmlsilver -bor $htmlbold),$Nic.macaddress,$htmlwhite))
-		$rowdata += @(,('IP Address',($htmlsilver -bor $htmlbold),$xIPAddress[0],$htmlwhite))
+		$rowdata.Add(@(,('Availability',($htmlsilver -bor $htmlbold),$xAvailability,$htmlwhite))) > $Null
+		$rowdata.Add(@(,('Allow the computer to turn off this device to save power',($htmlsilver -bor $htmlbold),$PowerSaving,$htmlwhite))) > $Null
+		$rowdata.Add(@(,('Physical Address',($htmlsilver -bor $htmlbold),$Nic.macaddress,$htmlwhite))) > $Null
+		$rowdata.Add(@(,('IP Address',($htmlsilver -bor $htmlbold),$xIPAddress[0],$htmlwhite))) > $Null
 		$cnt = -1
 		ForEach($tmp in $xIPAddress)
 		{
 			$cnt++
 			If($cnt -gt 0)
 			{
-				$rowdata += @(,('IP Address',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+				$rowdata.Add(@(,('IP Address',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))) > $Null
 			}
 		}
-		$rowdata += @(,('Default Gateway',($htmlsilver -bor $htmlbold),$Nic.Defaultipgateway[0],$htmlwhite))
-		$rowdata += @(,('Subnet Mask',($htmlsilver -bor $htmlbold),$xIPSubnet[0],$htmlwhite))
+		$rowdata.Add(@(,('Default Gateway',($htmlsilver -bor $htmlbold),$Nic.Defaultipgateway[0],$htmlwhite))) > $Null
+		$rowdata.Add(@(,('Subnet Mask',($htmlsilver -bor $htmlbold),$xIPSubnet[0],$htmlwhite))) > $Null
 		$cnt = -1
 		ForEach($tmp in $xIPSubnet)
 		{
 			$cnt++
 			If($cnt -gt 0)
 			{
-				$rowdata += @(,('Subnet Mask',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+				$rowdata.Add(@(,('Subnet Mask',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))) > $Null
 			}
 		}
 		If($nic.dhcpenabled)
 		{
 			$DHCPLeaseObtainedDate = $nic.ConvertToDateTime($nic.dhcpleaseobtained)
 			$DHCPLeaseExpiresDate = $nic.ConvertToDateTime($nic.dhcpleaseexpires)
-			$rowdata += @(,('DHCP Enabled',($htmlsilver -bor $htmlbold),$Nic.dhcpenabled,$htmlwhite))
-			$rowdata += @(,('DHCP Lease Obtained',($htmlsilver -bor $htmlbold),$dhcpleaseobtaineddate,$htmlwhite))
-			$rowdata += @(,('DHCP Lease Expires',($htmlsilver -bor $htmlbold),$dhcpleaseexpiresdate,$htmlwhite))
-			$rowdata += @(,('DHCP Server',($htmlsilver -bor $htmlbold),$Nic.dhcpserver,$htmlwhite))
+			$rowdata.Add(@(,('DHCP Enabled',($htmlsilver -bor $htmlbold),$Nic.dhcpenabled,$htmlwhite))) > $Null
+			$rowdata.Add(@(,('DHCP Lease Obtained',($htmlsilver -bor $htmlbold),$dhcpleaseobtaineddate,$htmlwhite))) > $Null
+			$rowdata.Add(@(,('DHCP Lease Expires',($htmlsilver -bor $htmlbold),$dhcpleaseexpiresdate,$htmlwhite))) > $Null
+			$rowdata.Add(@(,('DHCP Server',($htmlsilver -bor $htmlbold),$Nic.dhcpserver,$htmlwhite))) > $Null
 		}
 		If(![String]::IsNullOrEmpty($nic.dnsdomain))
 		{
-			$rowdata += @(,('DNS Domain',($htmlsilver -bor $htmlbold),$Nic.dnsdomain,$htmlwhite))
+			$rowdata.Add(@(,('DNS Domain',($htmlsilver -bor $htmlbold),$Nic.dnsdomain,$htmlwhite))) > $Null
 		}
 		If($Null -ne $nic.dnsdomainsuffixsearchorder -and $nic.dnsdomainsuffixsearchorder.length -gt 0)
 		{
-			$rowdata += @(,('DNS Search Suffixes',($htmlsilver -bor $htmlbold),$xnicdnsdomainsuffixsearchorder[0],$htmlwhite))
+			$rowdata.Add(@(,('DNS Search Suffixes',($htmlsilver -bor $htmlbold),$xnicdnsdomainsuffixsearchorder[0],$htmlwhite))) > $Null
 			$cnt = -1
 			ForEach($tmp in $xnicdnsdomainsuffixsearchorder)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+					$rowdata.Add(@(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))) > $Null
 				}
 			}
 		}
-		$rowdata += @(,('DNS WINS Enabled',($htmlsilver -bor $htmlbold),$xdnsenabledforwinsresolution,$htmlwhite))
+		$rowdata.Add(@(,('DNS WINS Enabled',($htmlsilver -bor $htmlbold),$xdnsenabledforwinsresolution,$htmlwhite))) > $Null
 		If($Null -ne $nic.dnsserversearchorder -and $nic.dnsserversearchorder.length -gt 0)
 		{
-			$rowdata += @(,('DNS Servers',($htmlsilver -bor $htmlbold),$xnicdnsserversearchorder[0],$htmlwhite))
+			$rowdata.Add(@(,('DNS Servers',($htmlsilver -bor $htmlbold),$xnicdnsserversearchorder[0],$htmlwhite))) > $Null
 			$cnt = -1
 			ForEach($tmp in $xnicdnsserversearchorder)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+					$rowdata.Add(@(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))) > $Null
 				}
 			}
 		}
-		$rowdata += @(,('NetBIOS Setting',($htmlsilver -bor $htmlbold),$xTcpipNetbiosOptions,$htmlwhite))
-		$rowdata += @(,('WINS: Enabled LMHosts',($htmlsilver -bor $htmlbold),$xwinsenablelmhostslookup,$htmlwhite))
+		$rowdata.Add(@(,('NetBIOS Setting',($htmlsilver -bor $htmlbold),$xTcpipNetbiosOptions,$htmlwhite))) > $Null
+		$rowdata.Add(@(,('WINS: Enabled LMHosts',($htmlsilver -bor $htmlbold),$xwinsenablelmhostslookup,$htmlwhite))) > $Null
 		If(![String]::IsNullOrEmpty($nic.winshostlookupfile))
 		{
-			$rowdata += @(,('Host Lookup File',($htmlsilver -bor $htmlbold),$Nic.winshostlookupfile,$htmlwhite))
+			$rowdata.Add(@(,('Host Lookup File',($htmlsilver -bor $htmlbold),$Nic.winshostlookupfile,$htmlwhite))) > $Null
 		}
 		If(![String]::IsNullOrEmpty($nic.winsprimaryserver))
 		{
-			$rowdata += @(,('Primary Server',($htmlsilver -bor $htmlbold),$Nic.winsprimaryserver,$htmlwhite))
+			$rowdata.Add(@(,('Primary Server',($htmlsilver -bor $htmlbold),$Nic.winsprimaryserver,$htmlwhite))) > $Null
 		}
 		If(![String]::IsNullOrEmpty($nic.winssecondaryserver))
 		{
-			$rowdata += @(,('Secondary Server',($htmlsilver -bor $htmlbold),$Nic.winssecondaryserver,$htmlwhite))
+			$rowdata.Add(@(,('Secondary Server',($htmlsilver -bor $htmlbold),$Nic.winssecondaryserver,$htmlwhite))) > $Null
 		}
 		If(![String]::IsNullOrEmpty($nic.winsscopeid))
 		{
-			$rowdata += @(,('Scope ID',($htmlsilver -bor $htmlbold),$Nic.winsscopeid,$htmlwhite))
+			$rowdata.Add(@(,('Scope ID',($htmlsilver -bor $htmlbold),$Nic.winsscopeid,$htmlwhite))) > $Null
 		}
 
 		$msg = ""
 		$columnWidths = @("150px","200px")
-		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths -tablewidth "350"
-		WriteHTMLLine 0 0 " "
+		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths
+		WriteHTMLLine 0 0 ""
 	}
 }
 #endregion
@@ -2667,6 +2695,7 @@ Function OutputNicItem
 Function GetComputerServices 
 {
 	Param([string]$RemoteComputerName)
+	# modified 29-Apr-2018 to change from Arrays to New-Object System.Collections.ArrayList
 	
 	#Get Computer services info
 	Write-Verbose "$(Get-Date): `t`tProcessing Computer services information"
@@ -2689,7 +2718,9 @@ Function GetComputerServices
 		#Replaced with a single call to retrieve services via WMI. The repeated
 		## "Get-WMIObject Win32_Service -Filter" calls were the major delays in the script.
 		## If we need to retrieve the StartUp type might as well just use WMI.
-		$Services = Get-WMIObject Win32_Service -ComputerName $RemoteComputerName | Sort-Object DisplayName
+		
+		#V2.20 changed to @()
+		$Services = @(Get-WMIObject Win32_Service -ComputerName $RemoteComputerName | Sort-Object DisplayName)
 	}
 	
 	Catch
@@ -2699,23 +2730,16 @@ Function GetComputerServices
 	
 	If($? -and $Null -ne $Services)
 	{
-		If($Services -is [array])
-		{
-			[int]$NumServices = $Services.count
-		}
-		Else
-		{
-			[int]$NumServices = 1
-		}
+		[int]$NumServices = $Services.count
 		Write-Verbose "$(Get-Date): `t`t$($NumServices) Services found"
 
 		If($MSWord -or $PDF)
 		{
 			WriteWordLine 0 1 "Services ($NumServices Services found)"
 
-			[System.Collections.Hashtable[]] $ServicesWordTable = @();
+			$ServicesWordTable = New-Object System.Collections.ArrayList
 			## Create an array of hashtables to store references of cells that we wish to highlight after the table has been added
-			[System.Collections.Hashtable[]] $HighlightedCells = @();
+			$HighlightedCells = New-Object System.Collections.ArrayList
 			## Seed the $Services row index from the second row
 			[int] $CurrentServiceIndex = 2;
 		}
@@ -2741,7 +2765,7 @@ Function GetComputerServices
 		ElseIf($HTML)
 		{
 			WriteHTMLLine 0 1 "Services ($NumServices Services found)"
-			$rowdata = @()
+			$rowdata = New-Object System.Collections.ArrayList
 		}
 
 		ForEach($Service in $Services) 
@@ -2759,22 +2783,17 @@ Function GetComputerServices
 				}
 
 				## Add the hash to the array
-				$ServicesWordTable += $WordTableRowHash;
+				$ServicesWordTable.Add($WordTableRowHash) > $Null
 
 				## Store "to highlight" cell references
 				If($Service.State -like "Stopped" -and $Service.StartMode -like "Auto") 
 				{
-					$HighlightedCells += @{ Row = $CurrentServiceIndex; Column = 2; }
+					$HighlightedCells.Add(@{ Row = $CurrentServiceIndex; Column = 2; }) > $Null
 				}
 				$CurrentServiceIndex++;
 			}
 			ElseIf($Text)
 			{
-				#Line 0 "Display Name`t: " $Service.DisplayName
-				#Line 0 "Status`t`t: " $Service.State
-				#Line 0 "Start Mode`t: " $Service.StartMode
-				#Line 0 ""
-				
 				#V2.16 change
 				If(($Service.DisplayName).Length -lt ($MaxDisplayNameLength))
 				{
@@ -2799,9 +2818,9 @@ Function GetComputerServices
 				{
 					$HighlightedCells = $htmlwhite
 				} 
-				$rowdata += @(,($Service.DisplayName,$htmlwhite,
+				$rowdata.Add(@(,($Service.DisplayName,$htmlwhite,
 								$Service.State,$HighlightedCells,
-								$Service.StartMode,$htmlwhite))
+								$Service.StartMode,$htmlwhite))) > $Null
 			}
 		}
 
@@ -5438,11 +5457,11 @@ Function Get-ComputerCountByOS
 	$TotalEnabledObjects = 0
 	$TotalDisabledObjects = 0
 	$TotalDisabledStaleObjects = 0
-	$AllComputerObjects = @()
-	$WindowsServerObjects = @()
-	$WindowsWorkstationObjects = @()
-	$NonWindowsComputerObjects = @()
-	$CNOandVCOObjects = @()
+	$AllComputerObjects = New-Object System.Collections.ArrayList
+	$WindowsServerObjects = New-Object System.Collections.ArrayList
+	$WindowsWorkstationObjects = New-Object System.Collections.ArrayList
+	$NonWindowsComputerObjects = New-Object System.Collections.ArrayList
+	$CNOandVCOObjects = New-Object System.Collections.ArrayList
 	$ComputersHashTable = @{}
 
 	$context = new-object System.DirectoryServices.ActiveDirectory.DirectoryContext("domain",$TrustedDomain)
@@ -5718,15 +5737,15 @@ Function Get-ComputerCountByOS
 			$obj | Add-Member -MemberType NoteProperty -Name "WhenCreated" -value $WhenCreated
 			$obj | Add-Member -MemberType NoteProperty -Name "Notes" -value $notes
 
-			$AllComputerObjects += $obj
+			$AllComputerObjects.Add($obj) > $Null
 
 			Switch($Category)
 			{
-				"Server"		{$WindowsServerObjects += $obj; break}
-				"Workstation"	{$WindowsWorkstationObjects += $obj; break}
-				"Other"			{$NonWindowsComputerObjects += $obj; break}
-				"CNO or VCO"	{$CNOandVCOObjects += $obj; break}
-				"Undefined"		{$NonWindowsComputerObjects += $obj; break}
+				"Server"		{$WindowsServerObjects.Add($obj) > $Null; break}
+				"Workstation"	{$WindowsWorkstationObjects.Add($obj) > $Null; break}
+				"Other"			{$NonWindowsComputerObjects.Add($obj) > $Null; break}
+				"CNO or VCO"	{$CNOandVCOObjects.Add($obj) > $Null; break}
+				"Undefined"		{$NonWindowsComputerObjects.Add($obj) > $Null; break}
 			}
 			$obj = New-Object -TypeName PSObject
 			$obj | Add-Member -MemberType NoteProperty -Name "OperatingSystem" -value $OperatingSystem
@@ -6411,7 +6430,8 @@ Function ProcessScriptSetup
 	If($ComputerName -eq "localhost")
 	{
 		$Script:ComputerName = $env:ComputerName
-		Write-Verbose "$(Get-Date): Server name has been renamed from localhost to $($ComputerName)"
+		#V2.20 change from "renamed" to "changed"
+		Write-Verbose "$(Get-Date): Server name has been changed from localhost to $($ComputerName)"
 	}
 	
 	#see if default value of $Env:USERDNSDOMAIN was used
@@ -6423,7 +6443,8 @@ Function ProcessScriptSetup
 		If($? -and $Null -ne $Results)
 		{
 			$Script:ComputerName = $Results
-			Write-Verbose "$(Get-Date): Server name has been renamed from $Env:USERDNSDOMAIN to $ComputerName"
+			#V2.20 change from "renamed" to "changed"
+			Write-Verbose "$(Get-Date): Server name has been changed from $Env:USERDNSDOMAIN to $ComputerName"
 		}
 		ElseIf(!$?) #changed for 2.16
 		{
@@ -6433,7 +6454,8 @@ Function ProcessScriptSetup
 			If($? -and $Null -ne $Results)
 			{
 				$Script:ComputerName = $Results
-				Write-Verbose "$(Get-Date): Server name has been renamed from $Env:USERDNSDOMAIN to $ComputerName"
+				#V2.20 change from "renamed" to "changed"
+				Write-Verbose "$(Get-Date): Server name has been changed from $Env:USERDNSDOMAIN to $ComputerName"
 			}
 		}
 	}
@@ -6449,7 +6471,8 @@ Function ProcessScriptSetup
 		If($? -and $Null -ne $Result)
 		{
 			$Script:ComputerName = $Result.HostName
-			Write-Verbose "$(Get-Date): Server name has been renamed from $ip to $ComputerName"
+			#V2.20 change from "renamed" to "changed"
+			Write-Verbose "$(Get-Date): Server name has been changed from $ip to $ComputerName"
 		}
 		Else
 		{
@@ -6634,6 +6657,7 @@ Function ProcessForestInformation
 		"4" {$ForestMode = "Windows Server 2008 R2"; Break}
 		"5" {$ForestMode = "Windows Server 2012"; Break}
 		"6" {$ForestMode = "Windows Server 2012 R2"; Break}
+		"7" {$ForestMode = "Windows Server 2016"; Break}	#added V2.20
 		"Windows2000Forest"        {$ForestMode = "Windows 2000"; Break}
 		"Windows2003InterimForest" {$ForestMode = "Windows Server 2003 interim"; Break}
 		"Windows2003Forest"        {$ForestMode = "Windows Server 2003"; Break}
@@ -6703,13 +6727,7 @@ Function ProcessForestInformation
 		[System.Collections.Hashtable[]] $ScriptInformation = @()
 		$ScriptInformation += @{ Data = "Forest mode"; Value = $ForestMode; }
 		$ScriptInformation += @{ Data = "Forest name"; Value = $Script:Forest.Name; }
-		$ScriptInformation += @{ Data = "Root domain"; Value = $Script:ForestRootDomain; }
-		$ScriptInformation += @{ Data = "Domain naming master"; Value = $Script:Forest.DomainNamingMaster; }
-		$ScriptInformation += @{ Data = "Schema master"; Value = $Script:Forest.SchemaMaster; }
-		$ScriptInformation += @{ Data = "Partitions container"; Value = $Script:Forest.PartitionsContainer; }
-
-		Write-Verbose "$(Get-Date): `tApplication partitions"
-
+		#V2.20 reorder to alpha order
 		$tmp = ""
 		If($Null -eq $AppPartitions)
 		{
@@ -6734,10 +6752,6 @@ Function ProcessForestInformation
 				}
 			}
 		}
-		$tmp = $Null
-
-		Write-Verbose "$(Get-Date): `tCross forest references"
-
 		$tmp = ""
 		If($Null -eq $CrossForestReferences)
 		{
@@ -6762,10 +6776,57 @@ Function ProcessForestInformation
 				}
 			}
 		}
-		$tmp = $Null
-
-		Write-Verbose "$(Get-Date): `tSPN suffixes"
-
+		$ScriptInformation += @{ Data = "Domain naming master"; Value = $Script:Forest.DomainNamingMaster; }
+		$tmp = ""
+		If($Null -eq $Script:Domains)
+		{
+			$tmp = "<None>"
+			$ScriptInformation += @{ Data = "Domains in forest"; Value = $tmp; }
+		}
+		Else
+		{
+			$cnt = 0
+			ForEach($Domain in $tmpDomains2)
+			{
+				$cnt++
+				$tmp = "$($Domain.ToString())"
+				
+				If($cnt -eq 1)
+				{
+					$ScriptInformation += @{ Data = "Domains in forest"; Value = $tmp; }
+				}
+				Else
+				{
+					$ScriptInformation += @{ Data = ""; Value = $tmp; }
+				}
+			}
+		}
+		$ScriptInformation += @{ Data = "Partitions container"; Value = $Script:Forest.PartitionsContainer; }
+		$ScriptInformation += @{ Data = "Root domain"; Value = $Script:ForestRootDomain; }
+		$ScriptInformation += @{ Data = "Schema master"; Value = $Script:Forest.SchemaMaster; }
+		$tmp = ""
+		If($Null -eq $Sites)
+		{
+			$tmp = "<None>"
+			$ScriptInformation += @{ Data = "Sites"; Value = $tmp; }
+		}
+		Else
+		{
+			$cnt = 0
+			ForEach($Site in $Sites)
+			{
+				$cnt++
+				
+				If($cnt -eq 1)
+				{
+					$ScriptInformation += @{ Data = "Sites"; Value = $Site.ToString(); }
+				}
+				Else
+				{
+					$ScriptInformation += @{ Data = ""; Value = $Site.ToString(); }
+				}
+			}
+		}
 		$tmp = ""
 		If($Null -eq $SPNSuffixes)
 		{
@@ -6790,10 +6851,7 @@ Function ProcessForestInformation
 				}
 			}
 		}
-		$tmp = $Null
-
-		Write-Verbose "$(Get-Date): `tUPN suffixes"
-
+		$ScriptInformation += @{ Data = "Tombstone lifetime"; Value = "$($TombstoneLifetime) days"; }
 		$tmp = ""
 		If($Null -eq $UPNSuffixes)
 		{
@@ -6820,63 +6878,6 @@ Function ProcessForestInformation
 		}
 		$tmp = $Null
 
-		Write-Verbose "$(Get-Date): `tDomains in forest"
-
-		$tmp = ""
-		If($Null -eq $Script:Domains)
-		{
-			$tmp = "<None>"
-			$ScriptInformation += @{ Data = "Domains in forest"; Value = $tmp; }
-		}
-		Else
-		{
-			$cnt = 0
-			ForEach($Domain in $tmpDomains2)
-			{
-				$cnt++
-				$tmp = "$($Domain.ToString())"
-				
-				If($cnt -eq 1)
-				{
-					$ScriptInformation += @{ Data = "Domains in forest"; Value = $tmp; }
-				}
-				Else
-				{
-					$ScriptInformation += @{ Data = ""; Value = $tmp; }
-				}
-			}
-		}
-		$tmp = $Null
-
-		Write-Verbose "$(Get-Date): `tSites"
-
-		$tmp = ""
-		If($Null -eq $Sites)
-		{
-			$tmp = "<None>"
-			$ScriptInformation += @{ Data = "Sites"; Value = $tmp; }
-		}
-		Else
-		{
-			$cnt = 0
-			ForEach($Site in $Sites)
-			{
-				$cnt++
-				
-				If($cnt -eq 1)
-				{
-					$ScriptInformation += @{ Data = "Sites"; Value = $Site.ToString(); }
-				}
-				Else
-				{
-					$ScriptInformation += @{ Data = ""; Value = $Site.ToString(); }
-				}
-			}
-		}
-		$tmp = $Null
-
-		$ScriptInformation += @{ Data = "Tombstone lifetime"; Value = "$($TombstoneLifetime) days"; }
-
 		Write-Verbose "$(Get-Date): `t`tCreate Forest Word table"
 		$Table = AddWordTable -Hashtable $ScriptInformation `
 		-Columns Data,Value `
@@ -6899,13 +6900,7 @@ Function ProcessForestInformation
 	{
 		Line 0  "Forest mode`t`t: " $ForestMode
 		Line 0  "Forest name`t`t: " $Script:Forest.Name
-		Line 0  "Root domain`t`t: " $Script:ForestRootDomain
-		Line 0  "Domain naming master`t: " $Script:Forest.DomainNamingMaster
-		Line 0  "Schema master`t`t: " $Script:Forest.SchemaMaster
-		Line 0  "Partitions container`t: " $Script:Forest.PartitionsContainer
-
-		Write-Verbose "$(Get-Date): `tApplication partitions"
-
+		#V2.20 reorder to alpha order
 		If($Null -eq $AppPartitions)
 		{
 			Line 0 "Application partitions`t: <None>"
@@ -6928,9 +6923,6 @@ Function ProcessForestInformation
 				}
 			}
 		}
-
-		Write-Verbose "$(Get-Date): `tCross forest references"
-
 		If($Null -eq $CrossForestReferences)
 		{
 			Line 0 "Cross forest references`t: <None>"
@@ -6953,59 +6945,7 @@ Function ProcessForestInformation
 				}
 			}
 		}
-
-		Write-Verbose "$(Get-Date): `tSPN suffixes"
-
-		If($Null -eq $SPNSuffixes)
-		{
-			Line 0 "SPN suffixes`t`t: <None>"
-		}
-		Else
-		{
-			Line 0 "SPN suffixes`t`t: " -NoNewLine
-			$cnt = 0
-			ForEach($SPNSuffix in $SPNSuffixes)
-			{
-				$cnt++
-				
-				If($cnt -eq 1)
-				{
-					Line 0 "$($SPNSuffix.ToString())"
-				}
-				Else
-				{
-					Line 3 "  $($SPNSuffix.ToString())"
-				}
-			}
-		}
-
-		Write-Verbose "$(Get-Date): `tUPN suffixes"
-
-		If($Null -eq $UPNSuffixes)
-		{
-			Line 0 "UPN Suffixes`t`t: <None>"
-		}
-		Else
-		{
-			Line 0 "UPN Suffixes`t`t: " -NoNewLine
-			$cnt = 0
-			ForEach($UPNSuffix in $UPNSuffixes)
-			{
-				$cnt++
-				
-				If($cnt -eq 1)
-				{
-					Line 0 "$($UPNSuffix.ToString())"
-				}
-				Else
-				{
-					Line 3 "  $($UPNSuffix.ToString())"
-				}
-			}
-		}
-
-		Write-Verbose "$(Get-Date): `tDomains in forest"
-
+		Line 0  "Domain naming master`t: " $Script:Forest.DomainNamingMaster
 		If($Null -eq $Script:Domains)
 		{
 			Line 0 "Domains in forest`t: <None>"
@@ -7029,9 +6969,9 @@ Function ProcessForestInformation
 				}
 			}
 		}
-
-		Write-Verbose "$(Get-Date): `tSites"
-
+		Line 0  "Partitions container`t: " $Script:Forest.PartitionsContainer
+		Line 0  "Root domain`t`t: " $Script:ForestRootDomain
+		Line 0  "Schema master`t`t: " $Script:Forest.SchemaMaster
 		If($Null -eq $Sites)
 		{
 			Line 0 "Sites`t`t`t: <None>"
@@ -7054,7 +6994,51 @@ Function ProcessForestInformation
 				}
 			}
 		}
+		If($Null -eq $SPNSuffixes)
+		{
+			Line 0 "SPN suffixes`t`t: <None>"
+		}
+		Else
+		{
+			Line 0 "SPN suffixes`t`t: " -NoNewLine
+			$cnt = 0
+			ForEach($SPNSuffix in $SPNSuffixes)
+			{
+				$cnt++
+				
+				If($cnt -eq 1)
+				{
+					Line 0 "$($SPNSuffix.ToString())"
+				}
+				Else
+				{
+					Line 3 "  $($SPNSuffix.ToString())"
+				}
+			}
+		}
 		Line 0 "Tombstone lifetime`t: " "$($TombstoneLifetime) days"
+		If($Null -eq $UPNSuffixes)
+		{
+			Line 0 "UPN Suffixes`t`t: <None>"
+		}
+		Else
+		{
+			Line 0 "UPN Suffixes`t`t: " -NoNewLine
+			$cnt = 0
+			ForEach($UPNSuffix in $UPNSuffixes)
+			{
+				$cnt++
+				
+				If($cnt -eq 1)
+				{
+					Line 0 "$($UPNSuffix.ToString())"
+				}
+				Else
+				{
+					Line 3 "  $($UPNSuffix.ToString())"
+				}
+			}
+		}
 		Line 0 ""
 	}
 	ElseIf($HTML)
@@ -7063,12 +7047,7 @@ Function ProcessForestInformation
 		$columnHeaders = @("Forest mode",($htmlsilver -bor $htmlbold),$ForestMode,$htmlwhite)
 		$rowdata += @(,('Forest name',($htmlsilver -bor $htmlbold),$Script:Forest.Name,$htmlwhite))
 		$rowdata += @(,('Root domain',($htmlsilver -bor $htmlbold),$Script:ForestRootDomain,$htmlwhite))
-		$rowdata += @(,('Domain naming master',($htmlsilver -bor $htmlbold),$Script:Forest.DomainNamingMaster,$htmlwhite))
-		$rowdata += @(,('Schema master',($htmlsilver -bor $htmlbold),$Script:Forest.SchemaMaster,$htmlwhite))
-		$rowdata += @(,('Partitions container',($htmlsilver -bor $htmlbold),$Script:Forest.PartitionsContainer,$htmlwhite))
-
-		Write-Verbose "$(Get-Date): `tApplication partitions"
-
+		#V2.20 reorder to alpha order
 		$tmp = ""
 		If($Null -eq $AppPartitions)
 		{
@@ -7094,10 +7073,6 @@ Function ProcessForestInformation
 				}
 			}
 		}
-		$tmp = $Null
-
-		Write-Verbose "$(Get-Date): `tCross forest references"
-
 		$tmp = ""
 		If($Null -eq $CrossForestReferences)
 		{
@@ -7122,10 +7097,56 @@ Function ProcessForestInformation
 				}
 			}
 		}
-		$tmp = $Null
-
-		Write-Verbose "$(Get-Date): `tSPN suffixes"
-
+		$rowdata += @(,('Domain naming master',($htmlsilver -bor $htmlbold),$Script:Forest.DomainNamingMaster,$htmlwhite))
+		$tmp = ""
+		If($Null -eq $Script:Domains)
+		{
+			$tmp = "None"
+			$rowdata += @(,('Domains in forest',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+		}
+		Else
+		{
+			$cnt = 0
+			ForEach($Domain in $tmpDomains2)
+			{
+				$cnt++
+				$tmp = "$($Domain.ToString())"
+				
+				If($cnt -eq 1)
+				{
+					$rowdata += @(,('Domains in forest',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+				}
+				Else
+				{
+					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+				}
+			}
+		}
+		$rowdata += @(,('Partitions container',($htmlsilver -bor $htmlbold),$Script:Forest.PartitionsContainer,$htmlwhite))
+		$rowdata += @(,('Schema master',($htmlsilver -bor $htmlbold),$Script:Forest.SchemaMaster,$htmlwhite))
+		$tmp = ""
+		If($Null -eq $Sites)
+		{
+			$tmp = "None"
+			$rowdata += @(,('Sites',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+		}
+		Else
+		{
+			$cnt = 0
+			ForEach($Site in $Sites)
+			{
+				$cnt++
+				
+				If($cnt -eq 1)
+				{
+					$rowdata += @(,('Sites',($htmlsilver -bor $htmlbold),$Site.ToString(),$htmlwhite))
+				}
+				Else
+				{
+					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$Site.ToString(),$htmlwhite))
+				}
+			}
+		}
 		$tmp = ""
 		If($Null -eq $SPNSuffixes)
 		{
@@ -7150,10 +7171,7 @@ Function ProcessForestInformation
 				}
 			}
 		}
-		$tmp = $Null
-
-		Write-Verbose "$(Get-Date): `tUPN suffixes"
-
+		$rowdata += @(,('Tombstone lifetime',($htmlsilver -bor $htmlbold),"$($TombstoneLifetime) days",$htmlwhite))
 		$tmp = ""
 		If($Null -eq $UPNSuffixes)
 		{
@@ -7179,63 +7197,6 @@ Function ProcessForestInformation
 			}
 		}
 		$tmp = $Null
-
-		Write-Verbose "$(Get-Date): `tDomains in forest"
-
-		$tmp = ""
-		If($Null -eq $Script:Domains)
-		{
-			$tmp = "None"
-			$rowdata += @(,('Domains in forest',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
-		}
-		Else
-		{
-			$cnt = 0
-			ForEach($Domain in $tmpDomains2)
-			{
-				$cnt++
-				$tmp = "$($Domain.ToString())"
-				
-				If($cnt -eq 1)
-				{
-					$rowdata += @(,('Domains in forest',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
-				}
-				Else
-				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
-				}
-			}
-		}
-		$tmp = $Null
-
-		Write-Verbose "$(Get-Date): `tSites"
-
-		$tmp = ""
-		If($Null -eq $Sites)
-		{
-			$tmp = "None"
-			$rowdata += @(,('Sites',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
-		}
-		Else
-		{
-			$cnt = 0
-			ForEach($Site in $Sites)
-			{
-				$cnt++
-				
-				If($cnt -eq 1)
-				{
-					$rowdata += @(,('Sites',($htmlsilver -bor $htmlbold),$Site.ToString(),$htmlwhite))
-				}
-				Else
-				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$Site.ToString(),$htmlwhite))
-				}
-			}
-		}
-		$tmp = $Null
-
-		$rowdata += @(,('Tombstone lifetime',($htmlsilver -bor $htmlbold),"$($TombstoneLifetime) days",$htmlwhite))
 
 		$msg = ""
 		$columnWidths = @("125","300")
@@ -7309,17 +7270,33 @@ Function ProcessAllDCsInTheForest
 				{
 					$GC = $Results.IsGlobalCatalog.ToString()
 					$ReadOnly = $Results.IsReadOnly.ToString()
+					#ServerOS and ServerCore added in V2.20
+					$ServerOS = $Results.OperatingSystem
+					#https://blogs.msmvps.com/russel/2017/03/16/how-to-tell-if-youre-running-on-windows-server-core/
+					$tmp = Get-RegistryValue "HKLM:\software\microsoft\windows nt\currentversion" "installationtype" $DCName
+					If($tmp -eq "Server Core")
+					{
+						$ServerCore = "Yes"
+					}
+					Else
+					{
+						$ServerCore = "No"
+					}
 				}
 				Else
 				{
 					$GC = "Unable to retrieve status"
 					$ReadOnly = "Unable to retrieve status"
+					$ServerOS = "Unable to retrieve status"
+					$ServerCore = "Unable to retrieve status"
 				}
 				
 				$WordTableRowHash += @{ 
 				DCName = $DC; 
 				GC = $GC; 
-				ReadOnly = $ReadOnly
+				ReadOnly = $ReadOnly;
+				ServerOS = $ServerOS;
+				ServerCore = $ServerCore
 				}
 				
 				$Results = $Null
@@ -7334,14 +7311,14 @@ Function ProcessAllDCsInTheForest
 			{
 				#2 is to allow for spacing between columns
 				Line 1 ("Name" + (' ' * ($MaxDCNameLength - 2))) -NoNewLine
-				Line 0 "Global Catalog            Read-only                "
+				Line 0 "Global Catalog  Read-only  Server OS                       Server Core"
 				Line 1 ('=' * $MaxDCNameLength) -NoNewLine
-				Line 0 "====================================================="
+				Line 0 "==============================================================================================="
 			}
 			Else
 			{
-				Line 1 "Name  Global Catalog            Read-only                "
-				Line 1 "==========================================================="
+				Line 1 "Name  Global Catalog  Read-only  Server OS                       Server Core"
+				Line 1 "============================================================================"
 			}
 			
 			ForEach($DC in $AllDCs)
@@ -7357,11 +7334,25 @@ Function ProcessAllDCsInTheForest
 				{
 					$xGC = $Results.IsGlobalCatalog.ToString()
 					$xRO = $Results.IsReadOnly.ToString()
+					#ServerOS and ServerCore added in V2.20
+					$ServerOS = $Results.OperatingSystem
+					#https://blogs.msmvps.com/russel/2017/03/16/how-to-tell-if-youre-running-on-windows-server-core/
+					$tmp = Get-RegistryValue "HKLM:\software\microsoft\windows nt\currentversion" "installationtype" $DCName
+					If($tmp -eq "Server Core")
+					{
+						$ServerCore = "Yes"
+					}
+					Else
+					{
+						$ServerCore = "No"
+					}
 				}
 				Else
 				{
 					$xGC = "Unable to retrieve status"
 					$xRO = "Unable to retrieve status"
+					$ServerOS = "Unable to retrieve"
+					$ServerCore = "N/A"
 				}
 
 				If(($DC).Length -lt ($MaxDCNameLength))
@@ -7372,7 +7363,7 @@ Function ProcessAllDCsInTheForest
 				{
 					[int]$NumOfSpaces = -4
 				}
-				Line 1 ( "{0,$NumOfSpaces}  {1,-25} {2,-25}" -f $DC,$xGC,$xRO)
+				Line 1 ( "{0,$NumOfSpaces}  {1,-15} {2,-10} {3,-31} {4,-3}" -f $DC,$xGC,$xRO,$ServerOS,$ServerCore)
 
 				$Results = $Null
 			}
@@ -7394,16 +7385,33 @@ Function ProcessAllDCsInTheForest
 				{
 					$GC = $Results.IsGlobalCatalog.ToString()
 					$ReadOnly = $Results.IsReadOnly.ToString()
+					#ServerOS and ServerCore added in V2.20
+					$ServerOS = $Results.OperatingSystem
+					#https://blogs.msmvps.com/russel/2017/03/16/how-to-tell-if-youre-running-on-windows-server-core/
+					$tmp = Get-RegistryValue "HKLM:\software\microsoft\windows nt\currentversion" "installationtype" $DCName
+					If($tmp -eq "Server Core")
+					{
+						$ServerCore = "Yes"
+					}
+					Else
+					{
+						$ServerCore = "No"
+					}
 				}
 				Else
 				{
 					$GC = "Unable to retrieve status"
 					$ReadOnly = "Unable to retrieve status"
+					$ServerOS = "Unable to retrieve status"
+					$ServerCore = "Unable to retrieve status"
 				}
 				
 				$rowdata += @(,($DC,$htmlwhite,
 								$GC,$htmlwhite,
-								$ReadOnly,$htmlwhite))
+								$ReadOnly,$htmlwhite,
+								$ServerOS,$htmlwhite,
+								$ServerCore,$htmlwhite
+								))
 			}
 		}
 	}
@@ -7411,17 +7419,18 @@ Function ProcessAllDCsInTheForest
 	{
 		Write-Verbose "$(Get-Date): `t`tCreate Domain Controller in Forest Word table"
 		$Table = AddWordTable -Hashtable $WordTableRowHash `
-		-Columns DCName, GC, ReadOnly `
-		-Headers "Name", "Global Catalog", "Read-only" `
+		-Columns DCName, GC, ReadOnly, ServerOS, ServerCore `
+		-Headers "Name", "Global Catalog", "Read-only", "Server OS", "Server Core" `
 		-AutoFit $wdAutoFitFixed;
 
 		SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
-		$Table.Columns.Item(1).Width = 200;
-		$Table.Columns.Item(2).Width = 80;
-		$Table.Columns.Item(3).Width = 65;
+		$Table.Columns.Item(1).Width = 150;
+		$Table.Columns.Item(2).Width = 50;
+		$Table.Columns.Item(3).Width = 50;
+		$Table.Columns.Item(4).Width = 130;
+		$Table.Columns.Item(5).Width = 45;
 
-		#indent the entire table 1 tab stop
 		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustNone)
 
 		FindWordDocumentEnd
@@ -7436,7 +7445,9 @@ Function ProcessAllDCsInTheForest
 	{
 		$columnHeaders = @('Name',($htmlsilver -bor $htmlbold),
 							'Global Catalog',($htmlsilver -bor $htmlbold),
-							'Read-only',($htmlsilver -bor $htmlbold))
+							'Read-only',($htmlsilver -bor $htmlbold),
+							'Server OS',($htmlsilver -bor $htmlbold),
+							'Server Core',($htmlsilver -bor $htmlbold))
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 		WriteHTMLLine 0 0 " "
@@ -7943,7 +7954,7 @@ Function ProcessADSchemaItems
 	$rootDS   = [ADSI] 'LDAP://RootDSE'
 	$schemaNC = $rootDS.schemaNamingContext.Item( 0 )
 
-	$SchemaItems = @()
+	$SchemaItems = New-Object System.Collections.ArrayList
 	ForEach( $item in $Name )
 	{
 		Write-Verbose "$(Get-Date): `t`tChecking for $item declared in schema"
@@ -7974,14 +7985,14 @@ Function ProcessADSchemaItems
 			$Itemobj | Add-Member -MemberType NoteProperty -Name ItemName	-Value $item
 			$Itemobj | Add-Member -MemberType NoteProperty -Name ItemState	-Value "Present"
 			$Itemobj | Add-Member -MemberType NoteProperty -Name ItemDesc	-Value $tmp
-			$SchemaItems += $Itemobj
+			$SchemaItems.Add($Itemobj) > $Null
 		}
 		Else
 		{
 			$Itemobj | Add-Member -MemberType NoteProperty -Name ItemName	-Value $item
 			$Itemobj | Add-Member -MemberType NoteProperty -Name ItemState	-Value "Not Present"
 			$Itemobj | Add-Member -MemberType NoteProperty -Name ItemDesc	-Value $tmp
-			$SchemaItems += $Itemobj
+			$SchemaItems.Add($Itemobj) > $Null
 		}
 		$mem = $null
 		$obj = $null
@@ -7991,14 +8002,7 @@ Function ProcessADSchemaItems
 	{
 		$TableRange = $doc.Application.Selection.Range
 		[int]$Columns = 3
-		If($SchemaItems -is [array])
-		{
-			[int]$Rows = $SchemaItems.Count + 1
-		}
-		Else
-		{
-			[int]$Rows = 2
-		}
+		[int]$Rows = $SchemaItems.Count + 1
 		[int]$xRow = 1
 
 		$Table = $doc.Tables.Add($TableRange, $Rows, $Columns)
@@ -8069,9 +8073,9 @@ Function ProcessADSchemaItems
 		{
 			switch ($xcol.Index)
 			{
-			  1 {$xcol.width = 200; Break}
+			  1 {$xcol.width = 175; Break}
 			  2 {$xcol.width = 75; Break}
-			  3 {$xcol.width = 200; Break}
+			  3 {$xcol.width = 175; Break}
 			}
 		}
 		
@@ -8099,7 +8103,7 @@ Function ProcessADSchemaItems
 							'Used for',($htmlsilver -bor $htmlbold)
 							)
 		$msg = ""
-		$columnWidths = @("200","75","200")
+		$columnWidths = @("175","75","175")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "475"
 		WriteHTMLLine 0 0 " "
 	}
@@ -8166,12 +8170,12 @@ Function ProcessSiteInformation
 					$SiteLinkTypeDN = @()
 					$SiteLinkTypeDN = $SiteLink.DistinguishedName.Split(",")
 					$SiteLinkType = $SiteLinkTypeDN[1].SubString(3)
-					$SitesInLink = @()
+					$SitesInLink = New-Object System.Collections.ArrayList
 					$SiteLinkSiteList = $SiteLink.SiteList
 					ForEach($xSite in $SiteLinkSiteList)
 					{
 						$tmp = $xSite.Split(",")
-						$SitesInLink += "$($tmp[0].SubString(3))"
+						$SitesInLink.Add("$($tmp[0].SubString(3))") > $Null
 					}
 					
 					$ScriptInformation += @{ Data = "Name"; Value = $SiteLink.Name; }
@@ -8295,7 +8299,7 @@ Function ProcessSiteInformation
 				
 				#build array of connect objects
 				Write-Verbose "$(Get-Date): `t`t`tProcessing automatic connection objects"
-				$Connections = @()
+				$Connections = New-Object System.Collections.ArrayList
 				$ConnnectionObjects = $Null
 				$ConnectionObjects = Get-ADObject -Filter 'objectClass -eq "nTDSConnection" -and options -bor 1' -Searchbase $Script:ConfigNC -Property DistinguishedName, fromServer -Server $ADForest -EA 0
 				
@@ -8317,7 +8321,7 @@ Function ProcessSiteInformation
 						$obj | Add-Member -MemberType NoteProperty -Name ToServer       -Value $ToServer
 						$obj | Add-Member -MemberType NoteProperty -Name FromServer     -Value $FromServer
 						$obj | Add-Member -MemberType NoteProperty -Name FromServerSite -Value $FromServerSite
-						$Connections += $obj
+						$Connections.Add($obj) > $Null
 					}
 				}
 				
@@ -8437,12 +8441,12 @@ Function ProcessSiteInformation
 					$SiteLinkTypeDN = @()
 					$SiteLinkTypeDN = $SiteLink.DistinguishedName.Split(",")
 					$SiteLinkType = $SiteLinkTypeDN[1].SubString(3)
-					$SitesInLink = @()
+					$SitesInLink = New-Object System.Collections.ArrayList
 					$SiteLinkSiteList = $SiteLink.SiteList
 					ForEach($xSite in $SiteLinkSiteList)
 					{
 						$tmp = $xSite.Split(",")
-						$SitesInLink += "$($tmp[0].SubString(3))"
+						$SitesInLink.Add("$($tmp[0].SubString(3))") > $Null
 					}
 					
 					Line 0 "Name`t`t`t: " $SiteLink.Name
@@ -8555,7 +8559,7 @@ Function ProcessSiteInformation
 				
 				#build array of connect objects
 				Write-Verbose "$(Get-Date): `t`t`tProcessing automatic connection objects"
-				$Connections = @()
+				$Connections = New-Object System.Collections.ArrayList
 				$ConnnectionObjects = $Null
 				$ConnectionObjects = Get-ADObject -Filter 'objectClass -eq "nTDSConnection" -and options -bor 1' `
 				-Searchbase $Script:ConfigNC -Property DistinguishedName, fromServer -Server $ADForest -EA 0
@@ -8578,7 +8582,7 @@ Function ProcessSiteInformation
 						$obj | Add-Member -MemberType NoteProperty -Name ToServer       -Value $ToServer
 						$obj | Add-Member -MemberType NoteProperty -Name FromServer     -Value $FromServer
 						$obj | Add-Member -MemberType NoteProperty -Name FromServerSite -Value $FromServerSite
-						$Connections += $obj
+						$Connections.Add($obj) > $Null
 					}
 				}
 				
@@ -8679,12 +8683,12 @@ Function ProcessSiteInformation
 					$SiteLinkTypeDN = @()
 					$SiteLinkTypeDN = $SiteLink.DistinguishedName.Split(",")
 					$SiteLinkType = $SiteLinkTypeDN[1].SubString(3)
-					$SitesInLink = @()
+					$SitesInLink = New-Object System.Collections.ArrayList
 					$SiteLinkSiteList = $SiteLink.SiteList
 					ForEach($xSite in $SiteLinkSiteList)
 					{
 						$tmp = $xSite.Split(",")
-						$SitesInLink += "$($tmp[0].SubString(3))"
+						$SitesInLink.Add("$($tmp[0].SubString(3))") > $Null
 					}
 					
 					$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$SiteLink.Name,$htmlwhite)
@@ -8805,7 +8809,7 @@ Function ProcessSiteInformation
 				
 				#build array of connect objects
 				Write-Verbose "$(Get-Date): `t`t`tProcessing automatic connection objects"
-				$Connections = @()
+				$Connections = New-Object System.Collections.ArrayList
 				$ConnnectionObjects = $Null
 				$ConnectionObjects = Get-ADObject -Filter 'objectClass -eq "nTDSConnection" -and options -bor 1' `
 				-Searchbase $Script:ConfigNC -Property DistinguishedName, fromServer -Server $ADForest -EA 0
@@ -8828,7 +8832,7 @@ Function ProcessSiteInformation
 						$obj | Add-Member -MemberType NoteProperty -Name ToServer       -Value $ToServer
 						$obj | Add-Member -MemberType NoteProperty -Name FromServer     -Value $FromServer
 						$obj | Add-Member -MemberType NoteProperty -Name FromServerSite -Value $FromServerSite
-						$Connections += $obj
+						$Connections.Add($obj) > $Null
 					}
 				}
 				
@@ -8979,13 +8983,13 @@ Function ProcessDomains
 		WriteHTMLLine 1 0 "Domain Information"
 	}
 
-	$Script:AllDomainControllers = @()
+	$Script:AllDomainControllers = New-Object System.Collections.ArrayList
 	$First = $True
 
 	#http://technet.microsoft.com/en-us/library/bb125224(v=exchg.150).aspx
 	#http://support.microsoft.com/kb/556086/he
-	#http://blog.helocheck.com/exchange-schema-version/
 	#https://eightwone.com/references/ad-schema-versions/
+	#https://eightwone.com/references/schema-versions/
 	
 	$SchemaVersionTable = @{ 
 	"13" = "Windows 2000"; 
@@ -8997,6 +9001,7 @@ Function ProcessDomains
 	"69" = "Windows Server 2012 R2";
 	"72" = "Windows Server 2016 TP4";
 	"87" = "Windows Server 2016";
+	"88" = "Windows Server 2019 Preview";	#added V2.20
 	"4397" = "Exchange 2000 RTM"; 
 	"4406" = "Exchange 2000 SP3";
 	"6870" = "Exchange 2003 RTM, SP1, SP2"; 
@@ -9015,13 +9020,13 @@ Function ProcessDomains
 	"15292" = "Exchange 2013 SP1/CU4";
 	"15300" = "Exchange 2013 CU5";
 	"15303" = "Exchange 2013 CU6";
-	"15312" = "Exchange 2013 CU7/CU8/CU9/CU10/CU11/CU12/CU13";
+	"15312" = "Exchange 2013 CU7 through CU 21"; #updated in 2.20
 	"15317" = "Exchange 2016";
 	"15323" = "Exchange 2016 CU1";
 	"15325" = "Exchange 2016 CU2";
 	"15326" = "Exchange 2016 CU3/CU4/CU5"; #added in 2.16
 	"15330" = "Exchange 2016 CU6"; #added in 2.16
-	"15332" = "Exchange 2016 CU7" #added in 2.16
+	"15332" = "Exchange 2016 CU7 through CU10" #added in 2.16 and updated in 2.20
 	}
 
 	ForEach($Domain in $Script:Domains)
@@ -9078,6 +9083,7 @@ Function ProcessDomains
 				"4" {$DomainMode = "Windows Server 2008 R2"; Break}
 				"5" {$DomainMode = "Windows Server 2012"; Break}
 				"6" {$DomainMode = "Windows Server 2012 R2"; Break}
+				"7" {$DomainMode = "Windows Server 2016"; Break}	#added V2.20
 				"Windows2000Domain"   		{$DomainMode = "Windows 2000"; Break}
 				"Windows2003Mixed"    		{$DomainMode = "Windows Server 2003 mixed"; Break}
 				"Windows2003Domain"   		{$DomainMode = "Windows Server 2003"; Break}
@@ -9133,6 +9139,15 @@ Function ProcessDomains
 					$ExchangeSchemaVersionName = "Unknown"
 				}
 			}
+
+			If($Null -eq $DomainInfo.LastLogonReplicationInterval)
+			{
+				$LastLogonReplicationInterval = "Default 1 day"
+			}
+			Else
+			{
+				$LastLogonReplicationInterval = $DomainInfo.LastLogonReplicationInterval.ToString()
+			}
 			
 			If($MSWORD -or $PDF)
 			{
@@ -9140,32 +9155,8 @@ Function ProcessDomains
 				$ScriptInformation += @{ Data = "Domain mode"; Value = $DomainMode; }
 				$ScriptInformation += @{ Data = "Domain name"; Value = $DomainInfo.Name; }
 				$ScriptInformation += @{ Data = "NetBIOS name"; Value = $DomainInfo.NetBIOSName; }
-				$ScriptInformation += @{ Data = "DNS root"; Value = $DomainInfo.DNSRoot; }
-				$ScriptInformation += @{ Data = "Distinguished name"; Value = $DomainInfo.DistinguishedName; }
-				$ScriptInformation += @{ Data = "Infrastructure master"; Value = $DomainInfo.InfrastructureMaster; }
-				$ScriptInformation += @{ Data = "PDC Emulator"; Value = $DomainInfo.PDCEmulator; }
-				$ScriptInformation += @{ Data = "RID Master"; Value = $DomainInfo.RIDMaster; }
-				$ScriptInformation += @{ Data = "Default computers container"; Value = $DomainInfo.ComputersContainer; }
-				$ScriptInformation += @{ Data = "Default users container"; Value = $DomainInfo.UsersContainer; }
-				$ScriptInformation += @{ Data = "Deleted objects container"; Value = $DomainInfo.DeletedObjectsContainer; }
-				$ScriptInformation += @{ Data = "Domain controllers container"; Value = $DomainInfo.DomainControllersContainer; }
-				$ScriptInformation += @{ Data = "Foreign security principals container"; Value = $DomainInfo.ForeignSecurityPrincipalsContainer; }
-				$ScriptInformation += @{ Data = "Lost and Found container"; Value = $DomainInfo.LostAndFoundContainer; }
-				$ScriptInformation += @{ Data = "Quotas container"; Value = $DomainInfo.QuotasContainer; }
-				$ScriptInformation += @{ Data = "Systems container"; Value = $DomainInfo.SystemsContainer; }
+				#V2.20 reorder the following properties in alpha order
 				$ScriptInformation += @{ Data = "AD Schema"; Value = "($($ADSchemaVersion)) - $($ADSchemaVersionName)"; }
-				
-				If(![String]::IsNullOrEmpty($ExchangeSchemaInfo))
-				{
-					$ScriptInformation += @{ Data = "Exchange Schema"; Value = "($($ExchangeSchemaVersion)) - $($ExchangeSchemaVersionName)"; }
-				}
-				
-				If(![String]::IsNullOrEmpty($DomainInfo.ManagedBy))
-				{
-					$ScriptInformation += @{ Data = "Managed by"; Value = $DomainInfo.ManagedBy; }
-				}
-
-				Write-Verbose "$(Get-Date): `t`tGetting Allowed DNS Suffixes"
 				$DNSSuffixes = $DomainInfo.AllowedDNSSuffixes | Sort-Object 
 				If($Null -eq $DNSSuffixes)
 				{
@@ -9188,9 +9179,6 @@ Function ProcessDomains
 						}
 					}
 				}
-				$DNSSuffixes = $Null
-
-				Write-Verbose "$(Get-Date): `t`tGetting Child domains"
 				$ChildDomains = $DomainInfo.ChildDomains | Sort-Object 
 				If($Null -eq $ChildDomains)
 				{
@@ -9213,9 +9201,32 @@ Function ProcessDomains
 						}
 					}
 				}
-				$ChildDomains = $Null
-
-				Write-Verbose "$(Get-Date): `t`tGetting Read-only replica directory servers"
+				$ScriptInformation += @{ Data = "Default computers container"; Value = $DomainInfo.ComputersContainer; }
+				$ScriptInformation += @{ Data = "Default users container"; Value = $DomainInfo.UsersContainer; }
+				$ScriptInformation += @{ Data = "Deleted objects container"; Value = $DomainInfo.DeletedObjectsContainer; }
+				$ScriptInformation += @{ Data = "Distinguished name"; Value = $DomainInfo.DistinguishedName; }
+				$ScriptInformation += @{ Data = "DNS root"; Value = $DomainInfo.DNSRoot; }
+				$ScriptInformation += @{ Data = "Domain controllers container"; Value = $DomainInfo.DomainControllersContainer; }
+				If(![String]::IsNullOrEmpty($ExchangeSchemaInfo))
+				{
+					$ScriptInformation += @{ Data = "Exchange Schema"; Value = "($($ExchangeSchemaVersion)) - $($ExchangeSchemaVersionName)"; }
+				}
+				$ScriptInformation += @{ Data = "Foreign security principals container"; Value = $DomainInfo.ForeignSecurityPrincipalsContainer; }
+				$ScriptInformation += @{ Data = "Infrastructure master"; Value = $DomainInfo.InfrastructureMaster; }
+				#V2.20 added
+				$ScriptInformation += @{ Data = "Last logon replication interval"; Value = $LastLogonReplicationInterval; }
+				$ScriptInformation += @{ Data = "Lost and Found container"; Value = $DomainInfo.LostAndFoundContainer; }
+				If(![String]::IsNullOrEmpty($DomainInfo.ManagedBy))
+				{
+					$ScriptInformation += @{ Data = "Managed by"; Value = $DomainInfo.ManagedBy; }
+				}
+				$ScriptInformation += @{ Data = "PDC Emulator"; Value = $DomainInfo.PDCEmulator; }
+				#V2.20 added
+				If(validObject $DomainInfo PublicKeyRequiredPasswordRolling)
+				{
+					$ScriptInformation += @{ Data = "Public key required password rolling"; Value = $DomainInfo.PublicKeyRequiredPasswordRolling.ToString(); }
+				}
+				$ScriptInformation += @{ Data = "Quotas container"; Value = $DomainInfo.QuotasContainer; }
 				$ReadOnlyReplicas = $DomainInfo.ReadOnlyReplicaDirectoryServers | Sort-Object 
 				If($Null -eq $ReadOnlyReplicas)
 				{
@@ -9238,9 +9249,6 @@ Function ProcessDomains
 						}
 					}
 				}
-				$ReadOnlyReplicas = $Null
-
-				Write-Verbose "$(Get-Date): `t`tGetting Replica directory servers"
 				$Replicas = $DomainInfo.ReplicaDirectoryServers | Sort-Object 
 				If($Replicas -eq $Null)
 				{
@@ -9263,9 +9271,7 @@ Function ProcessDomains
 						}
 					}
 				}
-				$Replicas = $Null
-
-				Write-Verbose "$(Get-Date): `t`tGetting Subordinate references"
+				$ScriptInformation += @{ Data = "RID Master"; Value = $DomainInfo.RIDMaster; }
 				$SubordinateReferences = $DomainInfo.SubordinateReferences | Sort-Object 
 				If($Null -eq $SubordinateReferences)
 				{
@@ -9288,7 +9294,7 @@ Function ProcessDomains
 						}
 					}
 				}
-				$SubordinateReferences = $Null
+				$ScriptInformation += @{ Data = "Systems container"; Value = $DomainInfo.SystemsContainer; }
 				
 				$Table = AddWordTable -Hashtable $ScriptInformation `
 				-Columns Data,Value `
@@ -9387,7 +9393,7 @@ Function ProcessDomains
 				
 				If($? -and $Null -ne $DomainControllers)
 				{
-					$Script:AllDomainControllers += $DomainControllers
+					$Script:AllDomainControllers.Add($DomainControllers) > $Null
 					[System.Collections.Hashtable[]] $WordTable = @();
 					WriteWordLine 3 0 "Domain Controllers"
 					ForEach($DomainController in $DomainControllers)
@@ -9595,31 +9601,8 @@ Function ProcessDomains
 				Line 1 "Domain mode`t`t`t`t: " $DomainMode
 				Line 1 "Domain name`t`t`t`t: " $DomainInfo.Name
 				Line 1 "NetBIOS name`t`t`t`t: " $DomainInfo.NetBIOSName
-				Line 1 "DNS root`t`t`t`t: " $DomainInfo.DNSRoot
-				Line 1 "Distinguished name`t`t`t: " $DomainInfo.DistinguishedName
-				Line 1 "Infrastructure master`t`t`t: " $DomainInfo.InfrastructureMaster
-				Line 1 "PDC Emulator`t`t`t`t: " $DomainInfo.PDCEmulator
-				Line 1 "RID Master`t`t`t`t: " $DomainInfo.RIDMaster
-				Line 1 "Default computers container`t`t: " $DomainInfo.ComputersContainer
-				Line 1 "Default users container`t`t`t: " $DomainInfo.UsersContainer
-				Line 1 "Deleted objects container`t`t: " $DomainInfo.DeletedObjectsContainer
-				Line 1 "Domain controllers container`t`t: " $DomainInfo.DomainControllersContainer
-				Line 1 "Foreign security principals container`t: " $DomainInfo.ForeignSecurityPrincipalsContainer
-				Line 1 "Lost and Found container`t`t: " $DomainInfo.LostAndFoundContainer
-				Line 1 "Quotas container`t`t`t: " $DomainInfo.QuotasContainer
-				Line 1 "Systems container`t`t`t: " $DomainInfo.SystemsContainer
+				#V2.20 reorder the following properties in alpha order
 				Line 1 "AD Schema`t`t`t`t: ($($ADSchemaVersion)) - $($ADSchemaVersionName)"
-				If(![String]::IsNullOrEmpty($ExchangeSchemaInfo))
-				{
-					Line 1 "Exchange Schema`t`t`t`t: ($($ExchangeSchemaVersion)) - $($ExchangeSchemaVersionName)"
-				}
-				
-				If(![String]::IsNullOrEmpty($DomainInfo.ManagedBy))
-				{
-					Line 1 "Managed by`t`t`t`t: " $DomainInfo.ManagedBy
-				}
-
-				Write-Verbose "$(Get-Date): `t`tGetting Allowed DNS Suffixes"
 				Line 1 "Allowed DNS Suffixes`t`t`t: " -NoNewLine
 				$DNSSuffixes = $DomainInfo.AllowedDNSSuffixes | Sort-Object 
 				If($Null -eq $DNSSuffixes)
@@ -9643,9 +9626,6 @@ Function ProcessDomains
 						}
 					}
 				}
-				$DNSSuffixes = $Null
-
-				Write-Verbose "$(Get-Date): `t`tGetting Child domains"
 				Line 1 "Child domains`t`t`t`t: " -NoNewLine
 				$ChildDomains = $DomainInfo.ChildDomains | Sort-Object 
 				If($Null -eq $ChildDomains)
@@ -9669,9 +9649,32 @@ Function ProcessDomains
 						}
 					}
 				}
-				$ChildDomains = $Null
-
-				Write-Verbose "$(Get-Date): `t`tGetting Read-only replica directory servers"
+				Line 1 "Default computers container`t`t: " $DomainInfo.ComputersContainer
+				Line 1 "Default users container`t`t`t: " $DomainInfo.UsersContainer
+				Line 1 "Deleted objects container`t`t: " $DomainInfo.DeletedObjectsContainer
+				Line 1 "Distinguished name`t`t`t: " $DomainInfo.DistinguishedName
+				Line 1 "DNS root`t`t`t`t: " $DomainInfo.DNSRoot
+				Line 1 "Domain controllers container`t`t: " $DomainInfo.DomainControllersContainer
+				If(![String]::IsNullOrEmpty($ExchangeSchemaInfo))
+				{
+					Line 1 "Exchange Schema`t`t`t`t: ($($ExchangeSchemaVersion)) - $($ExchangeSchemaVersionName)"
+				}
+				Line 1 "Foreign security principals container`t: " $DomainInfo.ForeignSecurityPrincipalsContainer
+				Line 1 "Infrastructure master`t`t`t: " $DomainInfo.InfrastructureMaster
+				#V2.20 added
+				Line 1 "Last logon replication interval`t`t: " $LastLogonReplicationInterval
+				Line 1 "Lost and Found container`t`t: " $DomainInfo.LostAndFoundContainer
+				If(![String]::IsNullOrEmpty($DomainInfo.ManagedBy))
+				{
+					Line 1 "Managed by`t`t`t`t: " $DomainInfo.ManagedBy
+				}
+				Line 1 "PDC Emulator`t`t`t`t: " $DomainInfo.PDCEmulator
+				#V2.20 added
+				If(validObject $DomainInfo PublicKeyRequiredPasswordRolling)
+				{
+					Line 1 "Public key required password rolling`t: " $DomainInfo.PublicKeyRequiredPasswordRolling.ToString()
+				}
+				Line 1 "Quotas container`t`t`t: " $DomainInfo.QuotasContainer
 				Line 1 "Read-only replica directory servers`t: " -NoNewLine
 				$ReadOnlyReplicas = $DomainInfo.ReadOnlyReplicaDirectoryServers | Sort-Object 
 				If($Null -eq $ReadOnlyReplicas)
@@ -9695,9 +9698,6 @@ Function ProcessDomains
 						}
 					}
 				}
-				$ReadOnlyReplicas = $Null
-
-				Write-Verbose "$(Get-Date): `t`tGetting Replica directory servers"
 				Line 1 "Replica directory servers`t`t: " -NoNewLine
 				$Replicas = $DomainInfo.ReplicaDirectoryServers | Sort-Object 
 				If($Replicas -eq $Null)
@@ -9721,9 +9721,7 @@ Function ProcessDomains
 						}
 					}
 				}
-				$Replicas = $Null
-
-				Write-Verbose "$(Get-Date): `t`tGetting Subordinate references"
+				Line 1 "RID Master`t`t`t`t: " $DomainInfo.RIDMaster
 				Line 1 "Subordinate references`t`t`t: " -NoNewLine
 				$SubordinateReferences = $DomainInfo.SubordinateReferences | Sort-Object 
 				If($Null -eq $SubordinateReferences)
@@ -9747,7 +9745,7 @@ Function ProcessDomains
 						}
 					}
 				}
-				$SubordinateReferences = $Null
+				Line 1 "Systems container`t`t`t: " $DomainInfo.SystemsContainer
 				
 				Write-Verbose "$(Get-Date): `t`tGetting domain trusts"
 				Line 0 "Domain trusts: "
@@ -9812,7 +9810,7 @@ Function ProcessDomains
 				
 				If($? -and $Null -ne $DomainControllers)
 				{
-					$Script:AllDomainControllers += $DomainControllers
+					$Script:AllDomainControllers.Add($DomainControllers) > $Null
 					Line 0 "Domain Controllers: "
 					ForEach($DomainController in $DomainControllers)
 					{
@@ -9993,32 +9991,8 @@ Function ProcessDomains
 				$columnHeaders = @("Domain mode",($htmlsilver -bor $htmlbold),$DomainMode,$htmlwhite)
 				$rowdata += @(,('Domain name',($htmlsilver -bor $htmlbold),$DomainInfo.Name,$htmlwhite))
 				$rowdata += @(,('NetBIOS name',($htmlsilver -bor $htmlbold),$DomainInfo.NetBIOSName,$htmlwhite))
-				$rowdata += @(,('DNS root',($htmlsilver -bor $htmlbold),$DomainInfo.DNSRoot,$htmlwhite))
-				$rowdata += @(,('Distinguished name',($htmlsilver -bor $htmlbold),$DomainInfo.DistinguishedName,$htmlwhite))
-				$rowdata += @(,('Infrastructure master',($htmlsilver -bor $htmlbold),$DomainInfo.InfrastructureMaster,$htmlwhite))
-				$rowdata += @(,('PDC Emulator',($htmlsilver -bor $htmlbold),$DomainInfo.PDCEmulator,$htmlwhite))
-				$rowdata += @(,('RID Master',($htmlsilver -bor $htmlbold),$DomainInfo.RIDMaster,$htmlwhite))
-				$rowdata += @(,('Default computers container',($htmlsilver -bor $htmlbold),$DomainInfo.ComputersContainer,$htmlwhite))
-				$rowdata += @(,('Default users container',($htmlsilver -bor $htmlbold),$DomainInfo.UsersContainer,$htmlwhite))
-				$rowdata += @(,('Deleted objects container',($htmlsilver -bor $htmlbold),$DomainInfo.DeletedObjectsContainer,$htmlwhite))
-				$rowdata += @(,('Domain controllers container',($htmlsilver -bor $htmlbold),$DomainInfo.DomainControllersContainer,$htmlwhite))
-				$rowdata += @(,('Foreign security principals container',($htmlsilver -bor $htmlbold),$DomainInfo.ForeignSecurityPrincipalsContainer,$htmlwhite))
-				$rowdata += @(,('Lost and Found container',($htmlsilver -bor $htmlbold),$DomainInfo.LostAndFoundContainer,$htmlwhite))
-				$rowdata += @(,('Quotas container',($htmlsilver -bor $htmlbold),$DomainInfo.QuotasContainer,$htmlwhite))
-				$rowdata += @(,('Systems container',($htmlsilver -bor $htmlbold),$DomainInfo.SystemsContainer,$htmlwhite))
+				#V2.20 reorder the following properties in alpha order
 				$rowdata += @(,('AD Schema',($htmlsilver -bor $htmlbold),"($($ADSchemaVersion)) - $($ADSchemaVersionName)",$htmlwhite))
-				
-				If(![String]::IsNullOrEmpty($ExchangeSchemaInfo))
-				{
-					$rowdata += @(,('Exchange Schema',($htmlsilver -bor $htmlbold),"($($ExchangeSchemaVersion)) - $($ExchangeSchemaVersionName)",$htmlwhite))
-				}
-				
-				If(![String]::IsNullOrEmpty($DomainInfo.ManagedBy))
-				{
-					$rowdata += @(,('Managed by',($htmlsilver -bor $htmlbold),$DomainInfo.ManagedBy,$htmlwhite))
-				}
-
-				Write-Verbose "$(Get-Date): `t`tGetting Allowed DNS Suffixes"
 				$DNSSuffixes = $DomainInfo.AllowedDNSSuffixes | Sort-Object 
 				If($Null -eq $DNSSuffixes)
 				{
@@ -10041,9 +10015,6 @@ Function ProcessDomains
 						}
 					}
 				}
-				$DNSSuffixes = $Null
-
-				Write-Verbose "$(Get-Date): `t`tGetting Child domains"
 				$ChildDomains = $DomainInfo.ChildDomains | Sort-Object 
 				If($Null -eq $ChildDomains)
 				{
@@ -10066,9 +10037,32 @@ Function ProcessDomains
 						}
 					}
 				}
-				$ChildDomains = $Null
-
-				Write-Verbose "$(Get-Date): `t`tGetting Read-only replica directory servers"
+				$rowdata += @(,('Default computers container',($htmlsilver -bor $htmlbold),$DomainInfo.ComputersContainer,$htmlwhite))
+				$rowdata += @(,('Default users container',($htmlsilver -bor $htmlbold),$DomainInfo.UsersContainer,$htmlwhite))
+				$rowdata += @(,('Deleted objects container',($htmlsilver -bor $htmlbold),$DomainInfo.DeletedObjectsContainer,$htmlwhite))
+				$rowdata += @(,('Distinguished name',($htmlsilver -bor $htmlbold),$DomainInfo.DistinguishedName,$htmlwhite))
+				$rowdata += @(,('DNS root',($htmlsilver -bor $htmlbold),$DomainInfo.DNSRoot,$htmlwhite))
+				$rowdata += @(,('Domain controllers container',($htmlsilver -bor $htmlbold),$DomainInfo.DomainControllersContainer,$htmlwhite))
+				If(![String]::IsNullOrEmpty($ExchangeSchemaInfo))
+				{
+					$rowdata += @(,('Exchange Schema',($htmlsilver -bor $htmlbold),"($($ExchangeSchemaVersion)) - $($ExchangeSchemaVersionName)",$htmlwhite))
+				}
+				$rowdata += @(,('Foreign security principals container',($htmlsilver -bor $htmlbold),$DomainInfo.ForeignSecurityPrincipalsContainer,$htmlwhite))
+				$rowdata += @(,('Infrastructure master',($htmlsilver -bor $htmlbold),$DomainInfo.InfrastructureMaster,$htmlwhite))
+				#V2.20 added
+				$rowdata += @(,("Last logon replication interval",($htmlsilver -bor $htmlbold),$LastLogonReplicationInterval,$htmlwhite))
+				$rowdata += @(,('Lost and Found container',($htmlsilver -bor $htmlbold),$DomainInfo.LostAndFoundContainer,$htmlwhite))
+				If(![String]::IsNullOrEmpty($DomainInfo.ManagedBy))
+				{
+					$rowdata += @(,('Managed by',($htmlsilver -bor $htmlbold),$DomainInfo.ManagedBy,$htmlwhite))
+				}
+				$rowdata += @(,('PDC Emulator',($htmlsilver -bor $htmlbold),$DomainInfo.PDCEmulator,$htmlwhite))
+				#V2.20 added
+				If(validObject $DomainInfo PublicKeyRequiredPasswordRolling)
+				{
+					$rowdata += @(,("Public key required password rolling",($htmlsilver -bor $htmlbold),$DomainInfo.PublicKeyRequiredPasswordRolling.ToString(),$htmlwhite))
+				}
+				$rowdata += @(,('Quotas container',($htmlsilver -bor $htmlbold),$DomainInfo.QuotasContainer,$htmlwhite))
 				$ReadOnlyReplicas = $DomainInfo.ReadOnlyReplicaDirectoryServers | Sort-Object 
 				If($Null -eq $ReadOnlyReplicas)
 				{
@@ -10091,9 +10085,6 @@ Function ProcessDomains
 						}
 					}
 				}
-				$ReadOnlyReplicas = $Null
-
-				Write-Verbose "$(Get-Date): `t`tGetting Replica directory servers"
 				$Replicas = $DomainInfo.ReplicaDirectoryServers | Sort-Object 
 				If($Replicas -eq $Null)
 				{
@@ -10116,9 +10107,7 @@ Function ProcessDomains
 						}
 					}
 				}
-				$Replicas = $Null
-
-				Write-Verbose "$(Get-Date): `t`tGetting Subordinate references"
+				$rowdata += @(,('RID Master',($htmlsilver -bor $htmlbold),$DomainInfo.RIDMaster,$htmlwhite))
 				$SubordinateReferences = $DomainInfo.SubordinateReferences | Sort-Object 
 				If($Null -eq $SubordinateReferences)
 				{
@@ -10141,7 +10130,7 @@ Function ProcessDomains
 						}
 					}
 				}
-				$SubordinateReferences = $Null
+				$rowdata += @(,('Systems container',($htmlsilver -bor $htmlbold),$DomainInfo.SystemsContainer,$htmlwhite))
 				
 				$msg = ""
 				$columnWidths = @("175","300")
@@ -10216,7 +10205,7 @@ Function ProcessDomains
 				
 				If($? -and $Null -ne $DomainControllers)
 				{
-					$Script:AllDomainControllers += $DomainControllers
+					$Script:AllDomainControllers.Add($DomainControllers) > $Null
 					$rowdata = @()
 					WriteHTMLLine 3 0 "Domain Controllers"
 					ForEach($DomainController in $DomainControllers)
@@ -10394,12 +10383,6 @@ Function ProcessDomains
 				}
 			}
 
-			$DomainControllers = $Null
-			$SubordinateReferences = $Null
-			$Replicas = $Null
-			$ReadOnlyReplicas = $Null
-			$ChildDomains = $Null
-			$DNSSuffixes = $Null
 			$First = $False
 		}
 		ElseIf(!$?)
@@ -10437,6 +10420,18 @@ Function ProcessDomains
 			}
 		}
 	}
+	$ADDomainTrusts = $Null
+	$ADSchemaInfo = $Null
+	$ChildDomains = $Null
+	$DNSSuffixes = $Null
+	$DomainControllers = $Null
+	$ExchangeSchemaInfo = $Null
+	$FGPPs = $Null
+	$First = $Null
+	$ReadOnlyReplicas = $Null
+	$Replicas = $Null
+	$SubordinateReferences = $Null
+	$Table = $Null
 }
 #endregion
 
@@ -11159,21 +11154,15 @@ Function OutputEventLogInfo
 		[void]$ELInfo.Add($obj)
 	}
 	
-	$xEventLogInfo = $ELInfo | Sort-Object EventLogName
+	#V2.20 changed to @()
+	$xEventLogInfo = @($ELInfo | Sort-Object EventLogName)
 	
 	If($MSWord -or $PDF)
 	{
 		WriteWordLine 3 0 "Event Log Information"
 		$TableRange = $doc.Application.Selection.Range
 		[int]$Columns = 2
-		If($xEventLogInfo -is [array])
-		{
-			[int]$Rows = $xEventLogInfo.Count + 1
-		}
-		Else
-		{
-			[int]$Rows = 2
-		}
+		[int]$Rows = $xEventLogInfo.Count + 1
 		[int]$xRow = 1
 		
 		$Table = $doc.Tables.Add($TableRange, $Rows, $Columns)
@@ -11334,10 +11323,11 @@ Function ProcessOrganizationalUnits
 		
 		#get all OUs for the domain
 		$OUs = $Null
-		$OUs = Get-ADOrganizationalUnit -Filter * -Server $Domain `
+		#V2.20 changed to @()
+		$OUs = @(Get-ADOrganizationalUnit -Filter * -Server $Domain `
 		-Properties CanonicalName, DistinguishedName, Name, Created, ProtectedFromAccidentalDeletion -EA 0 | `
 		Select-Object CanonicalName, DistinguishedName, Name, Created, ProtectedFromAccidentalDeletion | `
-		Sort-Object CanonicalName
+		Sort-Object CanonicalName)
 		
 		If($? -and $Null -ne $OUs)
 		{
@@ -11346,16 +11336,8 @@ Function ProcessOrganizationalUnits
 			{
 				$TableRange = $doc.Application.Selection.Range
 				[int]$Columns = 6
-				If($OUs -is [array])
-				{
-					[int]$Rows = $OUs.Count + 1
-					[int]$NumOUs = $OUs.Count
-				}
-				Else
-				{
-					[int]$Rows = 2
-					[int]$NumOUs = 1
-				}
+				[int]$Rows = $OUs.Count + 1
+				[int]$NumOUs = $OUs.Count
 				[int]$xRow = 1
 
 				$Table = $doc.Tables.Add($TableRange, $Rows, $Columns)
@@ -11407,47 +11389,17 @@ Function ProcessOrganizationalUnits
 					[int]$ComputerCount = 0
 					[int]$GroupCount = 0
 					
-					$Results = Get-ADUser -Filter * -SearchBase $OU.DistinguishedName -Server $Domain -EA 0
-					If($Null -eq $Results)
-					{
-						$UserCount = 0
-					}
-					ElseIf($Results -is [array])
-					{
-						$UserCount = $Results.Count
-					}
-					Else
-					{
-						$UserCount = 1
-					}
+					#V2.20 changed to @()
+					$Results = @(Get-ADUser -Filter * -SearchBase $OU.DistinguishedName -Server $Domain -EA 0)
+					$UserCount = $Results.Count
 
-					$Results = Get-ADComputer -Filter * -SearchBase $OU.DistinguishedName -Server $Domain -EA 0
-					If($Null -eq $Results)
-					{
-						$ComputerCount = 0
-					}
-					ElseIf($Results -is [array])
-					{
-						$ComputerCount = $Results.Count
-					}
-					Else
-					{
-						$ComputerCount = 1
-					}
+					#V2.20 changed to @()
+					$Results = @(Get-ADComputer -Filter * -SearchBase $OU.DistinguishedName -Server $Domain -EA 0)
+					$ComputerCount = $Results.Count
 
-					$Results = Get-ADGroup -Filter * -SearchBase $OU.DistinguishedName -Server $Domain -EA 0
-					If($Null -eq $Results)
-					{
-						$GroupCount = 0
-					}
-					ElseIf($Results -is [array])
-					{
-						$GroupCount = $Results.Count
-					}
-					Else
-					{
-						$GroupCount = 1
-					}
+					#V2.20 changed to @()
+					$Results = @(Get-ADGroup -Filter * -SearchBase $OU.DistinguishedName -Server $Domain -EA 0)
+					$GroupCount = $Results.Count
 					
 					$Table.Cell($xRow,1).Range.Text = $OUDisplayName
 					$Table.Cell($xRow,2).Range.Text = $OU.Created.ToString()
@@ -11513,14 +11465,7 @@ Function ProcessOrganizationalUnits
 			}
 			ElseIf($Text)
 			{
-				If($OUs -is [array])
-				{
-					[int]$NumOUs = $OUs.Count
-				}
-				Else
-				{
-					[int]$NumOUs = 1
-				}
+				[int]$NumOUs = $OUs.Count
 				#V2.16 addition
 				[int]$MaxOUNameLength = ($OUs.CanonicalName.SubString($OUs[0].CanonicalName.IndexOf("/")+1) | measure-object -maximum -property length).maximum
 				
@@ -11550,47 +11495,17 @@ Function ProcessOrganizationalUnits
 					[int]$ComputerCount = 0
 					[int]$GroupCount = 0
 					
-					$Results = Get-ADUser -Filter * -SearchBase $OU.DistinguishedName -Server $Domain -EA 0
-					If($Null -eq $Results)
-					{
-						$UserCount = 0
-					}
-					ElseIf($Results -is [array])
-					{
-						$UserCount = $Results.Count
-					}
-					Else
-					{
-						$UserCount = 1
-					}
+					#V2.20 changed to @()
+					$Results = @(Get-ADUser -Filter * -SearchBase $OU.DistinguishedName -Server $Domain -EA 0)
+					$UserCount = $Results.Count
 
-					$Results = Get-ADComputer -Filter * -SearchBase $OU.DistinguishedName -Server $Domain -EA 0
-					If($Null -eq $Results)
-					{
-						$ComputerCount = 0
-					}
-					ElseIf($Results -is [array])
-					{
-						$ComputerCount = $Results.Count
-					}
-					Else
-					{
-						$ComputerCount = 1
-					}
+					#V2.20 changed to @()
+					$Results = @(Get-ADComputer -Filter * -SearchBase $OU.DistinguishedName -Server $Domain -EA 0)
+					$ComputerCount = $Results.Count
 
-					$Results = Get-ADGroup -Filter * -SearchBase $OU.DistinguishedName -Server $Domain -EA 0
-					If($Null -eq $Results)
-					{
-						$GroupCount = 0
-					}
-					ElseIf($Results -is [array])
-					{
-						$GroupCount = $Results.Count
-					}
-					Else
-					{
-						$GroupCount = 1
-					}
+					#V2.20 changed to @()
+					$Results = @(Get-ADGroup -Filter * -SearchBase $OU.DistinguishedName -Server $Domain -EA 0)
+					$GroupCount = $Results.Count
 					
 					If($OU.ProtectedFromAccidentalDeletion -eq $True)
 					{
@@ -11628,14 +11543,7 @@ Function ProcessOrganizationalUnits
 			}
 			ElseIf($HTML)
 			{
-				If($OUs -is [array])
-				{
-					[int]$NumOUs = $OUs.Count
-				}
-				Else
-				{
-					[int]$NumOUs = 1
-				}
+				[int]$NumOUs = $OUs.Count
 				$rowdata = @()
 				ForEach($OU in $OUs)
 				{
@@ -11649,47 +11557,17 @@ Function ProcessOrganizationalUnits
 					[int]$ComputerCount = 0
 					[int]$GroupCount = 0
 					
-					$Results = Get-ADUser -Filter * -SearchBase $OU.DistinguishedName -Server $Domain -EA 0
-					If($Null -eq $Results)
-					{
-						$UserCount = 0
-					}
-					ElseIf($Results -is [array])
-					{
-						$UserCount = $Results.Count
-					}
-					Else
-					{
-						$UserCount = 1
-					}
+					#V2.20 changed to @()
+					$Results = @(Get-ADUser -Filter * -SearchBase $OU.DistinguishedName -Server $Domain -EA 0)
+					$UserCount = $Results.Count
 
-					$Results = Get-ADComputer -Filter * -SearchBase $OU.DistinguishedName -Server $Domain -EA 0
-					If($Null -eq $Results)
-					{
-						$ComputerCount = 0
-					}
-					ElseIf($Results -is [array])
-					{
-						$ComputerCount = $Results.Count
-					}
-					Else
-					{
-						$ComputerCount = 1
-					}
+					#V2.20 changed to @()
+					$Results = @(Get-ADComputer -Filter * -SearchBase $OU.DistinguishedName -Server $Domain -EA 0)
+					$ComputerCount = $Results.Count
 
-					$Results = Get-ADGroup -Filter * -SearchBase $OU.DistinguishedName -Server $Domain -EA 0
-					If($Null -eq $Results)
-					{
-						$GroupCount = 0
-					}
-					ElseIf($Results -is [array])
-					{
-						$GroupCount = $Results.Count
-					}
-					Else
-					{
-						$GroupCount = 1
-					}
+					#V2.20 changed to @()
+					$Results = @(Get-ADGroup -Filter * -SearchBase $OU.DistinguishedName -Server $Domain -EA 0)
+					$GroupCount = $Results.Count
 					
 					[string]$UserCountStr = "{0,7:N0}" -f $UserCount
 					[string]$ComputerCountStr = "{0,7:N0}" -f $ComputerCount
@@ -11851,118 +11729,48 @@ Function ProcessGroupInformation
 			[int]$GroupsWithSIDHistory = 0
 			
 			Write-Verbose "$(Get-Date): `t`t`tSecurity Groups"
-			$Results = $groups | Where-Object {$_.groupcategory -eq "Security"}
+			#V2.20 changed to @()
+			$Results = @($groups | Where-Object {$_.groupcategory -eq "Security"})
 			
-			If($Null -eq $Results)
-			{
-				[int]$SecurityCount = 0
-			}
-			ElseIf($Results -is [array])
-			{
-				[int]$SecurityCount = $Results.Count
-			}
-			Else
-			{
-				[int]$SecurityCount = 1
-			}
+			[int]$SecurityCount = $Results.Count
 			
 			Write-Verbose "$(Get-Date): `t`t`tDistribution Groups"
-			$Results = $groups | Where-Object {$_.groupcategory -eq "Distribution"}
+			#V2.20 changed to @()
+			$Results = @($groups | Where-Object {$_.groupcategory -eq "Distribution"})
 			
-			If($Null -ne $Results)
-			{
-				[int]$DistributionCount = 0
-			}
-			ElseIf($Results -is [array])
-			{
-				[int]$DistributionCount = $Results.Count
-			}
-			Else
-			{
-				[int]$DistributionCount = 1
-			}
+			[int]$DistributionCount = $Results.Count
 
 			Write-Verbose "$(Get-Date): `t`t`tGlobal Groups"
-			$Results = $groups | Where-Object {$_.groupscope -eq "Global"}
+			#V2.20 changed to @()
+			$Results = @($groups | Where-Object {$_.groupscope -eq "Global"})
 
-			If($Null -eq $Results)
-			{
-				[int]$GlobalCount = 0
-			}
-			ElseIf($Results -is [array])
-			{
-				[int]$GlobalCount = $Results.Count
-			}
-			Else
-			{
-				[int]$GlobalCount = 1
-			}
+			[int]$GlobalCount = $Results.Count
 
 			Write-Verbose "$(Get-Date): `t`t`tUniversal Groups"
-			$Results = $groups | Where-Object {$_.groupscope -eq "Universal"}
+			#V2.20 changed to @()
+			$Results = @($groups | Where-Object {$_.groupscope -eq "Universal"})
 
-			If($Null -eq $Results)
-			{
-				[int]$UniversalCount = 0
-			}
-			ElseIf($Results -is [array])
-			{
-				[int]$UniversalCount = $Results.Count
-			}
-			Else
-			{
-				[int]$UniversalCount = 1
-			}
+			[int]$UniversalCount = $Results.Count
 			
 			Write-Verbose "$(Get-Date): `t`t`tDomain Local Groups"
-			$Results = $groups | Where-Object {$_.groupscope -eq "DomainLocal"}
+			#V2.20 changed to @()
+			$Results = @($groups | Where-Object {$_.groupscope -eq "DomainLocal"})
 
-			If($Null -eq $Results)
-			{
-				[int]$DomainLocalCount = 0
-			}
-			ElseIf($Results -is [array])
-			{
-				[int]$DomainLocalCount = $Results.Count
-			}
-			Else
-			{
-				[int]$DomainLocalCount = 1
-			}
+			[int]$DomainLocalCount = $Results.Count
 
 			Write-Verbose "$(Get-Date): `t`t`tGroups with SID History"
 			$Results = $Null
-			$Results = Get-ADObject -LDAPFilter "(sIDHistory=*)" -Server $Domain -Property objectClass, sIDHistory -EA 0
+			#V2.20 changed to @()
+			$Results = @(Get-ADObject -LDAPFilter "(sIDHistory=*)" -Server $Domain -Property objectClass, sIDHistory -EA 0)
 
-			If($Null -eq $Results)
-			{
-				[int]$GroupsWithSIDHistory = 0
-			}
-			ElseIf($Results -is [array])
-			{
-				[int]$GroupsWithSIDHistory = ($Results | Where-Object {$_.objectClass -eq 'group'}).Count
-			}
-			Else
-			{
-				[int]$GroupsWithSIDHistory = 1
-			}
+			[int]$GroupsWithSIDHistory = ($Results | Where-Object {$_.objectClass -eq 'group'}).Count
 
 			Write-Verbose "$(Get-Date): `t`t`tContacts"
 			$Results = $Null
-			$Results = Get-ADObject -LDAPFilter "objectClass=Contact" -Server $Domain -EA 0
+			#V2.20 changed to @()
+			$Results = @(Get-ADObject -LDAPFilter "objectClass=Contact" -Server $Domain -EA 0)
 
-			If($Null -eq $Results)
-			{
-				[int]$ContactsCount = 0
-			}
-			ElseIf($Results -is [array])
-			{
-				[int]$ContactsCount = $Results.Count
-			}
-			Else
-			{
-				[int]$ContactsCount = 1
-			}
+			[int]$ContactsCount = $Results.Count
 
 			[string]$TotalCountStr = "{0,7:N0}" -f ($SecurityCount + $DistributionCount)
 			[string]$SecurityCountStr = "{0,7:N0}" -f $SecurityCount
@@ -12085,18 +11893,12 @@ Function ProcessGroupInformation
 			
 			Write-Verbose "$(Get-Date): `t`tListing domain admins"
 			$Admins = $Null
-			$Admins = Get-ADGroupMember -Identity $DomainAdminsSID -Server $Domain -EA 0
+			#V2.20 changed to @()
+			$Admins = @(Get-ADGroupMember -Identity $DomainAdminsSID -Server $Domain -EA 0)
 			
 			If($? -and $Null -ne $Admins)
 			{
-				If($Admins -is [array])
-				{
-					[int]$AdminsCount = $Admins.Count
-				}
-				Else
-				{
-					[int]$AdminsCount = 1
-				}
+				[int]$AdminsCount = $Admins.Count
 				$Admins = $Admins | Sort-Object Name
 				[string]$AdminsCountStr = "{0:N0}" -f $AdminsCount
 				
@@ -12353,18 +12155,12 @@ Function ProcessGroupInformation
 			{
 				Write-Verbose "$(Get-Date): `t`tListing enterprise admins"
 			
-				$Admins = Get-ADGroupMember -Identity $EnterpriseAdminsSID -Server $Domain -EA 0 
+				#V2.20 changed to @()
+				$Admins = @(Get-ADGroupMember -Identity $EnterpriseAdminsSID -Server $Domain -EA 0)
 				
 				If($? -and $Null -ne $Admins)
 				{
-					If($Admins -is [array])
-					{
-						[int]$AdminsCount = $Admins.Count
-					}
-					Else
-					{
-						[int]$AdminsCount = 1
-					}
+					[int]$AdminsCount = $Admins.Count
 					$Admins = $Admins | Sort-Object Name
 					[string]$AdminsCountStr = "{0:N0}" -f $AdminsCount
 					
@@ -12725,18 +12521,12 @@ Function ProcessGroupInformation
 			{
 				Write-Verbose "$(Get-Date): `t`tListing schema admins"
 			
-				$Admins = Get-ADGroupMember -Identity $SchemaAdminsSID -Server $Domain -EA 0 
+				#V2.20 changed to @()
+				$Admins = @(Get-ADGroupMember -Identity $SchemaAdminsSID -Server $Domain -EA 0)
 				
 				If($? -and $Null -ne $Admins)
 				{
-					If($Admins -is [array])
-					{
-						[int]$AdminsCount = $Admins.Count
-					}
-					Else
-					{
-						[int]$AdminsCount = 1
-					}
+					[int]$AdminsCount = $Admins.Count
 					$Admins = $Admins | Sort-Object Name
 					[string]$AdminsCountStr = "{0:N0}" -f $AdminsCount
 					
@@ -13096,19 +12886,13 @@ Function ProcessGroupInformation
 
 			#http://www.shariqsheikh.com/blog/index.php/200908/use-powershell-to-look-up-admincount-from-adminsdholder-and-sdprop/		
 			Write-Verbose "$(Get-Date): `t`tListing users with AdminCount=1"
-			$AdminCounts = Get-ADUser -LDAPFilter "(admincount=1)"  -Server $Domain -EA 0 
+			#V2.20 changed to @()
+			$AdminCounts = @(Get-ADUser -LDAPFilter "(admincount=1)"  -Server $Domain -EA 0)
 			
 			If($? -and $Null -ne $AdminCounts)
 			{
 				$AdminCounts = $AdminCounts | Sort-Object Name
-				If($AdminCounts -is [array])
-				{
-					[int]$AdminsCount = $AdminCounts.Count
-				}
-				Else
-				{
-					[int]$AdminsCount = 1
-				}
+				[int]$AdminsCount = $AdminCounts.Count
 				[string]$AdminsCountStr = "{0:N0}" -f $AdminsCount
 				
 				If($MSWORD -or $PDF)
@@ -13355,19 +13139,13 @@ Function ProcessGroupInformation
 			}
 			
 			Write-Verbose "$(Get-Date): `t`tListing groups with AdminCount = 1"
-			$AdminCounts = Get-ADGroup -LDAPFilter "(admincount=1)" -Server $Domain -EA 0 | Select-Object Name
+			#V2.20 changed to @()
+			$AdminCounts = @(Get-ADGroup -LDAPFilter "(admincount=1)" -Server $Domain -EA 0 | Select-Object Name)
 			
 			If($? -and $Null -ne $AdminCounts)
 			{
 				$AdminCounts = $AdminCounts | Sort-Object Name
-				If($AdminCounts -is [array])
-				{
-					[int]$AdminsCount = $AdminCounts.Count
-				}
-				Else
-				{
-					[int]$AdminsCount = 1
-				}
+				[int]$AdminsCount = $AdminCounts.Count
 				[string]$AdminsCountStr = "{0:N0}" -f $AdminsCount
 				
 				If($MSWORD -or $PDF)
@@ -13393,22 +13171,16 @@ Function ProcessGroupInformation
 					{
 						Write-Verbose "$(Get-Date): `t`t`t$($Admin.Name)"
 						$xRow++
-						$Members = Get-ADGroupMember -Identity $Admin.Name -Server $Domain -EA 0 | Sort-Object Name
+						#V2.20 changed to @()
+						$Members = @(Get-ADGroupMember -Identity $Admin.Name -Server $Domain -EA 0 | Sort-Object Name)
 						
 						If($? -and $Null -ne $Members)
 						{
-							If($Members -is [array])
-							{
-								$MembersCount = $Members.Count
-							}
-							Else
-							{
-								$MembersCount = 1
-							}
+							[int]$MembersCount = $Members.Count
 						}
 						Else
 						{
-							$MembersCount = 0
+							[int]$MembersCount = 0
 						}
 
 						[string]$MembersCountStr = "{0:N0}" -f $MembersCount
@@ -13453,22 +13225,16 @@ Function ProcessGroupInformation
 					ForEach($Admin in $AdminCounts)
 					{
 						Write-Verbose "$(Get-Date): `t`t`t$($Admin.Name)"
-						$Members = Get-ADGroupMember -Identity $Admin.Name -Server $Domain -EA 0 | Sort-Object Name
+						#V2.20 changed to @()
+						$Members = @(Get-ADGroupMember -Identity $Admin.Name -Server $Domain -EA 0 | Sort-Object Name)
 						
 						If($? -and $Null -ne $Members)
 						{
-							If($Members -is [array])
-							{
-								$MembersCount = $Members.Count
-							}
-							Else
-							{
-								$MembersCount = 1
-							}
+							[int]$MembersCount = $Members.Count
 						}
 						Else
 						{
-							$MembersCount = 0
+							[int]$MembersCount = 0
 						}
 
 						[string]$MembersCountStr = "{0:N0}" -f $MembersCount
@@ -13506,22 +13272,16 @@ Function ProcessGroupInformation
 					ForEach($Admin in $AdminCounts)
 					{
 						Write-Verbose "$(Get-Date): `t`t`t$($Admin.Name)"
-						$Members = Get-ADGroupMember -Identity $Admin.Name -Server $Domain -EA 0 | Sort-Object Name
+						#V2.20 changed to @()
+						$Members = @(Get-ADGroupMember -Identity $Admin.Name -Server $Domain -EA 0 | Sort-Object Name)
 						
 						If($? -and $Null -ne $Members)
 						{
-							If($Members -is [array])
-							{
-								$MembersCount = $Members.Count
-							}
-							Else
-							{
-								$MembersCount = 1
-							}
+							$MembersCount = $Members.Count
 						}
 						Else
 						{
-							$MembersCount = 0
+							[int]$MembersCount = 0
 						}
 
 						[string]$MembersCountStr = "{0:N0}" -f $MembersCount
@@ -13723,7 +13483,8 @@ Function ProcessGPOsByDomain
 				WriteHTMLLine 3 0 "Linked Group Policy Objects" 
 			}
 
-			$LinkedGPOs = $DomainInfo.LinkedGroupPolicyObjects | Sort-Object 
+			#V2.20 changed to @()
+			$LinkedGPOs = @($DomainInfo.LinkedGroupPolicyObjects | Sort-Object)
 			If($Null -eq $LinkedGpos)
 			{
 				If($MSWORD -or $PDF)
@@ -13741,7 +13502,7 @@ Function ProcessGPOsByDomain
 			}
 			Else
 			{
-				$GPOArray = @()
+				$GPOArray = New-Object System.Collections.ArrayList
 				ForEach($LinkedGpo in $LinkedGpos)
 				{
 					#taken from Michael B. Smith's work on the XenApp 6.x scripts
@@ -13758,7 +13519,7 @@ Function ProcessGPOsByDomain
 					{
 						$tmp = $gpObject.DisplayName	### name of the group policy object
 					}
-					$GPOArray += $tmp
+					$GPOArray.Add($tmp) > $Null
 				}
 
 				$GPOArray = $GPOArray | Sort-Object 
@@ -13767,14 +13528,7 @@ Function ProcessGPOsByDomain
 				{
 					$TableRange = $Script:doc.Application.Selection.Range
 					[int]$Columns = 1
-					If($LinkedGpos -is [array])
-					{
-						[int]$Rows = $LinkedGpos.Count
-					}
-					Else
-					{
-						[int]$Rows = 1
-					}
+					[int]$Rows = $LinkedGpos.Count
 					$Table = $Script:doc.Tables.Add($TableRange, $Rows, $Columns)
 					$Table.Style = $Script:MyHash.Word_TableGrid
 			
@@ -13932,20 +13686,14 @@ Function ProcessgGPOsByOUOld
 		}
 		
 		#get all OUs for the domain
-		$OUs = Get-ADOrganizationalUnit -Filter * -Server $Domain `
+		#V2.20 changed to @()
+		$OUs = @(Get-ADOrganizationalUnit -Filter * -Server $Domain `
 		-Properties CanonicalName, DistinguishedName, Name -EA 0 | `
-		Select-Object CanonicalName, DistinguishedName, Name | Sort-Object CanonicalName
+		Select-Object CanonicalName, DistinguishedName, Name | Sort-Object CanonicalName)
 		
 		If($? -and $Null -ne $OUs)
 		{
-			If($OUs -is [array])
-			{
-				[int]$NumOUs = $OUs.Count
-			}
-			Else
-			{
-				[int]$NumOUs = 1
-			}
+			[int]$NumOUs = $OUs.Count
 			[int]$OUCount = 0
 
 			ForEach($OU in $OUs)
@@ -13967,7 +13715,7 @@ Function ProcessgGPOsByOUOld
 					}
 					Else
 					{
-						$GPOArray = @()
+						$GPOArray = New-Object System.Collections.ArrayList
 						ForEach($LinkedGpo in $LinkedGpos)
 						{
 							#taken from Michael B. Smith's work on the XenApp 6.x scripts
@@ -13984,19 +13732,12 @@ Function ProcessgGPOsByOUOld
 							{
 								$tmp = $gpObject.DisplayName	### name of the group policy object
 							}
-							$GPOArray += $tmp
+							$GPOArray.Add($tmp) > $Null
 						}
 
 						$GPOArray = $GPOArray | Sort-Object 
 
-						If($LinkedGpos -is [array])
-						{
-							[int]$Rows = $LinkedGpos.Count
-						}
-						Else
-						{
-							[int]$Rows = 1
-						}
+						[int]$Rows = $LinkedGpos.Count
 
 						If($MSWORD -or $PDF)
 						{
@@ -14180,20 +13921,14 @@ Function ProcessgGPOsByOUNew
 		}
 		
 		#get all OUs for the domain
-		$OUs = Get-ADOrganizationalUnit -Filter * -Server $Domain `
+		#V2.20 changed to @()
+		$OUs = @(Get-ADOrganizationalUnit -Filter * -Server $Domain `
 		-Properties CanonicalName, DistinguishedName, Name -EA 0 | `
-		Select-Object CanonicalName, DistinguishedName, Name | Sort-Object CanonicalName
+		Select-Object CanonicalName, DistinguishedName, Name | Sort-Object CanonicalName)
 		
 		If($? -and $Null -ne $OUs)
 		{
-			If($OUs -is [array])
-			{
-				[int]$NumOUs = $OUs.Count
-			}
-			Else
-			{
-				[int]$NumOUs = 1
-			}
+			[int]$NumOUs = $OUs.Count
 			[int]$OUCount = 0
 
 			ForEach($OU in $OUs)
@@ -14238,7 +13973,7 @@ Function ProcessgGPOsByOUNew
 					}
 					Else
 					{
-						$AllGPOs = @()
+						$AllGPOs = New-Object System.Collections.ArrayList
 
 						ForEach($item in $InheritedGPOs)
 						{
@@ -14255,20 +13990,13 @@ Function ProcessgGPOsByOUNew
 							$obj | Add-Member -MemberType NoteProperty -Name "GPOName" -value $Item
 							$obj | Add-Member -MemberType NoteProperty -Name "GPOType" -value $GPOType
 							
-							$AllGPOs += $obj
+							$AllGPOs.Add($obj) > $Null
 						}
 
 						$AllGPOS = $AllGPOs | Sort-Object GPOName						
 
 						[int]$Rows = 0
-						If($AllGPOS -is [array])
-						{
-							$Rows = $AllGPOS.Count
-						}
-						Else
-						{
-							$Rows = 1
-						}
+						$Rows = $AllGPOS.Count
 						
 						If($MSWORD -or $PDF)
 						{
@@ -14592,298 +14320,122 @@ Function ProcessMiscDataByDomain
 			Write-Verbose "$(Get-Date): `t`tGathering user misc data"
 			
 			#added for 2.16 HomeDrive, HomeDirectory, ProfilePath, ScriptPath, PrimaryGroup
-			$Users = Get-ADUser -Filter * -Server $Domain `
+			#V2.20 changed to @()
+			$Users = @(Get-ADUser -Filter * -Server $Domain `
 			-Properties CannotChangePassword, Enabled, LockedOut, PasswordExpired, PasswordNeverExpires, `
 			PasswordNotRequired, lastLogonTimestamp, DistinguishedName, SamAccountName, UserPrincipalName, `
-			HomeDrive, HomeDirectory, ProfilePath, ScriptPath, PrimaryGroup -EA 0 
+			HomeDrive, HomeDirectory, ProfilePath, ScriptPath, PrimaryGroup -EA 0)
 			
 			If($? -and $Null -ne $Users)
 			{
-				If($Users -is [array])
-				{
-					[int]$UsersCount = $Users.Count
-				}
-				Else
-				{
-					[int]$UsersCount = 1
-				}
+				[int]$UsersCount = $Users.Count
 				
 				Write-Verbose "$(Get-Date): `t`t`tDisabled users"
-				$DisabledUsers = $Users | Where-Object {$_.Enabled -eq $False}
+				#V2.20 changed to @()
+				$DisabledUsers = @($Users | Where-Object {$_.Enabled -eq $False})
 			
-				If($Null -eq $DisabledUsers)
-				{
-					[int]$UsersDisabledcnt = 0
-				}
-				ElseIf($DisabledUsers -is [array])
-				{
-					[int]$UsersDisabledcnt = $DisabledUsers.Count
-				}
-				Else
-				{
-					[int]$UsersDisabledcnt = 1
-				}
+				[int]$UsersDisabledcnt = $DisabledUsers.Count
 				
 				Write-Verbose "$(Get-Date): `t`t`tUnknown users"
-				$UnknownUsers = $Users | Where-Object {$_.Enabled -eq $Null}
+				#V2.20 changed to @()
+				$UnknownUsers = @($Users | Where-Object {$_.Enabled -eq $Null})
 			
-				If($Null -eq $UnknownUsers)
-				{
-					[int]$UsersUnknowncnt = 0
-				}
-				ElseIf($UnknownUsers -is [array])
-				{
-					[int]$UsersUnknowncnt = $UnknownUsers.Count
-				}
-				Else
-				{
-					[int]$UsersUnknowncnt = 1
-				}
+				[int]$UsersUnknowncnt = $UnknownUsers.Count
 
 				Write-Verbose "$(Get-Date): `t`t`tLocked out users"
-				$LockedOutUsers = $Users | Where-Object {$_.LockedOut -eq $True}
+				#V2.20 changed to @()
+				$LockedOutUsers = @($Users | Where-Object {$_.LockedOut -eq $True})
 			
-				If($Null -eq $LockedOutUsers)
-				{
-					[int]$UsersLockedOutcnt = 0
-				}
-				ElseIf($LockedOutUsers -is [array])
-				{
-					[int]$UsersLockedOutcnt = $LockedOutUsers.Count
-				}
-				Else
-				{
-					[int]$UsersLockedOutcnt = 1
-				}
+				[int]$UsersLockedOutcnt = $LockedOutUsers.Count
 
 				Write-Verbose "$(Get-Date): `t`t`tAll users with password expired"
-				$AllUsersWithPasswordExpired = $Users | Where-Object {$_.PasswordExpired -eq $True}
+				#V2.20 changed to @()
+				$AllUsersWithPasswordExpired = @($Users | Where-Object {$_.PasswordExpired -eq $True})
 			
-				If($Null -eq $AllUsersWithPasswordExpired)
-				{
-					[int]$UsersPasswordExpiredcnt = 0
-				}
-				ElseIf($AllUsersWithPasswordExpired -is [array])
-				{
-					[int]$UsersPasswordExpiredcnt = $AllUsersWithPasswordExpired.Count
-				}
-				Else
-				{
-					[int]$UsersPasswordExpiredcnt = 1
-				}
+				[int]$UsersPasswordExpiredcnt = $AllUsersWithPasswordExpired.Count
 
 				Write-Verbose "$(Get-Date): `t`t`tAll users whose password never expires"
-				$AllUsersWhosePasswordNeverExpires = $Users | Where-Object {$_.PasswordNeverExpires -eq $True}
+				#V2.20 changed to @()
+				$AllUsersWhosePasswordNeverExpires = @($Users | Where-Object {$_.PasswordNeverExpires -eq $True})
 			
-				If($Null -eq $AllUsersWhosePasswordNeverExpires)
-				{
-					[int]$UsersPasswordNeverExpirescnt = 0
-				}
-				ElseIf($AllUsersWhosePasswordNeverExpires -is [array])
-				{
-					[int]$UsersPasswordNeverExpirescnt = $AllUsersWhosePasswordNeverExpires.Count
-				}
-				Else
-				{
-					[int]$UsersPasswordNeverExpirescnt = 1
-				}
+				[int]$UsersPasswordNeverExpirescnt = $AllUsersWhosePasswordNeverExpires.Count
 
 				Write-Verbose "$(Get-Date): `t`t`tAll users with password not required"
-				$AllUsersWithPasswordNotRequired = $Users | Where-Object {$_.PasswordNotRequired -eq $True}
+				#V2.20 changed to @()
+				$AllUsersWithPasswordNotRequired = @($Users | Where-Object {$_.PasswordNotRequired -eq $True})
 			
-				If($Null -eq $AllUsersWithPasswordNotRequired)
-				{
-					[int]$UsersPasswordNotRequiredcnt = 0
-				}
-				ElseIf($AllUsersWithPasswordNotRequired -is [array])
-				{
-					[int]$UsersPasswordNotRequiredcnt = $AllUsersWithPasswordNotRequired.Count
-				}
-				Else
-				{
-					[int]$UsersPasswordNotRequiredcnt = 1
-				}
+				[int]$UsersPasswordNotRequiredcnt = $AllUsersWithPasswordNotRequired.Count
 
 				Write-Verbose "$(Get-Date): `t`t`tAll users who cannot change password"
-				$AllUsersWhoCannotChangePassword = $Users | Where-Object {$_.CannotChangePassword -eq $True}
+				#V2.20 changed to @()
+				$AllUsersWhoCannotChangePassword = @($Users | Where-Object {$_.CannotChangePassword -eq $True})
 			
-				If($Null -eq $AllUsersWhoCannotChangePassword)
-				{
-					[int]$UsersCannotChangePasswordcnt = 0
-				}
-				ElseIf($AllUsersWhoCannotChangePassword -is [array])
-				{
-					[int]$UsersCannotChangePasswordcnt = $AllUsersWhoCannotChangePassword.Count
-				}
-				Else
-				{
-					[int]$UsersCannotChangePasswordcnt = 1
-				}
+				[int]$UsersCannotChangePasswordcnt = $AllUsersWhoCannotChangePassword.Count
 
 				Write-Verbose "$(Get-Date): `t`t`tAll users with SID History"
-				$AllUsersWithSIDHistory = Get-ADObject -LDAPFilter "(sIDHistory=*)" -Server $Domain `
-				-Property objectClass, sIDHistory -EA 0
+				#V2.20 changed to @()
+				$AllUsersWithSIDHistory = @(Get-ADObject -LDAPFilter "(sIDHistory=*)" -Server $Domain `
+				-Property objectClass, sIDHistory -EA 0)
 
-				If($Null -eq $AllUsersWithSIDHistory)
-				{
-					[int]$UsersWithSIDHistorycnt = 0
-				}
-				ElseIf($AllUsersWithSIDHistory -is [array])
-				{
-					[int]$UsersWithSIDHistorycnt = ($AllUsersWithSIDHistory | Where-Object {$_.objectClass -eq 'user'}).Count
-				}
-				Else
-				{
-					[int]$UserssWithSIDHistorycnt = 1
-				}
+				[int]$UsersWithSIDHistorycnt = ($AllUsersWithSIDHistory | Where-Object {$_.objectClass -eq 'user'}).Count
 
 				#2.16
 				Write-Verbose "$(Get-Date): `t`t`tAll users with Homedrive set in ADUC"
-				$HomeDriveUsers = $Users | Where-Object {$_.HomeDrive -ne $Null}
+				#V2.20 changed to @()
+				$HomeDriveUsers = @($Users | Where-Object {$_.HomeDrive -ne $Null})
 			
-				If($Null -eq $HomeDriveUsers)
-				{
-					[int]$UsersHomeDrivecnt = 0
-				}
-				ElseIf($HomeDriveUsers -is [array])
-				{
-					[int]$UsersHomeDrivecnt = $HomeDriveUsers.Count
-				}
-				Else
-				{
-					[int]$UsersHomeDrivecnt = 1
-				}
+				[int]$UsersHomeDrivecnt = $HomeDriveUsers.Count
 				
 				#2.16
 				Write-Verbose "$(Get-Date): `t`t`tAll users whose Primary Group is not Domain Users"
-				$PrimaryGroupUsers = $Users | Where-Object {$_.SamAccountName -ne 'Guest' -and $_.PrimaryGroup -notmatch 'Domain Users'}
+				#V2.20 changed to @()
+				$PrimaryGroupUsers = @($Users | Where-Object {$_.SamAccountName -ne 'Guest' -and $_.PrimaryGroup -notmatch 'Domain Users'})
 			
-				If($Null -eq $PrimaryGroupUsers)
-				{
-					[int]$UsersPrimaryGroupcnt = 0
-				}
-				ElseIf($PrimaryGroupUsers -is [array])
-				{
-					[int]$UsersPrimaryGroupcnt = $PrimaryGroupUsers.Count
-				}
-				Else
-				{
-					[int]$UsersPrimaryGroupcnt = 1
-				}
+				[int]$UsersPrimaryGroupcnt = $PrimaryGroupUsers.Count
 
 				#2.16
 				Write-Verbose "$(Get-Date): `t`t`tAll users with RDS HomeDrive set in ADUC"
-				$RDSHomeDriveUsers = $users | Get-RDUserSetting | Where-Object {$_.TerminalServicesHomeDrive -gt 0}
+				#V2.20 changed to @()
+				$RDSHomeDriveUsers = @($users | Get-RDUserSetting | Where-Object {$_.TerminalServicesHomeDrive -gt 0})
 			
-				If($Null -eq $RDSHomeDriveUsers)
-				{
-					[int]$UsersRDSHomeDrivecnt = 0
-				}
-				ElseIf($RDSHomeDriveUsers -is [array])
-				{
-					[int]$UsersRDSHomeDrivecnt = $RDSHomeDriveUsers.Count
-				}
-				Else
-				{
-					[int]$UsersRDSHomeDrivecnt = 1
-				}
+				[int]$UsersRDSHomeDrivecnt = $RDSHomeDriveUsers.Count
 
 				#active users now
 				Write-Verbose "$(Get-Date): `t`t`tActive users"
-				$EnabledUsers = $Users | Where-Object {$_.Enabled -eq $True}
+				#V2.20 changed to @()
+				$EnabledUsers = @($Users | Where-Object {$_.Enabled -eq $True})
 			
-				If($Null -eq $EnabledUsers)
-				{
-					[int]$ActiveUsersCount = 0
-				}
-				ElseIf($EnabledUsers -is [array])
-				{
-					[int]$ActiveUsersCount = $EnabledUsers.Count
-				}
-				Else
-				{
-					[int]$ActiveUsersCount = 1
-				}
+				[int]$ActiveUsersCount = $EnabledUsers.Count
 
 				Write-Verbose "$(Get-Date): `t`t`tActive users password expired"
-				$Results = $EnabledUsers | Where-Object {$_.PasswordExpired -eq $True}
+				#V2.20 changed to @()
+				$Results = @($EnabledUsers | Where-Object {$_.PasswordExpired -eq $True})
 			
-				If($Null -eq $Results)
-				{
-					[int]$ActiveUsersPasswordExpired = 0
-				}
-				ElseIf($Results -is [array])
-				{
-					[int]$ActiveUsersPasswordExpired = $Results.Count
-				}
-				Else
-				{
-					[int]$ActiveUsersPasswordExpired = 1
-				}
+				[int]$ActiveUsersPasswordExpired = $Results.Count
 
 				Write-Verbose "$(Get-Date): `t`t`tActive users password never expires"
-				$Results = $EnabledUsers | Where-Object {$_.PasswordNeverExpires -eq $True}
+				#V2.20 changed to @()
+				$Results = @($EnabledUsers | Where-Object {$_.PasswordNeverExpires -eq $True})
 			
-				If($Null -eq $Results)
-				{
-					[int]$ActiveUsersPasswordNeverExpires = 0
-				}
-				ElseIf($Results -is [array])
-				{
-					[int]$ActiveUsersPasswordNeverExpires = $Results.Count
-				}
-				Else
-				{
-					[int]$ActiveUsersPasswordNeverExpires = 1
-				}
+				[int]$ActiveUsersPasswordNeverExpires = $Results.Count
 
 				Write-Verbose "$(Get-Date): `t`t`tActive users password not required"
-				$Results = $EnabledUsers | Where-Object {$_.PasswordNotRequired -eq $True}
+				#V2.20 changed to @()
+				$Results = @($EnabledUsers | Where-Object {$_.PasswordNotRequired -eq $True})
 			
-				If($Null -eq $Results)
-				{
-					[int]$ActiveUsersPasswordNotRequired = 0
-				}
-				ElseIf($Results -is [array])
-				{
-					[int]$ActiveUsersPasswordNotRequired = $Results.Count
-				}
-				Else
-				{
-					[int]$ActiveUsersPasswordNotRequired = 1
-				}
+				[int]$ActiveUsersPasswordNotRequired = $Results.Count
 
 				Write-Verbose "$(Get-Date): `t`t`tActive Users cannot change password"
-				$Results = $EnabledUsers | Where-Object {$_.CannotChangePassword -eq $True}
+				#V2.20 changed to @()
+				$Results = @($EnabledUsers | Where-Object {$_.CannotChangePassword -eq $True})
 			
-				If($Null -eq $Results)
-				{
-					[int]$ActiveUsersCannotChangePassword = 0
-				}
-				ElseIf($Results -is [array])
-				{
-					[int]$ActiveUsersCannotChangePassword = $Results.Count
-				}
-				Else
-				{
-					[int]$ActiveUsersCannotChangePassword = 1
-				}
+				[int]$ActiveUsersCannotChangePassword = $Results.Count
 
 				Write-Verbose "$(Get-Date): `t`t`tActive Users no lastLogonTimestamp"
-				$Results = $EnabledUsers | Where-Object {$_.lastLogonTimestamp -eq $Null}
+				#V2.20 changed to @()
+				$Results = @($EnabledUsers | Where-Object {$_.lastLogonTimestamp -eq $Null})
 			
-				If($Null -eq $Results)
-				{
-					[int]$ActiveUserslastLogonTimestamp = 0
-				}
-				ElseIf($Results -is [array])
-				{
-					[int]$ActiveUserslastLogonTimestamp = $Results.Count
-				}
-				Else
-				{
-					[int]$ActiveUserslastLogonTimestamp = 1
-				}
+				[int]$ActiveUserslastLogonTimestamp = $Results.Count
 			}
 			Else
 			{
@@ -16092,7 +15644,8 @@ Function ProcessEventLogInfo
 	Write-Verbose "$(Get-Date): `tAdd Domain Controller Event Log Data table to doc"
 	
 	#sort by DC and then event log name
-	$xEventLogInfo = $Script:DCEventLogInfo | Sort-Object EventLogName, DCName
+	#V2.20 changed to @()
+	$xEventLogInfo = @($Script:DCEventLogInfo | Sort-Object EventLogName, DCName)
 	$txt = "Domain Controller Event Log Data"
 	
 	If($MSWord -or $PDF)
@@ -16101,14 +15654,7 @@ Function ProcessEventLogInfo
 		WriteWordLine 1 0 $txt
 		$TableRange = $doc.Application.Selection.Range
 		[int]$Columns = 3
-		If($xEventLogInfo -is [array])
-		{
-			[int]$Rows = $xEventLogInfo.Count + 1
-		}
-		Else
-		{
-			[int]$Rows = 2
-		}
+		[int]$Rows = $xEventLogInfo.Count + 1
 		[int]$xRow = 1
 		
 		$Table = $doc.Tables.Add($TableRange, $Rows, $Columns)
