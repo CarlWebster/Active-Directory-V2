@@ -804,7 +804,7 @@
 	NAME: ADDS_Inventory_V2.ps1
 	VERSION: 2.20
 	AUTHOR: Carl Webster, Sr. Solutions Architect, Choice Solutions, LLC and Michael B. Smith
-	LASTEDIT: April 28, 2018
+	LASTEDIT: September 28, 2018
 #>
 
 
@@ -953,6 +953,143 @@ Param(
 #Version 1.0 released to the community on May 31, 2014
 #
 #Version 2.0 is based on version 1.20
+#
+#Version 2.20 28-Sep-2018
+#	Added Domain Functional Level of 7 for Windows Server 2016
+#	Added Forest Functional Level of 7 for Windows Server 2016
+#	Added Domain Schema version 88 for Server 2019 Preview
+#	Added to Domain Information:
+#		Last logon replication interval
+#		Public key required password rolling (2012+)
+#	Added to Forest Information, Domain Controllers:
+#		Operation System
+#		Server Core (Y/N)
+#	Changed "renamed" to "changed" as it was freaking people out thinking I was renaming their domain or computer
+#	Changed all but the Word and HTML arrays from "@() +=" to "New-Object System.Collections.ArrayList .Add()"
+#	Changed the code where I checked for Singletons and -is [array] to use @() around the cmdlets so the result
+#		is always an array. Thanks to fellow CTP Sam Jacobs for the tip. This reduced the code by almost 500 lines.
+#	Changed the functions getting the computer WMI hardware and service info to use 
+#		"New-Object System.Collections.ArrayList .Add()" for Word and HTML tables
+#	Changed the width of the Domain Controllers table to accommodate the new columns
+#	Change the width of the AD Schema Items table to match the other tables
+#	Remove all the duplicate $VarName = $Null from Function ProcessDomains
+#	Reorder Change Log so the most recent is on top and the oldest is at the bottom
+#	Reorder most of the domain properties to be in alphabetical order
+#	Reorder most of the forest properties to be in alphabetical order
+#	Updated Exchange schema version information
+#
+#Version 2.19 5-Apr-2018
+#	Added Event Log information to each domain controller and an appendix
+#		If the script is run from an elevated PowerShell session by a user with Domain Admin rights
+#	Added Operating System information to Functions GetComputerWMIInfo and OutputComputerItem
+#	Code clean-up for most recommendations made by Visual Studio Code
+#
+#Version 2.18 10-Mar-2018
+#	Added Log switch to create a transcript log
+#
+#Version 2.17 8-Dec-2017
+#	Updated Function WriteHTMLLine with fixes from the script template
+#
+#Version 2.16 4-Dec-2017
+#	Add checking for users with home drive set in Active Directory Users and Computers (ADUC)
+#		Added function OutputHDUserInfo
+#	Add checking for users with RDS home drive set in ADUC
+#		Added function from Jeff Hicks Get-RDUserSetting
+#		Added function OutputRDSHDUserInfo
+#	Add checking for users whose Primary Group is not Domain Users
+#		Added function OutputPGUserInfo
+#	Add "DC: " in fron tof the domain controller name, in text output, for domain controller information
+#	Add new parameter ADDomain to restrict report to a single domain in a multi-domain Forest
+#	Add schema extension checking for the following items and add to Forest section:
+#		'User-Account-Control', #Flags that control the behavior of a user account
+#		'msNPAllowDialin', #RAS Server
+#		'ms-Mcs-AdmPwd', #LAPS
+#		'ms-Mcs-AdmPwdExpirationTime', #LAPS
+#		'ms-SMS-Assignment-Site-Code', #SCCM
+#		'ms-SMS-Capabilities', #SCCM
+#		'msRTCSIP-UserRoutingGroupId', #Lync/SfB
+#		'msRTCSIP-MirrorBackEndServer' #Lync/SfB
+#		'ms-exch-schema-version-pt' #Exchange
+#	Add "Site: " in front of Site name when listing Subnets, Servers, and Connection Objects
+#	Remove several large blocks of code that had been commented out
+#	Revise how $LinkedGPOs and $InheritedGPOs variables are set to work around invalid property 
+#		name DisplayName when collection is empty
+#	Sort Enabled Scopes in AD Optional Features
+#	Text output changes to tabular data:
+#		Domain Controllers (in Forest section)
+#		AD Schema Items (in Forest section)
+#		Services
+#		Organizational Units
+#		Domain Admins
+#		Enterprise Admins
+#		Schema Admins
+#		Users with AdminCount=1
+#	Updated Exchange schema versions
+#	Updated help text
+#	When reporting on the domain controllers in the Forest, if unable to get data from a domain controller,
+#		instead of reporting "Unknown", use:
+#		Unable to retrieve Global Catalog status on <DCName>
+#		Unable to retrieve Read-only status on <DCName>
+#	When run for a single domain in a multi-domain forest
+#		Revise gathering list of domains
+#		Revise testing for $ComputerName 
+#		Revise variable $ADContext in Function ProcessAllDCsInTheForest
+#
+#Version 2.15 26-Jun-2017
+#	Added new parameter MaxDetails:
+#		This is the same as using the following parameters:
+#			DCDNSInfo
+#			GPOInheritance
+#			HardWare
+#			IncludeUserInfo
+#			Services
+#	Fixed wrong loop variable for CA
+#	Removed code that made sure all Parameters were set to default values if for some reason they did exist or values were $Null
+#	Reordered the parameters in the help text and parameter list so they match and are grouped better
+#	Replaced _SetDocumentProperty function with Jim Moyle's Set-DocumentProperty function
+#	Updated Function ProcessScriptEnd for the new Cover Page properties and Parameters
+#	Updated Function ShowScriptOptions for the new Cover Page properties and Parameters
+#	Updated Function UpdateDocumentProperties for the new Cover Page properties and Parameters
+#	Updated help text
+#
+#Version 2.14 12-May-2017
+#	Add Certificate Authority Information section to Forest Information
+#		Check for the following CA related errors:
+#			Possible error: There are more than one Certification Authority Root(s)
+#			Error: Certification Authority Root(s) exist, but no Certification Authority Issuers(s) (also known as Enrollment Agents) exist
+#			Error: More Certification Authority Root(s) exist than there are Certification Authority Issuers(s) (also known as Enrollment Agents)
+#			Error: Certification Authority Issuers(s) (also known as Enrollment Agents) exist, but no Certification Authority Root(s) exist
+#	Change "Users with AdminCount=1 ($($AdminsCountStr) members):" to "Users with AdminCount=1 ($($AdminsCountStr) users):"
+#	Reorder the Forest Information section
+#
+#Version 2.13 13-Feb-2017
+#	Fix French wording for Table of Contents 2
+#
+#Version 2.12 10-Nov-2016
+#	Add Chinese language support
+#	Add table for Time Server information if script is run from an elevated PowerShell session
+#	Remove "Appendix A" from DC DNS Info table
+#
+#Version 2.11 6-Nov-2016
+#	Fixed Domain Trust Attributes (thanks GT)
+#	Fixed several Write-Warning statements that had no message
+#	Fixed using -AddDateTime with -HTML
+#	Remove duplicate setting for $Script:Title
+#	Reworked the use of [gc]::Collect()
+#
+#Version 2.10 released on 19-Oct-2016 (Happy Birthday Linz)
+#	Add a new parameter, IncludeUserInfo
+#		Add to the User Miscellaneous Data section, outputs a table with the SamAccountName
+#		and DistinguishedName of the users in the All Users counts
+#	Add to the Domain section, listing Fine Grained Password Policies
+#	Add to the Forest section, Tombstone Lifetime
+#	Changed the HTML header for AD Optional Features from a table header to a section header
+#	Changed "Site and Services" heading to "Sites and Services"
+#	Fixed formatting issues with HTML headings output
+#	The $AdminsCountStr variable was used, when it should not have been used, 
+#		when privileged groups had no members or members could not be retrieved
+#	Update Forest and Domain schema tables for the released Server 2016 product
+#
 #Version 2.0 released 26-Sep-2016
 #
 #	Added a parameter, GPOInheritance, to set whether to use the new GPOs by OU with linked and inherited GPOs
@@ -1003,132 +1140,7 @@ Param(
 #	Update Verbose messages for testing to see if -ComputerName is a domain controller
 #	Worked around Get-ADDomainController issue when run from a child domain
 #
-#Version 2.10 released on 19-Oct-2016 (Happy Birthday Linz)
-#	Add a new parameter, IncludeUserInfo
-#		Add to the User Miscellaneous Data section, outputs a table with the SamAccountName
-#		and DistinguishedName of the users in the All Users counts
-#	Add to the Domain section, listing Fine Grained Password Policies
-#	Add to the Forest section, Tombstone Lifetime
-#	Changed the HTML header for AD Optional Features from a table header to a section header
-#	Changed "Site and Services" heading to "Sites and Services"
-#	Fixed formatting issues with HTML headings output
-#	The $AdminsCountStr variable was used, when it should not have been used, 
-#		when privileged groups had no members or members could not be retrieved
-#	Update Forest and Domain schema tables for the released Server 2016 product
-#
-#Version 2.11 6-Nov-2016
-#	Fixed Domain Trust Attributes (thanks GT)
-#	Fixed several Write-Warning statements that had no message
-#	Fixed using -AddDateTime with -HTML
-#	Remove duplicate setting for $Script:Title
-#	Reworked the use of [gc]::Collect()
-#
-#Version 2.12
-#	Add Chinese language support
-#	Add table for Time Server information if script is run from an elevated PowerShell session
-#	Remove "Appendix A" from DC DNS Info table
-#
-#Version 2.13
-#	Fix French wording for Table of Contents 2
-#
-#Version 2.14
-#	Add Certificate Authority Information section to Forest Information
-#		Check for the following CA related errors:
-#			Possible error: There are more than one Certification Authority Root(s)
-#			Error: Certification Authority Root(s) exist, but no Certification Authority Issuers(s) (also known as Enrollment Agents) exist
-#			Error: More Certification Authority Root(s) exist than there are Certification Authority Issuers(s) (also known as Enrollment Agents)
-#			Error: Certification Authority Issuers(s) (also known as Enrollment Agents) exist, but no Certification Authority Root(s) exist
-#	Change "Users with AdminCount=1 ($($AdminsCountStr) members):" to "Users with AdminCount=1 ($($AdminsCountStr) users):"
-#	Reorder the Forest Information section
-#
-#Version 2.15
-#	Added new parameter MaxDetails:
-#		This is the same as using the following parameters:
-#			DCDNSInfo
-#			GPOInheritance
-#			HardWare
-#			IncludeUserInfo
-#			Services
-#	Fixed wrong loop variable for CA
-#	Removed code that made sure all Parameters were set to default values if for some reason they did exist or values were $Null
-#	Reordered the parameters in the help text and parameter list so they match and are grouped better
-#	Replaced _SetDocumentProperty function with Jim Moyle's Set-DocumentProperty function
-#	Updated Function ProcessScriptEnd for the new Cover Page properties and Parameters
-#	Updated Function ShowScriptOptions for the new Cover Page properties and Parameters
-#	Updated Function UpdateDocumentProperties for the new Cover Page properties and Parameters
-#	Updated help text
-#
-#Version 2.16 4-Dec-2017
-#	Add checking for users with home drive set in Active Directory Users and Computers (ADUC)
-#		Added function OutputHDUserInfo
-#	Add checking for users with RDS home drive set in ADUC
-#		Added function from Jeff Hicks Get-RDUserSetting
-#		Added function OutputRDSHDUserInfo
-#	Add checking for users whose Primary Group is not Domain Users
-#		Added function OutputPGUserInfo
-#	Add "DC: " in fron tof the domain controller name, in text output, for domain controller information
-#	Add new parameter ADDomain to restrict report to a single domain in a multi-domain Forest
-#	Add schema extension checking for the following items and add to Forest section:
-#		'User-Account-Control', #Flags that control the behavior of a user account
-#		'msNPAllowDialin', #RAS Server
-#		'ms-Mcs-AdmPwd', #LAPS
-#		'ms-Mcs-AdmPwdExpirationTime', #LAPS
-#		'ms-SMS-Assignment-Site-Code', #SCCM
-#		'ms-SMS-Capabilities', #SCCM
-#		'msRTCSIP-UserRoutingGroupId', #Lync/SfB
-#		'msRTCSIP-MirrorBackEndServer' #Lync/SfB
-#		'ms-exch-schema-version-pt' #Exchange
-#	Add "Site: " in front of Site name when listing Subnets, Servers, and Connection Objects
-#	Remove several large blocks of code that had been commented out
-#	Revise how $LinkedGPOs and $InheritedGPOs variables are set to work around invalid property 
-#		name DisplayName when collection is empty
-#	Sort Enabled Scopes in AD Optional Features
-#	Text output changes to tabular data:
-#		Domain Controllers (in Forest section)
-#		AD Schema Items (in Forest section)
-#		Services
-#		Organizational Units
-#		Domain Admins
-#		Enterprise Admins
-#		Schema Admins
-#		Users with AdminCount=1
-#	Updated Exchange schema versions
-#	Updated help text
-#	When reporting on the domain controllers in the Forest, if unable to get data from a domain controller,
-#		instead of reporting "Unknown", use:
-#		Unable to retrieve Global Catalog status on <DCName>
-#		Unable to retrieve Read-only status on <DCName>
-#	When run for a single domain in a multi-domain forest
-#		Revise gathering list of domains
-#		Revise testing for $ComputerName 
-#		Revise variable $ADContext in Function ProcessAllDCsInTheForest
-#
-#Version 2.17 8-Dec-2017
-#	Updated Function WriteHTMLLine with fixes from the script template
-#
-#Version 2.18 10-Mar-2018
-#	Added Log switch to create a transcript log
-#
-#Version 2.19 5-Apr-2018
-#	Added Event Log information to each domain controller and an appendix
-#		If the script is run from an elevated PowerShell session by a user with Domain Admin rights
-#	Added Operating System information to Functions GetComputerWMIInfo and OutputComputerItem
-#	Code clean-up for most recommendations made by Visual Studio Code
-#
-#Version 2.20
-#	Added Domain Functional Level of 7 for Windows Server 2016
-#	Added Forest Functional Level of 7 for Windows Server 2016
-#	Added Domain Schema version 88 for Server 2019 Preview
-#	Added to Domain Information:
-#		Last logon replication interval
-#		Public key required password rolling (2012+)
-#	Changed "renamed" to "changed" as it was freaking people out thinking I was renaming their domain or computer
-#	Changed all but the Word and HTML arrays from "@() +=" to "New-Object System.Collections.ArrayList .Add()"
-#	Changed the code where I checked for Singletons and -is [array] to use @() around the cmdlets so the result
-#		is always an array. Thanks to fellow CTP Sam Jacobs for the tip. This reduced the code by almost 500 lines.
-#	Remove all the duplicate $VarName = $Null from Function ProcessDomains
-#	Reorder most of the domain properties to be in alphabetical order
-#	Reorder most of the forest properties to be in alphabetical order
+
 
 Set-StrictMode -Version 2
 
@@ -1517,7 +1529,7 @@ Function GetComputerWMIInfo
 	# http://blog.myvirtualvision.com
 	# modified 1-May-2014 to work in trusted AD Forests and using different domain admin credentials	
 	# modified 17-Aug-2016 to fix a few issues with Text and HTML output
-	# modified 2-Aug-2018 to add ComputerOS information
+	# modified 29-Apr-2018 to change from Arrays to New-Object System.Collections.ArrayList
 
 	#Get Computer info
 	Write-Verbose "$(Get-Date): `t`tProcessing WMI Computer information"
@@ -1947,18 +1959,17 @@ Function GetComputerWMIInfo
 Function OutputComputerItem
 {
 	Param([object]$Item, [string]$OS)
-	# modified 2-Aug-2018 to add Operating System information
 	
 	If($MSWord -or $PDF)
 	{
-		[System.Collections.Hashtable[]] $ItemInformation = @()
-		$ItemInformation += @{ Data = "Manufacturer"; Value = $Item.manufacturer; }
-		$ItemInformation += @{ Data = "Model"; Value = $Item.model; }
-		$ItemInformation += @{ Data = "Domain"; Value = $Item.domain; }
-		$ItemInformation += @{ Data = "Operating System"; Value = $OS; }
-		$ItemInformation += @{ Data = "Total Ram"; Value = "$($Item.totalphysicalram) GB"; }
-		$ItemInformation += @{ Data = "Physical Processors (sockets)"; Value = $Item.NumberOfProcessors; }
-		$ItemInformation += @{ Data = "Logical Processors (cores w/HT)"; Value = $Item.NumberOfLogicalProcessors; }
+		$ItemInformation = New-Object System.Collections.ArrayList
+		$ItemInformation.Add(@{ Data = "Manufacturer"; Value = $Item.manufacturer; }) > $Null
+		$ItemInformation.Add(@{ Data = "Model"; Value = $Item.model; }) > $Null
+		$ItemInformation.Add(@{ Data = "Domain"; Value = $Item.domain; }) > $Null
+		$ItemInformation.Add(@{ Data = "Operating System"; Value = $OS; }) > $Null
+		$ItemInformation.Add(@{ Data = "Total Ram"; Value = "$($Item.totalphysicalram) GB"; }) > $Null
+		$ItemInformation.Add(@{ Data = "Physical Processors (sockets)"; Value = $Item.NumberOfProcessors; }) > $Null
+		$ItemInformation.Add(@{ Data = "Logical Processors (cores w/HT)"; Value = $Item.NumberOfLogicalProcessors; }) > $Null
 		$Table = AddWordTable -Hashtable $ItemInformation `
 		-Columns Data,Value `
 		-List `
@@ -1990,14 +2001,14 @@ Function OutputComputerItem
 	}
 	ElseIf($HTML)
 	{
-		$rowdata = @()
+		$rowdata = New-Object System.Collections.ArrayList
 		$columnHeaders = @("Manufacturer",($htmlsilver -bor $htmlbold),$Item.manufacturer,$htmlwhite)
-		$rowdata += @(,('Model',($htmlsilver -bor $htmlbold),$Item.model,$htmlwhite))
-		$rowdata += @(,('Domain',($htmlsilver -bor $htmlbold),$Item.domain,$htmlwhite))
-		$rowdata += @(,('Operating System',($htmlsilver -bor $htmlbold),$OS,$htmlwhite))
-		$rowdata += @(,('Total Ram',($htmlsilver -bor $htmlbold),"$($Item.totalphysicalram) GB",$htmlwhite))
-		$rowdata += @(,('Physical Processors (sockets)',($htmlsilver -bor $htmlbold),$Item.NumberOfProcessors,$htmlwhite))
-		$rowdata += @(,('Logical Processors (cores w/HT)',($htmlsilver -bor $htmlbold),$Item.NumberOfLogicalProcessors,$htmlwhite))
+		$rowdata.Add(@(,('Model',($htmlsilver -bor $htmlbold),$Item.model,$htmlwhite))) > $Null
+		$rowdata.Add(@(,('Domain',($htmlsilver -bor $htmlbold),$Item.domain,$htmlwhite))) > $Null
+		$rowdata.Add(@(,('Operating System',($htmlsilver -bor $htmlbold),$OS,$htmlwhite))) > $Null
+		$rowdata.Add(@(,('Total Ram',($htmlsilver -bor $htmlbold),"$($Item.totalphysicalram) GB",$htmlwhite))) > $Null
+		$rowdata.Add(@(,('Physical Processors (sockets)',($htmlsilver -bor $htmlbold),$Item.NumberOfProcessors,$htmlwhite))) > $Null
+		$rowdata.Add(@(,('Logical Processors (cores w/HT)',($htmlsilver -bor $htmlbold),$Item.NumberOfLogicalProcessors,$htmlwhite))) > $Null
 
 		$msg = ""
 		$columnWidths = @("150px","200px")
@@ -2038,27 +2049,27 @@ Function OutputDriveItem
 
 	If($MSWORD -or $PDF)
 	{
-		[System.Collections.Hashtable[]] $DriveInformation = @()
-		$DriveInformation += @{ Data = "Caption"; Value = $Drive.caption; }
-		$DriveInformation += @{ Data = "Size"; Value = "$($drive.drivesize) GB"; }
+		$DriveInformation = New-Object System.Collections.ArrayList
+		$DriveInformation.Add(@{ Data = "Caption"; Value = $Drive.caption; }) > $Null
+		$DriveInformation.Add(@{ Data = "Size"; Value = "$($drive.drivesize) GB"; }) > $Null
 		If(![String]::IsNullOrEmpty($drive.filesystem))
 		{
-			$DriveInformation += @{ Data = "File System"; Value = $Drive.filesystem; }
+			$DriveInformation.Add(@{ Data = "File System"; Value = $Drive.filesystem; }) > $Null
 		}
-		$DriveInformation += @{ Data = "Free Space"; Value = "$($drive.drivefreespace) GB"; }
+		$DriveInformation.Add(@{ Data = "Free Space"; Value = "$($drive.drivefreespace) GB"; }) > $Null
 		If(![String]::IsNullOrEmpty($drive.volumename))
 		{
-			$DriveInformation += @{ Data = "Volume Name"; Value = $Drive.volumename; }
+			$DriveInformation.Add(@{ Data = "Volume Name"; Value = $Drive.volumename; }) > $Null
 		}
 		If(![String]::IsNullOrEmpty($drive.volumedirty))
 		{
-			$DriveInformation += @{ Data = "Volume is Dirty"; Value = $xVolumeDirty; }
+			$DriveInformation.Add(@{ Data = "Volume is Dirty"; Value = $xVolumeDirty; }) > $Null
 		}
 		If(![String]::IsNullOrEmpty($drive.volumeserialnumber))
 		{
-			$DriveInformation += @{ Data = "Volume Serial Number"; Value = $Drive.volumeserialnumber; }
+			$DriveInformation.Add(@{ Data = "Volume Serial Number"; Value = $Drive.volumeserialnumber; }) > $Null
 		}
-		$DriveInformation += @{ Data = "Drive Type"; Value = $xDriveType; }
+		$DriveInformation.Add(@{ Data = "Drive Type"; Value = $xDriveType; }) > $Null
 		$Table = AddWordTable -Hashtable $DriveInformation `
 		-Columns Data,Value `
 		-List `
@@ -2105,33 +2116,33 @@ Function OutputDriveItem
 	}
 	ElseIf($HTML)
 	{
-		$rowdata = @()
+		$rowdata = New-Object System.Collections.ArrayList
 		$columnHeaders = @("Caption",($htmlsilver -bor $htmlbold),$Drive.caption,$htmlwhite)
-		$rowdata += @(,('Size',($htmlsilver -bor $htmlbold),"$($drive.drivesize) GB",$htmlwhite))
+		$rowdata.Add(@(,('Size',($htmlsilver -bor $htmlbold),"$($drive.drivesize) GB",$htmlwhite))) > $Null
 
 		If(![String]::IsNullOrEmpty($drive.filesystem))
 		{
-			$rowdata += @(,('File System',($htmlsilver -bor $htmlbold),$Drive.filesystem,$htmlwhite))
+			$rowdata.Add(@(,('File System',($htmlsilver -bor $htmlbold),$Drive.filesystem,$htmlwhite))) > $Null
 		}
-		$rowdata += @(,('Free Space',($htmlsilver -bor $htmlbold),"$($drive.drivefreespace) GB",$htmlwhite))
+		$rowdata.Add(@(,('Free Space',($htmlsilver -bor $htmlbold),"$($drive.drivefreespace) GB",$htmlwhite))) > $Null
 		If(![String]::IsNullOrEmpty($drive.volumename))
 		{
-			$rowdata += @(,('Volume Name',($htmlsilver -bor $htmlbold),$Drive.volumename,$htmlwhite))
+			$rowdata.Add(@(,('Volume Name',($htmlsilver -bor $htmlbold),$Drive.volumename,$htmlwhite))) > $Null
 		}
 		If(![String]::IsNullOrEmpty($drive.volumedirty))
 		{
-			$rowdata += @(,('Volume is Dirty',($htmlsilver -bor $htmlbold),$xVolumeDirty,$htmlwhite))
+			$rowdata.Add(@(,('Volume is Dirty',($htmlsilver -bor $htmlbold),$xVolumeDirty,$htmlwhite))) > $Null
 		}
 		If(![String]::IsNullOrEmpty($drive.volumeserialnumber))
 		{
-			$rowdata += @(,('Volume Serial Number',($htmlsilver -bor $htmlbold),$Drive.volumeserialnumber,$htmlwhite))
+			$rowdata.Add(@(,('Volume Serial Number',($htmlsilver -bor $htmlbold),$Drive.volumeserialnumber,$htmlwhite))) > $Null
 		}
-		$rowdata += @(,('Drive Type',($htmlsilver -bor $htmlbold),$xDriveType,$htmlwhite))
+		$rowdata.Add(@(,('Drive Type',($htmlsilver -bor $htmlbold),$xDriveType,$htmlwhite))) > $Null
 
 		$msg = ""
 		$columnWidths = @("150px","200px")
-		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths -tablewidth "350"
-		WriteHTMLLine 0 0 " "
+		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths
+		WriteHTMLLine 0 0 ""
 	}
 }
 
@@ -2164,27 +2175,27 @@ Function OutputProcessorItem
 
 	If($MSWORD -or $PDF)
 	{
-		[System.Collections.Hashtable[]] $ProcessorInformation = @()
-		$ProcessorInformation += @{ Data = "Name"; Value = $Processor.name; }
-		$ProcessorInformation += @{ Data = "Description"; Value = $Processor.description; }
-		$ProcessorInformation += @{ Data = "Max Clock Speed"; Value = "$($processor.maxclockspeed) MHz"; }
+		$ProcessorInformation = New-Object System.Collections.ArrayList
+		$ProcessorInformation.Add(@{ Data = "Name"; Value = $Processor.name; }) > $Null
+		$ProcessorInformation.Add(@{ Data = "Description"; Value = $Processor.description; }) > $Null
+		$ProcessorInformation.Add(@{ Data = "Max Clock Speed"; Value = "$($processor.maxclockspeed) MHz"; }) > $Null
 		If($processor.l2cachesize -gt 0)
 		{
-			$ProcessorInformation += @{ Data = "L2 Cache Size"; Value = "$($processor.l2cachesize) KB"; }
+			$ProcessorInformation.Add(@{ Data = "L2 Cache Size"; Value = "$($processor.l2cachesize) KB"; }) > $Null
 		}
 		If($processor.l3cachesize -gt 0)
 		{
-			$ProcessorInformation += @{ Data = "L3 Cache Size"; Value = "$($processor.l3cachesize) KB"; }
+			$ProcessorInformation.Add(@{ Data = "L3 Cache Size"; Value = "$($processor.l3cachesize) KB"; }) > $Null
 		}
 		If($processor.numberofcores -gt 0)
 		{
-			$ProcessorInformation += @{ Data = "Number of Cores"; Value = $Processor.numberofcores; }
+			$ProcessorInformation.Add(@{ Data = "Number of Cores"; Value = $Processor.numberofcores; }) > $Null
 		}
 		If($processor.numberoflogicalprocessors -gt 0)
 		{
-			$ProcessorInformation += @{ Data = "Number of Logical Processors (cores w/HT)"; Value = $Processor.numberoflogicalprocessors; }
+			$ProcessorInformation.Add(@{ Data = "Number of Logical Processors (cores w/HT)"; Value = $Processor.numberoflogicalprocessors; }) > $Null
 		}
-		$ProcessorInformation += @{ Data = "Availability"; Value = $xAvailability; }
+		$ProcessorInformation.Add(@{ Data = "Availability"; Value = $xAvailability; }) > $Null
 		$Table = AddWordTable -Hashtable $ProcessorInformation `
 		-Columns Data,Value `
 		-List `
@@ -2229,33 +2240,33 @@ Function OutputProcessorItem
 	}
 	ElseIf($HTML)
 	{
-		$rowdata = @()
+		$rowdata = New-Object System.Collections.ArrayList
 		$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$Processor.name,$htmlwhite)
-		$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$Processor.description,$htmlwhite))
+		$rowdata.Add(@(,('Description',($htmlsilver -bor $htmlbold),$Processor.description,$htmlwhite))) > $Null
 
-		$rowdata += @(,('Max Clock Speed',($htmlsilver -bor $htmlbold),"$($processor.maxclockspeed) MHz",$htmlwhite))
+		$rowdata.Add(@(,('Max Clock Speed',($htmlsilver -bor $htmlbold),"$($processor.maxclockspeed) MHz",$htmlwhite))) > $Null
 		If($processor.l2cachesize -gt 0)
 		{
-			$rowdata += @(,('L2 Cache Size',($htmlsilver -bor $htmlbold),"$($processor.l2cachesize) KB",$htmlwhite))
+			$rowdata.Add(@(,('L2 Cache Size',($htmlsilver -bor $htmlbold),"$($processor.l2cachesize) KB",$htmlwhite))) > $Null
 		}
 		If($processor.l3cachesize -gt 0)
 		{
-			$rowdata += @(,('L3 Cache Size',($htmlsilver -bor $htmlbold),"$($processor.l3cachesize) KB",$htmlwhite))
+			$rowdata.Add(@(,('L3 Cache Size',($htmlsilver -bor $htmlbold),"$($processor.l3cachesize) KB",$htmlwhite))) > $Null
 		}
 		If($processor.numberofcores -gt 0)
 		{
-			$rowdata += @(,('Number of Cores',($htmlsilver -bor $htmlbold),$Processor.numberofcores,$htmlwhite))
+			$rowdata.Add(@(,('Number of Cores',($htmlsilver -bor $htmlbold),$Processor.numberofcores,$htmlwhite))) > $Null
 		}
 		If($processor.numberoflogicalprocessors -gt 0)
 		{
-			$rowdata += @(,('Number of Logical Processors (cores w/HT)',($htmlsilver -bor $htmlbold),$Processor.numberoflogicalprocessors,$htmlwhite))
+			$rowdata.Add(@(,('Number of Logical Processors (cores w/HT)',($htmlsilver -bor $htmlbold),$Processor.numberoflogicalprocessors,$htmlwhite))) > $Null
 		}
-		$rowdata += @(,('Availability',($htmlsilver -bor $htmlbold),$xAvailability,$htmlwhite))
+		$rowdata.Add(@(,('Availability',($htmlsilver -bor $htmlbold),$xAvailability,$htmlwhite))) > $Null
 
 		$msg = ""
 		$columnWidths = @("150px","200px")
-		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths -tablewidth "350"
-		WriteHTMLLine 0 0 " "
+		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths
+		WriteHTMLLine 0 0 ""
 	}
 }
 
@@ -2304,35 +2315,35 @@ Function OutputNicItem
 		Default	{$xAvailability = "Unknown"; Break}
 	}
 
-	$xIPAddress = @()
+	$xIPAddress = New-Object System.Collections.ArrayList
 	ForEach($IPAddress in $Nic.ipaddress)
 	{
-		$xIPAddress += "$($IPAddress)"
+		$xIPAddress.Add("$($IPAddress)") > $Null
 	}
 
-	$xIPSubnet = @()
+	$xIPSubnet = New-Object System.Collections.ArrayList
 	ForEach($IPSubnet in $Nic.ipsubnet)
 	{
-		$xIPSubnet += "$($IPSubnet)"
+		$xIPSubnet.Add("$($IPSubnet)") > $Null
 	}
 
 	If($Null -ne $nic.dnsdomainsuffixsearchorder -and $nic.dnsdomainsuffixsearchorder.length -gt 0)
 	{
 		$nicdnsdomainsuffixsearchorder = $nic.dnsdomainsuffixsearchorder
-		$xnicdnsdomainsuffixsearchorder = @()
+		$xnicdnsdomainsuffixsearchorder = New-Object System.Collections.ArrayList
 		ForEach($DNSDomain in $nicdnsdomainsuffixsearchorder)
 		{
-			$xnicdnsdomainsuffixsearchorder += "$($DNSDomain)"
+			$xnicdnsdomainsuffixsearchorder.Add("$($DNSDomain)") > $Null
 		}
 	}
 	
 	If($Null -ne $nic.dnsserversearchorder -and $nic.dnsserversearchorder.length -gt 0)
 	{
 		$nicdnsserversearchorder = $nic.dnsserversearchorder
-		$xnicdnsserversearchorder = @()
+		$xnicdnsserversearchorder = New-Object System.Collections.ArrayList
 		ForEach($DNSServer in $nicdnsserversearchorder)
 		{
-			$xnicdnsserversearchorder += "$($DNSServer)"
+			$xnicdnsserversearchorder.Add("$($DNSServer)") > $Null
 		}
 	}
 
@@ -2367,99 +2378,99 @@ Function OutputNicItem
 
 	If($MSWORD -or $PDF)
 	{
-		[System.Collections.Hashtable[]] $NicInformation = @()
-		$NicInformation += @{ Data = "Name"; Value = $ThisNic.Name; }
+		$NicInformation = New-Object System.Collections.ArrayList
+		$NicInformation.Add(@{ Data = "Name"; Value = $ThisNic.Name; }) > $Null
 		If($ThisNic.Name -ne $nic.description)
 		{
-			$NicInformation += @{ Data = "Description"; Value = $Nic.description; }
+			$NicInformation.Add(@{ Data = "Description"; Value = $Nic.description; }) > $Null
 		}
-		$NicInformation += @{ Data = "Connection ID"; Value = $ThisNic.NetConnectionID; }
+		$NicInformation.Add(@{ Data = "Connection ID"; Value = $ThisNic.NetConnectionID; }) > $Null
 		If(validObject $Nic Manufacturer)
 		{
-			$NicInformation += @{ Data = "Manufacturer"; Value = $Nic.manufacturer; }
+			$NicInformation.Add(@{ Data = "Manufacturer"; Value = $Nic.manufacturer; }) > $Null
 		}
-		$NicInformation += @{ Data = "Availability"; Value = $xAvailability; }
-		$NicInformation += @{ Data = "Allow the computer to turn off this device to save power"; Value = $PowerSaving; }
-		$NicInformation += @{ Data = "Physical Address"; Value = $Nic.macaddress; }
+		$NicInformation.Add(@{ Data = "Availability"; Value = $xAvailability; }) > $Null
+		$NicInformation.Add(@{ Data = "Allow the computer to turn off this device to save power"; Value = $PowerSaving; }) > $Null
+		$NicInformation.Add(@{ Data = "Physical Address"; Value = $Nic.macaddress; }) > $Null
 		If($xIPAddress.Count -gt 1)
 		{
-			$NicInformation += @{ Data = "IP Address"; Value = $xIPAddress[0]; }
-			$NicInformation += @{ Data = "Default Gateway"; Value = $Nic.Defaultipgateway; }
-			$NicInformation += @{ Data = "Subnet Mask"; Value = $xIPSubnet[0]; }
+			$NicInformation.Add(@{ Data = "IP Address"; Value = $xIPAddress[0]; }) > $Null
+			$NicInformation.Add(@{ Data = "Default Gateway"; Value = $Nic.Defaultipgateway; }) > $Null
+			$NicInformation.Add(@{ Data = "Subnet Mask"; Value = $xIPSubnet[0]; }) > $Null
 			$cnt = -1
 			ForEach($tmp in $xIPAddress)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$NicInformation += @{ Data = "IP Address"; Value = $tmp; }
-					$NicInformation += @{ Data = "Subnet Mask"; Value = $xIPSubnet[$cnt]; }
+					$NicInformation.Add(@{ Data = "IP Address"; Value = $tmp; }) > $Null
+					$NicInformation.Add(@{ Data = "Subnet Mask"; Value = $xIPSubnet[$cnt]; }) > $Null
 				}
 			}
 		}
 		Else
 		{
-			$NicInformation += @{ Data = "IP Address"; Value = $xIPAddress; }
-			$NicInformation += @{ Data = "Default Gateway"; Value = $Nic.Defaultipgateway; }
-			$NicInformation += @{ Data = "Subnet Mask"; Value = $xIPSubnet; }
+			$NicInformation.Add(@{ Data = "IP Address"; Value = $xIPAddress; }) > $Null
+			$NicInformation.Add(@{ Data = "Default Gateway"; Value = $Nic.Defaultipgateway; }) > $Null
+			$NicInformation.Add(@{ Data = "Subnet Mask"; Value = $xIPSubnet; }) > $Null
 		}
 		If($nic.dhcpenabled)
 		{
 			$DHCPLeaseObtainedDate = $nic.ConvertToDateTime($nic.dhcpleaseobtained)
 			$DHCPLeaseExpiresDate = $nic.ConvertToDateTime($nic.dhcpleaseexpires)
-			$NicInformation += @{ Data = "DHCP Enabled"; Value = $Nic.dhcpenabled; }
-			$NicInformation += @{ Data = "DHCP Lease Obtained"; Value = $dhcpleaseobtaineddate; }
-			$NicInformation += @{ Data = "DHCP Lease Expires"; Value = $dhcpleaseexpiresdate; }
-			$NicInformation += @{ Data = "DHCP Server"; Value = $Nic.dhcpserver; }
+			$NicInformation.Add(@{ Data = "DHCP Enabled"; Value = $Nic.dhcpenabled; }) > $Null
+			$NicInformation.Add(@{ Data = "DHCP Lease Obtained"; Value = $dhcpleaseobtaineddate; }) > $Null
+			$NicInformation.Add(@{ Data = "DHCP Lease Expires"; Value = $dhcpleaseexpiresdate; }) > $Null
+			$NicInformation.Add(@{ Data = "DHCP Server"; Value = $Nic.dhcpserver; }) > $Null
 		}
 		If(![String]::IsNullOrEmpty($nic.dnsdomain))
 		{
-			$NicInformation += @{ Data = "DNS Domain"; Value = $Nic.dnsdomain; }
+			$NicInformation.Add(@{ Data = "DNS Domain"; Value = $Nic.dnsdomain; }) > $Null
 		}
 		If($Null -ne $nic.dnsdomainsuffixsearchorder -and $nic.dnsdomainsuffixsearchorder.length -gt 0)
 		{
-			$NicInformation += @{ Data = "DNS Search Suffixes"; Value = $xnicdnsdomainsuffixsearchorder[0]; }
+			$NicInformation.Add(@{ Data = "DNS Search Suffixes"; Value = $xnicdnsdomainsuffixsearchorder[0]; }) > $Null
 			$cnt = -1
 			ForEach($tmp in $xnicdnsdomainsuffixsearchorder)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$NicInformation += @{ Data = ""; Value = $tmp; }
+					$NicInformation.Add(@{ Data = ""; Value = $tmp; }) > $Null
 				}
 			}
 		}
-		$NicInformation += @{ Data = "DNS WINS Enabled"; Value = $xdnsenabledforwinsresolution; }
+		$NicInformation.Add(@{ Data = "DNS WINS Enabled"; Value = $xdnsenabledforwinsresolution; }) > $Null
 		If($Null -ne $nic.dnsserversearchorder -and $nic.dnsserversearchorder.length -gt 0)
 		{
-			$NicInformation += @{ Data = "DNS Servers"; Value = $xnicdnsserversearchorder[0]; }
+			$NicInformation.Add(@{ Data = "DNS Servers"; Value = $xnicdnsserversearchorder[0]; }) > $Null
 			$cnt = -1
 			ForEach($tmp in $xnicdnsserversearchorder)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$NicInformation += @{ Data = ""; Value = $tmp; }
+					$NicInformation.Add(@{ Data = ""; Value = $tmp; }) > $Null
 				}
 			}
 		}
-		$NicInformation += @{ Data = "NetBIOS Setting"; Value = $xTcpipNetbiosOptions; }
-		$NicInformation += @{ Data = "WINS: Enabled LMHosts"; Value = $xwinsenablelmhostslookup; }
+		$NicInformation.Add(@{ Data = "NetBIOS Setting"; Value = $xTcpipNetbiosOptions; }) > $Null
+		$NicInformation.Add(@{ Data = "WINS: Enabled LMHosts"; Value = $xwinsenablelmhostslookup; }) > $Null
 		If(![String]::IsNullOrEmpty($nic.winshostlookupfile))
 		{
-			$NicInformation += @{ Data = "Host Lookup File"; Value = $Nic.winshostlookupfile; }
+			$NicInformation.Add(@{ Data = "Host Lookup File"; Value = $Nic.winshostlookupfile; }) > $Null
 		}
 		If(![String]::IsNullOrEmpty($nic.winsprimaryserver))
 		{
-			$NicInformation += @{ Data = "Primary Server"; Value = $Nic.winsprimaryserver; }
+			$NicInformation.Add(@{ Data = "Primary Server"; Value = $Nic.winsprimaryserver; }) > $Null
 		}
 		If(![String]::IsNullOrEmpty($nic.winssecondaryserver))
 		{
-			$NicInformation += @{ Data = "Secondary Server"; Value = $Nic.winssecondaryserver; }
+			$NicInformation.Add(@{ Data = "Secondary Server"; Value = $Nic.winssecondaryserver; }) > $Null
 		}
 		If(![String]::IsNullOrEmpty($nic.winsscopeid))
 		{
-			$NicInformation += @{ Data = "Scope ID"; Value = $Nic.winsscopeid; }
+			$NicInformation.Add(@{ Data = "Scope ID"; Value = $Nic.winsscopeid; }) > $Null
 		}
 		$Table = AddWordTable -Hashtable $NicInformation -Columns Data,Value -List -AutoFit $wdAutoFitFixed;
 
@@ -2474,6 +2485,7 @@ Function OutputNicItem
 
 		FindWordDocumentEnd
 		$Table = $Null
+		WriteWordLine 0 0 ""
 	}
 	ElseIf($Text)
 	{
@@ -2573,107 +2585,108 @@ Function OutputNicItem
 		{
 			Line 3 "Scope ID`t`t: " $nic.winsscopeid
 		}
+		Line 0 ""
 	}
 	ElseIf($HTML)
 	{
-		$rowdata = @()
+		$rowdata = New-Object System.Collections.ArrayList
 		$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$ThisNic.Name,$htmlwhite)
 		If($ThisNic.Name -ne $nic.description)
 		{
-			$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$Nic.description,$htmlwhite))
+			$rowdata.Add(@(,('Description',($htmlsilver -bor $htmlbold),$Nic.description,$htmlwhite))) > $Null
 		}
-		$rowdata += @(,('Connection ID',($htmlsilver -bor $htmlbold),$ThisNic.NetConnectionID,$htmlwhite))
+		$rowdata.Add(@(,('Connection ID',($htmlsilver -bor $htmlbold),$ThisNic.NetConnectionID,$htmlwhite))) > $Null
 		If(validObject $Nic Manufacturer)
 		{
-			$rowdata += @(,('Manufacturer',($htmlsilver -bor $htmlbold),$Nic.manufacturer,$htmlwhite))
+			$rowdata.Add(@(,('Manufacturer',($htmlsilver -bor $htmlbold),$Nic.manufacturer,$htmlwhite))) > $Null
 		}
-		$rowdata += @(,('Availability',($htmlsilver -bor $htmlbold),$xAvailability,$htmlwhite))
-		$rowdata += @(,('Allow the computer to turn off this device to save power',($htmlsilver -bor $htmlbold),$PowerSaving,$htmlwhite))
-		$rowdata += @(,('Physical Address',($htmlsilver -bor $htmlbold),$Nic.macaddress,$htmlwhite))
-		$rowdata += @(,('IP Address',($htmlsilver -bor $htmlbold),$xIPAddress[0],$htmlwhite))
+		$rowdata.Add(@(,('Availability',($htmlsilver -bor $htmlbold),$xAvailability,$htmlwhite))) > $Null
+		$rowdata.Add(@(,('Allow the computer to turn off this device to save power',($htmlsilver -bor $htmlbold),$PowerSaving,$htmlwhite))) > $Null
+		$rowdata.Add(@(,('Physical Address',($htmlsilver -bor $htmlbold),$Nic.macaddress,$htmlwhite))) > $Null
+		$rowdata.Add(@(,('IP Address',($htmlsilver -bor $htmlbold),$xIPAddress[0],$htmlwhite))) > $Null
 		$cnt = -1
 		ForEach($tmp in $xIPAddress)
 		{
 			$cnt++
 			If($cnt -gt 0)
 			{
-				$rowdata += @(,('IP Address',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+				$rowdata.Add(@(,('IP Address',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))) > $Null
 			}
 		}
-		$rowdata += @(,('Default Gateway',($htmlsilver -bor $htmlbold),$Nic.Defaultipgateway[0],$htmlwhite))
-		$rowdata += @(,('Subnet Mask',($htmlsilver -bor $htmlbold),$xIPSubnet[0],$htmlwhite))
+		$rowdata.Add(@(,('Default Gateway',($htmlsilver -bor $htmlbold),$Nic.Defaultipgateway[0],$htmlwhite))) > $Null
+		$rowdata.Add(@(,('Subnet Mask',($htmlsilver -bor $htmlbold),$xIPSubnet[0],$htmlwhite))) > $Null
 		$cnt = -1
 		ForEach($tmp in $xIPSubnet)
 		{
 			$cnt++
 			If($cnt -gt 0)
 			{
-				$rowdata += @(,('Subnet Mask',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+				$rowdata.Add(@(,('Subnet Mask',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))) > $Null
 			}
 		}
 		If($nic.dhcpenabled)
 		{
 			$DHCPLeaseObtainedDate = $nic.ConvertToDateTime($nic.dhcpleaseobtained)
 			$DHCPLeaseExpiresDate = $nic.ConvertToDateTime($nic.dhcpleaseexpires)
-			$rowdata += @(,('DHCP Enabled',($htmlsilver -bor $htmlbold),$Nic.dhcpenabled,$htmlwhite))
-			$rowdata += @(,('DHCP Lease Obtained',($htmlsilver -bor $htmlbold),$dhcpleaseobtaineddate,$htmlwhite))
-			$rowdata += @(,('DHCP Lease Expires',($htmlsilver -bor $htmlbold),$dhcpleaseexpiresdate,$htmlwhite))
-			$rowdata += @(,('DHCP Server',($htmlsilver -bor $htmlbold),$Nic.dhcpserver,$htmlwhite))
+			$rowdata.Add(@(,('DHCP Enabled',($htmlsilver -bor $htmlbold),$Nic.dhcpenabled,$htmlwhite))) > $Null
+			$rowdata.Add(@(,('DHCP Lease Obtained',($htmlsilver -bor $htmlbold),$dhcpleaseobtaineddate,$htmlwhite))) > $Null
+			$rowdata.Add(@(,('DHCP Lease Expires',($htmlsilver -bor $htmlbold),$dhcpleaseexpiresdate,$htmlwhite))) > $Null
+			$rowdata.Add(@(,('DHCP Server',($htmlsilver -bor $htmlbold),$Nic.dhcpserver,$htmlwhite))) > $Null
 		}
 		If(![String]::IsNullOrEmpty($nic.dnsdomain))
 		{
-			$rowdata += @(,('DNS Domain',($htmlsilver -bor $htmlbold),$Nic.dnsdomain,$htmlwhite))
+			$rowdata.Add(@(,('DNS Domain',($htmlsilver -bor $htmlbold),$Nic.dnsdomain,$htmlwhite))) > $Null
 		}
 		If($Null -ne $nic.dnsdomainsuffixsearchorder -and $nic.dnsdomainsuffixsearchorder.length -gt 0)
 		{
-			$rowdata += @(,('DNS Search Suffixes',($htmlsilver -bor $htmlbold),$xnicdnsdomainsuffixsearchorder[0],$htmlwhite))
+			$rowdata.Add(@(,('DNS Search Suffixes',($htmlsilver -bor $htmlbold),$xnicdnsdomainsuffixsearchorder[0],$htmlwhite))) > $Null
 			$cnt = -1
 			ForEach($tmp in $xnicdnsdomainsuffixsearchorder)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+					$rowdata.Add(@(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))) > $Null
 				}
 			}
 		}
-		$rowdata += @(,('DNS WINS Enabled',($htmlsilver -bor $htmlbold),$xdnsenabledforwinsresolution,$htmlwhite))
+		$rowdata.Add(@(,('DNS WINS Enabled',($htmlsilver -bor $htmlbold),$xdnsenabledforwinsresolution,$htmlwhite))) > $Null
 		If($Null -ne $nic.dnsserversearchorder -and $nic.dnsserversearchorder.length -gt 0)
 		{
-			$rowdata += @(,('DNS Servers',($htmlsilver -bor $htmlbold),$xnicdnsserversearchorder[0],$htmlwhite))
+			$rowdata.Add(@(,('DNS Servers',($htmlsilver -bor $htmlbold),$xnicdnsserversearchorder[0],$htmlwhite))) > $Null
 			$cnt = -1
 			ForEach($tmp in $xnicdnsserversearchorder)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+					$rowdata.Add(@(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))) > $Null
 				}
 			}
 		}
-		$rowdata += @(,('NetBIOS Setting',($htmlsilver -bor $htmlbold),$xTcpipNetbiosOptions,$htmlwhite))
-		$rowdata += @(,('WINS: Enabled LMHosts',($htmlsilver -bor $htmlbold),$xwinsenablelmhostslookup,$htmlwhite))
+		$rowdata.Add(@(,('NetBIOS Setting',($htmlsilver -bor $htmlbold),$xTcpipNetbiosOptions,$htmlwhite))) > $Null
+		$rowdata.Add(@(,('WINS: Enabled LMHosts',($htmlsilver -bor $htmlbold),$xwinsenablelmhostslookup,$htmlwhite))) > $Null
 		If(![String]::IsNullOrEmpty($nic.winshostlookupfile))
 		{
-			$rowdata += @(,('Host Lookup File',($htmlsilver -bor $htmlbold),$Nic.winshostlookupfile,$htmlwhite))
+			$rowdata.Add(@(,('Host Lookup File',($htmlsilver -bor $htmlbold),$Nic.winshostlookupfile,$htmlwhite))) > $Null
 		}
 		If(![String]::IsNullOrEmpty($nic.winsprimaryserver))
 		{
-			$rowdata += @(,('Primary Server',($htmlsilver -bor $htmlbold),$Nic.winsprimaryserver,$htmlwhite))
+			$rowdata.Add(@(,('Primary Server',($htmlsilver -bor $htmlbold),$Nic.winsprimaryserver,$htmlwhite))) > $Null
 		}
 		If(![String]::IsNullOrEmpty($nic.winssecondaryserver))
 		{
-			$rowdata += @(,('Secondary Server',($htmlsilver -bor $htmlbold),$Nic.winssecondaryserver,$htmlwhite))
+			$rowdata.Add(@(,('Secondary Server',($htmlsilver -bor $htmlbold),$Nic.winssecondaryserver,$htmlwhite))) > $Null
 		}
 		If(![String]::IsNullOrEmpty($nic.winsscopeid))
 		{
-			$rowdata += @(,('Scope ID',($htmlsilver -bor $htmlbold),$Nic.winsscopeid,$htmlwhite))
+			$rowdata.Add(@(,('Scope ID',($htmlsilver -bor $htmlbold),$Nic.winsscopeid,$htmlwhite))) > $Null
 		}
 
 		$msg = ""
 		$columnWidths = @("150px","200px")
-		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths -tablewidth "350"
-		WriteHTMLLine 0 0 " "
+		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths
+		WriteHTMLLine 0 0 ""
 	}
 }
 #endregion
@@ -2682,6 +2695,7 @@ Function OutputNicItem
 Function GetComputerServices 
 {
 	Param([string]$RemoteComputerName)
+	# modified 29-Apr-2018 to change from Arrays to New-Object System.Collections.ArrayList
 	
 	#Get Computer services info
 	Write-Verbose "$(Get-Date): `t`tProcessing Computer services information"
@@ -2723,9 +2737,9 @@ Function GetComputerServices
 		{
 			WriteWordLine 0 1 "Services ($NumServices Services found)"
 
-			[System.Collections.Hashtable[]] $ServicesWordTable = @();
+			$ServicesWordTable = New-Object System.Collections.ArrayList
 			## Create an array of hashtables to store references of cells that we wish to highlight after the table has been added
-			[System.Collections.Hashtable[]] $HighlightedCells = @();
+			$HighlightedCells = New-Object System.Collections.ArrayList
 			## Seed the $Services row index from the second row
 			[int] $CurrentServiceIndex = 2;
 		}
@@ -2751,7 +2765,7 @@ Function GetComputerServices
 		ElseIf($HTML)
 		{
 			WriteHTMLLine 0 1 "Services ($NumServices Services found)"
-			$rowdata = @()
+			$rowdata = New-Object System.Collections.ArrayList
 		}
 
 		ForEach($Service in $Services) 
@@ -2769,22 +2783,17 @@ Function GetComputerServices
 				}
 
 				## Add the hash to the array
-				$ServicesWordTable += $WordTableRowHash;
+				$ServicesWordTable.Add($WordTableRowHash) > $Null
 
 				## Store "to highlight" cell references
 				If($Service.State -like "Stopped" -and $Service.StartMode -like "Auto") 
 				{
-					$HighlightedCells += @{ Row = $CurrentServiceIndex; Column = 2; }
+					$HighlightedCells.Add(@{ Row = $CurrentServiceIndex; Column = 2; }) > $Null
 				}
 				$CurrentServiceIndex++;
 			}
 			ElseIf($Text)
 			{
-				#Line 0 "Display Name`t: " $Service.DisplayName
-				#Line 0 "Status`t`t: " $Service.State
-				#Line 0 "Start Mode`t: " $Service.StartMode
-				#Line 0 ""
-				
 				#V2.16 change
 				If(($Service.DisplayName).Length -lt ($MaxDisplayNameLength))
 				{
@@ -2809,9 +2818,9 @@ Function GetComputerServices
 				{
 					$HighlightedCells = $htmlwhite
 				} 
-				$rowdata += @(,($Service.DisplayName,$htmlwhite,
+				$rowdata.Add(@(,($Service.DisplayName,$htmlwhite,
 								$Service.State,$HighlightedCells,
-								$Service.StartMode,$htmlwhite))
+								$Service.StartMode,$htmlwhite))) > $Null
 			}
 		}
 
@@ -7261,17 +7270,33 @@ Function ProcessAllDCsInTheForest
 				{
 					$GC = $Results.IsGlobalCatalog.ToString()
 					$ReadOnly = $Results.IsReadOnly.ToString()
+					#ServerOS and ServerCore added in V2.20
+					$ServerOS = $Results.OperatingSystem
+					#https://blogs.msmvps.com/russel/2017/03/16/how-to-tell-if-youre-running-on-windows-server-core/
+					$tmp = Get-RegistryValue "HKLM:\software\microsoft\windows nt\currentversion" "installationtype" $DCName
+					If($tmp -eq "Server Core")
+					{
+						$ServerCore = "Yes"
+					}
+					Else
+					{
+						$ServerCore = "No"
+					}
 				}
 				Else
 				{
 					$GC = "Unable to retrieve status"
 					$ReadOnly = "Unable to retrieve status"
+					$ServerOS = "Unable to retrieve status"
+					$ServerCore = "Unable to retrieve status"
 				}
 				
 				$WordTableRowHash += @{ 
 				DCName = $DC; 
 				GC = $GC; 
-				ReadOnly = $ReadOnly
+				ReadOnly = $ReadOnly;
+				ServerOS = $ServerOS;
+				ServerCore = $ServerCore
 				}
 				
 				$Results = $Null
@@ -7286,14 +7311,14 @@ Function ProcessAllDCsInTheForest
 			{
 				#2 is to allow for spacing between columns
 				Line 1 ("Name" + (' ' * ($MaxDCNameLength - 2))) -NoNewLine
-				Line 0 "Global Catalog            Read-only                "
+				Line 0 "Global Catalog  Read-only  Server OS                       Server Core"
 				Line 1 ('=' * $MaxDCNameLength) -NoNewLine
-				Line 0 "====================================================="
+				Line 0 "==============================================================================================="
 			}
 			Else
 			{
-				Line 1 "Name  Global Catalog            Read-only                "
-				Line 1 "==========================================================="
+				Line 1 "Name  Global Catalog  Read-only  Server OS                       Server Core"
+				Line 1 "============================================================================"
 			}
 			
 			ForEach($DC in $AllDCs)
@@ -7309,11 +7334,25 @@ Function ProcessAllDCsInTheForest
 				{
 					$xGC = $Results.IsGlobalCatalog.ToString()
 					$xRO = $Results.IsReadOnly.ToString()
+					#ServerOS and ServerCore added in V2.20
+					$ServerOS = $Results.OperatingSystem
+					#https://blogs.msmvps.com/russel/2017/03/16/how-to-tell-if-youre-running-on-windows-server-core/
+					$tmp = Get-RegistryValue "HKLM:\software\microsoft\windows nt\currentversion" "installationtype" $DCName
+					If($tmp -eq "Server Core")
+					{
+						$ServerCore = "Yes"
+					}
+					Else
+					{
+						$ServerCore = "No"
+					}
 				}
 				Else
 				{
 					$xGC = "Unable to retrieve status"
 					$xRO = "Unable to retrieve status"
+					$ServerOS = "Unable to retrieve"
+					$ServerCore = "N/A"
 				}
 
 				If(($DC).Length -lt ($MaxDCNameLength))
@@ -7324,7 +7363,7 @@ Function ProcessAllDCsInTheForest
 				{
 					[int]$NumOfSpaces = -4
 				}
-				Line 1 ( "{0,$NumOfSpaces}  {1,-25} {2,-25}" -f $DC,$xGC,$xRO)
+				Line 1 ( "{0,$NumOfSpaces}  {1,-15} {2,-10} {3,-31} {4,-3}" -f $DC,$xGC,$xRO,$ServerOS,$ServerCore)
 
 				$Results = $Null
 			}
@@ -7346,16 +7385,33 @@ Function ProcessAllDCsInTheForest
 				{
 					$GC = $Results.IsGlobalCatalog.ToString()
 					$ReadOnly = $Results.IsReadOnly.ToString()
+					#ServerOS and ServerCore added in V2.20
+					$ServerOS = $Results.OperatingSystem
+					#https://blogs.msmvps.com/russel/2017/03/16/how-to-tell-if-youre-running-on-windows-server-core/
+					$tmp = Get-RegistryValue "HKLM:\software\microsoft\windows nt\currentversion" "installationtype" $DCName
+					If($tmp -eq "Server Core")
+					{
+						$ServerCore = "Yes"
+					}
+					Else
+					{
+						$ServerCore = "No"
+					}
 				}
 				Else
 				{
 					$GC = "Unable to retrieve status"
 					$ReadOnly = "Unable to retrieve status"
+					$ServerOS = "Unable to retrieve status"
+					$ServerCore = "Unable to retrieve status"
 				}
 				
 				$rowdata += @(,($DC,$htmlwhite,
 								$GC,$htmlwhite,
-								$ReadOnly,$htmlwhite))
+								$ReadOnly,$htmlwhite,
+								$ServerOS,$htmlwhite,
+								$ServerCore,$htmlwhite
+								))
 			}
 		}
 	}
@@ -7363,17 +7419,18 @@ Function ProcessAllDCsInTheForest
 	{
 		Write-Verbose "$(Get-Date): `t`tCreate Domain Controller in Forest Word table"
 		$Table = AddWordTable -Hashtable $WordTableRowHash `
-		-Columns DCName, GC, ReadOnly `
-		-Headers "Name", "Global Catalog", "Read-only" `
+		-Columns DCName, GC, ReadOnly, ServerOS, ServerCore `
+		-Headers "Name", "Global Catalog", "Read-only", "Server OS", "Server Core" `
 		-AutoFit $wdAutoFitFixed;
 
 		SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
-		$Table.Columns.Item(1).Width = 200;
-		$Table.Columns.Item(2).Width = 80;
-		$Table.Columns.Item(3).Width = 65;
+		$Table.Columns.Item(1).Width = 150;
+		$Table.Columns.Item(2).Width = 50;
+		$Table.Columns.Item(3).Width = 50;
+		$Table.Columns.Item(4).Width = 130;
+		$Table.Columns.Item(5).Width = 45;
 
-		#indent the entire table 1 tab stop
 		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustNone)
 
 		FindWordDocumentEnd
@@ -7388,7 +7445,9 @@ Function ProcessAllDCsInTheForest
 	{
 		$columnHeaders = @('Name',($htmlsilver -bor $htmlbold),
 							'Global Catalog',($htmlsilver -bor $htmlbold),
-							'Read-only',($htmlsilver -bor $htmlbold))
+							'Read-only',($htmlsilver -bor $htmlbold),
+							'Server OS',($htmlsilver -bor $htmlbold),
+							'Server Core',($htmlsilver -bor $htmlbold))
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 		WriteHTMLLine 0 0 " "
@@ -8014,9 +8073,9 @@ Function ProcessADSchemaItems
 		{
 			switch ($xcol.Index)
 			{
-			  1 {$xcol.width = 200; Break}
+			  1 {$xcol.width = 175; Break}
 			  2 {$xcol.width = 75; Break}
-			  3 {$xcol.width = 200; Break}
+			  3 {$xcol.width = 175; Break}
 			}
 		}
 		
@@ -8044,7 +8103,7 @@ Function ProcessADSchemaItems
 							'Used for',($htmlsilver -bor $htmlbold)
 							)
 		$msg = ""
-		$columnWidths = @("200","75","200")
+		$columnWidths = @("175","75","175")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "475"
 		WriteHTMLLine 0 0 " "
 	}
@@ -8929,8 +8988,8 @@ Function ProcessDomains
 
 	#http://technet.microsoft.com/en-us/library/bb125224(v=exchg.150).aspx
 	#http://support.microsoft.com/kb/556086/he
-	#http://blog.helocheck.com/exchange-schema-version/
 	#https://eightwone.com/references/ad-schema-versions/
+	#https://eightwone.com/references/schema-versions/
 	
 	$SchemaVersionTable = @{ 
 	"13" = "Windows 2000"; 
@@ -8961,13 +9020,13 @@ Function ProcessDomains
 	"15292" = "Exchange 2013 SP1/CU4";
 	"15300" = "Exchange 2013 CU5";
 	"15303" = "Exchange 2013 CU6";
-	"15312" = "Exchange 2013 CU7/CU8/CU9/CU10/CU11/CU12/CU13";
+	"15312" = "Exchange 2013 CU7 through CU 21"; #updated in 2.20
 	"15317" = "Exchange 2016";
 	"15323" = "Exchange 2016 CU1";
 	"15325" = "Exchange 2016 CU2";
 	"15326" = "Exchange 2016 CU3/CU4/CU5"; #added in 2.16
 	"15330" = "Exchange 2016 CU6"; #added in 2.16
-	"15332" = "Exchange 2016 CU7" #added in 2.16
+	"15332" = "Exchange 2016 CU7 through CU10" #added in 2.16 and updated in 2.20
 	}
 
 	ForEach($Domain in $Script:Domains)

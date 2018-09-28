@@ -1,14 +1,23 @@
-#Version 2.20
+#Version 2.20 28-Sep-2018
 #	Added Domain Functional Level of 7 for Windows Server 2016
 #	Added Forest Functional Level of 7 for Windows Server 2016
 #	Added Domain Schema version 88 for Server 2019 Preview
 #	Added to Domain Information:
 #		Last logon replication interval
 #		Public key required password rolling (2012+)
+#	Added to Forest Information, Domain Controllers:
+#		Operation System
+#		Server Core (Y/N)
 #	Changed "renamed" to "changed" as it was freaking people out thinking I was renaming their domain or computer
 #	Changed all but the Word and HTML arrays from "@() +=" to "New-Object System.Collections.ArrayList .Add()"
 #	Changed the code where I checked for Singletons and -is [array] to use @() around the cmdlets so the result
 #		is always an array. Thanks to fellow CTP Sam Jacobs for the tip. This reduced the code by almost 500 lines.
+#	Changed the functions getting the computer WMI hardware and service info to use 
+#		"New-Object System.Collections.ArrayList .Add()" for Word and HTML tables
+#	Changed the width of the Domain Controllers table to accommodate the new columns
+#	Change the width of the AD Schema Items table to match the other tables
 #	Remove all the duplicate $VarName = $Null from Function ProcessDomains
+#	Reorder Change Log so the most recent is on top and the oldest is at the bottom
 #	Reorder most of the domain properties to be in alphabetical order
 #	Reorder most of the forest properties to be in alphabetical order
+#	Updated Exchange schema version information
