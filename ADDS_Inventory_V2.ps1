@@ -802,9 +802,9 @@
 	No objects are output from this script.  This script creates a Word or PDF document.
 .NOTES
 	NAME: ADDS_Inventory_V2.ps1
-	VERSION: 2.20
+	VERSION: 2.21
 	AUTHOR: Carl Webster, Sr. Solutions Architect, Choice Solutions, LLC and Michael B. Smith
-	LASTEDIT: September 28, 2018
+	LASTEDIT: November 11, 2018
 #>
 
 
@@ -953,6 +953,10 @@ Param(
 #Version 1.0 released to the community on May 31, 2014
 #
 #Version 2.0 is based on version 1.20
+#
+#Version 2.21 11-Nov-2018
+#	For HTML output, reverted the output Hardware and Service functions back to using $rowdata = @()
+#		Using $rowdata = New-Object System.Collections.ArrayList did not always work, which is weird
 #
 #Version 2.20 28-Sep-2018
 #	Added Domain Functional Level of 7 for Windows Server 2016
@@ -2001,19 +2005,18 @@ Function OutputComputerItem
 	}
 	ElseIf($HTML)
 	{
-		$rowdata = New-Object System.Collections.ArrayList
+		$rowdata = @()
 		$columnHeaders = @("Manufacturer",($htmlsilver -bor $htmlbold),$Item.manufacturer,$htmlwhite)
-		$rowdata.Add(@(,('Model',($htmlsilver -bor $htmlbold),$Item.model,$htmlwhite))) > $Null
-		$rowdata.Add(@(,('Domain',($htmlsilver -bor $htmlbold),$Item.domain,$htmlwhite))) > $Null
-		$rowdata.Add(@(,('Operating System',($htmlsilver -bor $htmlbold),$OS,$htmlwhite))) > $Null
-		$rowdata.Add(@(,('Total Ram',($htmlsilver -bor $htmlbold),"$($Item.totalphysicalram) GB",$htmlwhite))) > $Null
-		$rowdata.Add(@(,('Physical Processors (sockets)',($htmlsilver -bor $htmlbold),$Item.NumberOfProcessors,$htmlwhite))) > $Null
-		$rowdata.Add(@(,('Logical Processors (cores w/HT)',($htmlsilver -bor $htmlbold),$Item.NumberOfLogicalProcessors,$htmlwhite))) > $Null
+		$rowdata += @(,('Model',($htmlsilver -bor $htmlbold),$Item.model,$htmlwhite))
+		$rowdata += @(,('Domain',($htmlsilver -bor $htmlbold),$Item.domain,$htmlwhite))
+		$rowdata += @(,('Total Ram',($htmlsilver -bor $htmlbold),"$($Item.totalphysicalram) GB",$htmlwhite))
+		$rowdata += @(,('Physical Processors (sockets)',($htmlsilver -bor $htmlbold),$Item.NumberOfProcessors,$htmlwhite))
+		$rowdata += @(,('Logical Processors (cores w/HT)',($htmlsilver -bor $htmlbold),$Item.NumberOfLogicalProcessors,$htmlwhite))
 
 		$msg = ""
 		$columnWidths = @("150px","200px")
-		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths
-		WriteHTMLLine 0 0 ""
+		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths -tablewidth "350"
+		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -2116,33 +2119,33 @@ Function OutputDriveItem
 	}
 	ElseIf($HTML)
 	{
-		$rowdata = New-Object System.Collections.ArrayList
+		$rowdata = @()
 		$columnHeaders = @("Caption",($htmlsilver -bor $htmlbold),$Drive.caption,$htmlwhite)
-		$rowdata.Add(@(,('Size',($htmlsilver -bor $htmlbold),"$($drive.drivesize) GB",$htmlwhite))) > $Null
+		$rowdata += @(,('Size',($htmlsilver -bor $htmlbold),"$($drive.drivesize) GB",$htmlwhite))
 
 		If(![String]::IsNullOrEmpty($drive.filesystem))
 		{
-			$rowdata.Add(@(,('File System',($htmlsilver -bor $htmlbold),$Drive.filesystem,$htmlwhite))) > $Null
+			$rowdata += @(,('File System',($htmlsilver -bor $htmlbold),$Drive.filesystem,$htmlwhite))
 		}
-		$rowdata.Add(@(,('Free Space',($htmlsilver -bor $htmlbold),"$($drive.drivefreespace) GB",$htmlwhite))) > $Null
+		$rowdata += @(,('Free Space',($htmlsilver -bor $htmlbold),"$($drive.drivefreespace) GB",$htmlwhite))
 		If(![String]::IsNullOrEmpty($drive.volumename))
 		{
-			$rowdata.Add(@(,('Volume Name',($htmlsilver -bor $htmlbold),$Drive.volumename,$htmlwhite))) > $Null
+			$rowdata += @(,('Volume Name',($htmlsilver -bor $htmlbold),$Drive.volumename,$htmlwhite))
 		}
 		If(![String]::IsNullOrEmpty($drive.volumedirty))
 		{
-			$rowdata.Add(@(,('Volume is Dirty',($htmlsilver -bor $htmlbold),$xVolumeDirty,$htmlwhite))) > $Null
+			$rowdata += @(,('Volume is Dirty',($htmlsilver -bor $htmlbold),$xVolumeDirty,$htmlwhite))
 		}
 		If(![String]::IsNullOrEmpty($drive.volumeserialnumber))
 		{
-			$rowdata.Add(@(,('Volume Serial Number',($htmlsilver -bor $htmlbold),$Drive.volumeserialnumber,$htmlwhite))) > $Null
+			$rowdata += @(,('Volume Serial Number',($htmlsilver -bor $htmlbold),$Drive.volumeserialnumber,$htmlwhite))
 		}
-		$rowdata.Add(@(,('Drive Type',($htmlsilver -bor $htmlbold),$xDriveType,$htmlwhite))) > $Null
+		$rowdata += @(,('Drive Type',($htmlsilver -bor $htmlbold),$xDriveType,$htmlwhite))
 
 		$msg = ""
 		$columnWidths = @("150px","200px")
-		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths
-		WriteHTMLLine 0 0 ""
+		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths -tablewidth "350"
+		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -2240,33 +2243,33 @@ Function OutputProcessorItem
 	}
 	ElseIf($HTML)
 	{
-		$rowdata = New-Object System.Collections.ArrayList
+		$rowdata = @()
 		$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$Processor.name,$htmlwhite)
-		$rowdata.Add(@(,('Description',($htmlsilver -bor $htmlbold),$Processor.description,$htmlwhite))) > $Null
+		$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$Processor.description,$htmlwhite))
 
-		$rowdata.Add(@(,('Max Clock Speed',($htmlsilver -bor $htmlbold),"$($processor.maxclockspeed) MHz",$htmlwhite))) > $Null
+		$rowdata += @(,('Max Clock Speed',($htmlsilver -bor $htmlbold),"$($processor.maxclockspeed) MHz",$htmlwhite))
 		If($processor.l2cachesize -gt 0)
 		{
-			$rowdata.Add(@(,('L2 Cache Size',($htmlsilver -bor $htmlbold),"$($processor.l2cachesize) KB",$htmlwhite))) > $Null
+			$rowdata += @(,('L2 Cache Size',($htmlsilver -bor $htmlbold),"$($processor.l2cachesize) KB",$htmlwhite))
 		}
 		If($processor.l3cachesize -gt 0)
 		{
-			$rowdata.Add(@(,('L3 Cache Size',($htmlsilver -bor $htmlbold),"$($processor.l3cachesize) KB",$htmlwhite))) > $Null
+			$rowdata += @(,('L3 Cache Size',($htmlsilver -bor $htmlbold),"$($processor.l3cachesize) KB",$htmlwhite))
 		}
 		If($processor.numberofcores -gt 0)
 		{
-			$rowdata.Add(@(,('Number of Cores',($htmlsilver -bor $htmlbold),$Processor.numberofcores,$htmlwhite))) > $Null
+			$rowdata += @(,('Number of Cores',($htmlsilver -bor $htmlbold),$Processor.numberofcores,$htmlwhite))
 		}
 		If($processor.numberoflogicalprocessors -gt 0)
 		{
-			$rowdata.Add(@(,('Number of Logical Processors (cores w/HT)',($htmlsilver -bor $htmlbold),$Processor.numberoflogicalprocessors,$htmlwhite))) > $Null
+			$rowdata += @(,('Number of Logical Processors (cores w/HT)',($htmlsilver -bor $htmlbold),$Processor.numberoflogicalprocessors,$htmlwhite))
 		}
-		$rowdata.Add(@(,('Availability',($htmlsilver -bor $htmlbold),$xAvailability,$htmlwhite))) > $Null
+		$rowdata += @(,('Availability',($htmlsilver -bor $htmlbold),$xAvailability,$htmlwhite))
 
 		$msg = ""
 		$columnWidths = @("150px","200px")
-		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths
-		WriteHTMLLine 0 0 ""
+		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths -tablewidth "350"
+		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -2589,104 +2592,104 @@ Function OutputNicItem
 	}
 	ElseIf($HTML)
 	{
-		$rowdata = New-Object System.Collections.ArrayList
+		$rowdata = @()
 		$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$ThisNic.Name,$htmlwhite)
 		If($ThisNic.Name -ne $nic.description)
 		{
-			$rowdata.Add(@(,('Description',($htmlsilver -bor $htmlbold),$Nic.description,$htmlwhite))) > $Null
+			$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$Nic.description,$htmlwhite))
 		}
-		$rowdata.Add(@(,('Connection ID',($htmlsilver -bor $htmlbold),$ThisNic.NetConnectionID,$htmlwhite))) > $Null
+		$rowdata += @(,('Connection ID',($htmlsilver -bor $htmlbold),$ThisNic.NetConnectionID,$htmlwhite))
 		If(validObject $Nic Manufacturer)
 		{
-			$rowdata.Add(@(,('Manufacturer',($htmlsilver -bor $htmlbold),$Nic.manufacturer,$htmlwhite))) > $Null
+			$rowdata += @(,('Manufacturer',($htmlsilver -bor $htmlbold),$Nic.manufacturer,$htmlwhite))
 		}
-		$rowdata.Add(@(,('Availability',($htmlsilver -bor $htmlbold),$xAvailability,$htmlwhite))) > $Null
-		$rowdata.Add(@(,('Allow the computer to turn off this device to save power',($htmlsilver -bor $htmlbold),$PowerSaving,$htmlwhite))) > $Null
-		$rowdata.Add(@(,('Physical Address',($htmlsilver -bor $htmlbold),$Nic.macaddress,$htmlwhite))) > $Null
-		$rowdata.Add(@(,('IP Address',($htmlsilver -bor $htmlbold),$xIPAddress[0],$htmlwhite))) > $Null
+		$rowdata += @(,('Availability',($htmlsilver -bor $htmlbold),$xAvailability,$htmlwhite))
+		$rowdata += @(,('Allow the computer to turn off this device to save power',($htmlsilver -bor $htmlbold),$PowerSaving,$htmlwhite))
+		$rowdata += @(,('Physical Address',($htmlsilver -bor $htmlbold),$Nic.macaddress,$htmlwhite))
+		$rowdata += @(,('IP Address',($htmlsilver -bor $htmlbold),$xIPAddress[0],$htmlwhite))
 		$cnt = -1
 		ForEach($tmp in $xIPAddress)
 		{
 			$cnt++
 			If($cnt -gt 0)
 			{
-				$rowdata.Add(@(,('IP Address',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))) > $Null
+				$rowdata += @(,('IP Address',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
 			}
 		}
-		$rowdata.Add(@(,('Default Gateway',($htmlsilver -bor $htmlbold),$Nic.Defaultipgateway[0],$htmlwhite))) > $Null
-		$rowdata.Add(@(,('Subnet Mask',($htmlsilver -bor $htmlbold),$xIPSubnet[0],$htmlwhite))) > $Null
+		$rowdata += @(,('Default Gateway',($htmlsilver -bor $htmlbold),$Nic.Defaultipgateway[0],$htmlwhite))
+		$rowdata += @(,('Subnet Mask',($htmlsilver -bor $htmlbold),$xIPSubnet[0],$htmlwhite))
 		$cnt = -1
 		ForEach($tmp in $xIPSubnet)
 		{
 			$cnt++
 			If($cnt -gt 0)
 			{
-				$rowdata.Add(@(,('Subnet Mask',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))) > $Null
+				$rowdata += @(,('Subnet Mask',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
 			}
 		}
 		If($nic.dhcpenabled)
 		{
 			$DHCPLeaseObtainedDate = $nic.ConvertToDateTime($nic.dhcpleaseobtained)
 			$DHCPLeaseExpiresDate = $nic.ConvertToDateTime($nic.dhcpleaseexpires)
-			$rowdata.Add(@(,('DHCP Enabled',($htmlsilver -bor $htmlbold),$Nic.dhcpenabled,$htmlwhite))) > $Null
-			$rowdata.Add(@(,('DHCP Lease Obtained',($htmlsilver -bor $htmlbold),$dhcpleaseobtaineddate,$htmlwhite))) > $Null
-			$rowdata.Add(@(,('DHCP Lease Expires',($htmlsilver -bor $htmlbold),$dhcpleaseexpiresdate,$htmlwhite))) > $Null
-			$rowdata.Add(@(,('DHCP Server',($htmlsilver -bor $htmlbold),$Nic.dhcpserver,$htmlwhite))) > $Null
+			$rowdata += @(,('DHCP Enabled',($htmlsilver -bor $htmlbold),$Nic.dhcpenabled,$htmlwhite))
+			$rowdata += @(,('DHCP Lease Obtained',($htmlsilver -bor $htmlbold),$dhcpleaseobtaineddate,$htmlwhite))
+			$rowdata += @(,('DHCP Lease Expires',($htmlsilver -bor $htmlbold),$dhcpleaseexpiresdate,$htmlwhite))
+			$rowdata += @(,('DHCP Server',($htmlsilver -bor $htmlbold),$Nic.dhcpserver,$htmlwhite))
 		}
 		If(![String]::IsNullOrEmpty($nic.dnsdomain))
 		{
-			$rowdata.Add(@(,('DNS Domain',($htmlsilver -bor $htmlbold),$Nic.dnsdomain,$htmlwhite))) > $Null
+			$rowdata += @(,('DNS Domain',($htmlsilver -bor $htmlbold),$Nic.dnsdomain,$htmlwhite))
 		}
 		If($Null -ne $nic.dnsdomainsuffixsearchorder -and $nic.dnsdomainsuffixsearchorder.length -gt 0)
 		{
-			$rowdata.Add(@(,('DNS Search Suffixes',($htmlsilver -bor $htmlbold),$xnicdnsdomainsuffixsearchorder[0],$htmlwhite))) > $Null
+			$rowdata += @(,('DNS Search Suffixes',($htmlsilver -bor $htmlbold),$xnicdnsdomainsuffixsearchorder[0],$htmlwhite))
 			$cnt = -1
 			ForEach($tmp in $xnicdnsdomainsuffixsearchorder)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$rowdata.Add(@(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))) > $Null
+					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
 				}
 			}
 		}
-		$rowdata.Add(@(,('DNS WINS Enabled',($htmlsilver -bor $htmlbold),$xdnsenabledforwinsresolution,$htmlwhite))) > $Null
+		$rowdata += @(,('DNS WINS Enabled',($htmlsilver -bor $htmlbold),$xdnsenabledforwinsresolution,$htmlwhite))
 		If($Null -ne $nic.dnsserversearchorder -and $nic.dnsserversearchorder.length -gt 0)
 		{
-			$rowdata.Add(@(,('DNS Servers',($htmlsilver -bor $htmlbold),$xnicdnsserversearchorder[0],$htmlwhite))) > $Null
+			$rowdata += @(,('DNS Servers',($htmlsilver -bor $htmlbold),$xnicdnsserversearchorder[0],$htmlwhite))
 			$cnt = -1
 			ForEach($tmp in $xnicdnsserversearchorder)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$rowdata.Add(@(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))) > $Null
+					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
 				}
 			}
 		}
-		$rowdata.Add(@(,('NetBIOS Setting',($htmlsilver -bor $htmlbold),$xTcpipNetbiosOptions,$htmlwhite))) > $Null
-		$rowdata.Add(@(,('WINS: Enabled LMHosts',($htmlsilver -bor $htmlbold),$xwinsenablelmhostslookup,$htmlwhite))) > $Null
+		$rowdata += @(,('NetBIOS Setting',($htmlsilver -bor $htmlbold),$xTcpipNetbiosOptions,$htmlwhite))
+		$rowdata += @(,('WINS: Enabled LMHosts',($htmlsilver -bor $htmlbold),$xwinsenablelmhostslookup,$htmlwhite))
 		If(![String]::IsNullOrEmpty($nic.winshostlookupfile))
 		{
-			$rowdata.Add(@(,('Host Lookup File',($htmlsilver -bor $htmlbold),$Nic.winshostlookupfile,$htmlwhite))) > $Null
+			$rowdata += @(,('Host Lookup File',($htmlsilver -bor $htmlbold),$Nic.winshostlookupfile,$htmlwhite))
 		}
 		If(![String]::IsNullOrEmpty($nic.winsprimaryserver))
 		{
-			$rowdata.Add(@(,('Primary Server',($htmlsilver -bor $htmlbold),$Nic.winsprimaryserver,$htmlwhite))) > $Null
+			$rowdata += @(,('Primary Server',($htmlsilver -bor $htmlbold),$Nic.winsprimaryserver,$htmlwhite))
 		}
 		If(![String]::IsNullOrEmpty($nic.winssecondaryserver))
 		{
-			$rowdata.Add(@(,('Secondary Server',($htmlsilver -bor $htmlbold),$Nic.winssecondaryserver,$htmlwhite))) > $Null
+			$rowdata += @(,('Secondary Server',($htmlsilver -bor $htmlbold),$Nic.winssecondaryserver,$htmlwhite))
 		}
 		If(![String]::IsNullOrEmpty($nic.winsscopeid))
 		{
-			$rowdata.Add(@(,('Scope ID',($htmlsilver -bor $htmlbold),$Nic.winsscopeid,$htmlwhite))) > $Null
+			$rowdata += @(,('Scope ID',($htmlsilver -bor $htmlbold),$Nic.winsscopeid,$htmlwhite))
 		}
 
 		$msg = ""
 		$columnWidths = @("150px","200px")
-		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths
-		WriteHTMLLine 0 0 ""
+		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths -tablewidth "350"
+		WriteHTMLLine 0 0 " "
 	}
 }
 #endregion
@@ -2765,7 +2768,7 @@ Function GetComputerServices
 		ElseIf($HTML)
 		{
 			WriteHTMLLine 0 1 "Services ($NumServices Services found)"
-			$rowdata = New-Object System.Collections.ArrayList
+			$rowdata = @()
 		}
 
 		ForEach($Service in $Services) 
@@ -2818,9 +2821,9 @@ Function GetComputerServices
 				{
 					$HighlightedCells = $htmlwhite
 				} 
-				$rowdata.Add(@(,($Service.DisplayName,$htmlwhite,
+				$rowdata += @(,($Service.DisplayName,$htmlwhite,
 								$Service.State,$HighlightedCells,
-								$Service.StartMode,$htmlwhite))) > $Null
+								$Service.StartMode,$htmlwhite))
 			}
 		}
 

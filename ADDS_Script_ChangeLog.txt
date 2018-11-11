@@ -4,6 +4,10 @@
 #@carlwebster on Twitter
 #http://www.CarlWebster.com
 
+#Version 2.21 11-Nov-2018
+#	For HTML output, reverted the output Hardware and Service functions back to using $rowdata = @()
+#		Using $rowdata = New-Object System.Collections.ArrayList did not always work, which is weird
+
 #Version 2.20 28-Sep-2018
 #	Added Domain Functional Level of 7 for Windows Server 2016
 #	Added Forest Functional Level of 7 for Windows Server 2016
