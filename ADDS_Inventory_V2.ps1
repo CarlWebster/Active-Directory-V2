@@ -186,8 +186,8 @@
 .PARAMETER AddDateTime
 	Adds a date time stamp to the end of the file name.
 	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2018 at 6PM is 2018-06-01_1800.
-	Output filename will be ReportName_2018-06-01_1800.docx (or .pdf).
+	June 1, 2019 at 6PM is 2019-06-01_1800.
+	Output filename will be ReportName_2019-06-01_1800.docx (or .pdf).
 	This parameter is disabled by default.
 .PARAMETER ADForest
 	Specifies an Active Directory forest object by providing one of the following 
@@ -297,7 +297,7 @@
 	This is the same as using the following parameters:
 		DCDNSInfo
 		GPOInheritance
-		HardWare
+		Hardware
 		IncludeUserInfo
 		Services
 	
@@ -641,8 +641,8 @@
 
 	Adds a date time stamp to the end of the file name.
 	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2018 at 6PM is 2018-06-01_1800.
-	Output filename will be company.tld_2018-06-01_1800.docx.
+	June 1, 2019 at 6PM is 2019-06-01_1800.
+	Output filename will be company.tld_2019-06-01_1800.docx.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -PDF -ADForest corp.carlwebster.com 
 	-AddDateTime
@@ -664,8 +664,8 @@
 
 	Adds a date time stamp to the end of the file name.
 	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2018 at 6PM is 2018-06-01_1800.
-	Output filename will be corp.carlwebster.com_2018-06-01_1800.PDF
+	June 1, 2019 at 6PM is 2019-06-01_1800.
+	Output filename will be corp.carlwebster.com_2019-06-01_1800.PDF
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -ADForest corp.carlwebster.com 
 	-Folder \\FileServer\ShareName
@@ -791,7 +791,7 @@
 	Set the following parameter values:
 		DCDNSInfo       = True
 		GPOInheritance  = True
-		HardWare        = True
+		Hardware        = True
 		IncludeUserInfo = True
 		Services        = True
 		
@@ -802,9 +802,9 @@
 	No objects are output from this script.  This script creates a Word or PDF document.
 .NOTES
 	NAME: ADDS_Inventory_V2.ps1
-	VERSION: 2.21
+	VERSION: 2.22
 	AUTHOR: Carl Webster, Sr. Solutions Architect, Choice Solutions, LLC and Michael B. Smith
-	LASTEDIT: November 11, 2018
+	LASTEDIT: February 13, 2019
 #>
 
 
@@ -953,6 +953,22 @@ Param(
 #Version 1.0 released to the community on May 31, 2014
 #
 #Version 2.0 is based on version 1.20
+#
+#Version 2.22 14-Feb-2019
+#	Added a line under the OU table stating how many OUs are not protected
+#	Added color $wdColorYellow
+#	Added Exchange schema version 17000 for Exchange 2019
+#	Added to the "Gathering user misc data" section, the following console message if there are more than 100,000 user accounts in AD:
+#		There are $($UsersCount) user accounts to process. The following 17 actions will take a long time. Be patient.
+#	Changed section heading "Domain trusts" to "Domain Trusts" to match the capitalization of other sections
+#	Changed several $Var -eq $Null to $Null -eq $Var and on Get-Process line for WinWord (thanks to MBS)
+#	Changed test for "No Certification Authority Root(s) were retrieved" by Michael B. Smith who contributed the original code
+#	For HTML and Text output, for Heading1 and Heading2 output, added "///  " and "  \\\" surrounding the heading text
+#		This will help for those of us who read reports that contain > 100,000 OUs and users
+#		and > 1,000 GPOs
+#	Removed "Preview" from Windows Server 2019 AD Schema version 88
+#	Remove unused variables
+#	Updated help text
 #
 #Version 2.21 11-Nov-2018
 #	For HTML output, reverted the output Hardware and Service functions back to using $rowdata = @()
@@ -1331,7 +1347,6 @@ If($MSWord -or $PDF)
 	Write-Verbose "$(Get-Date): CoName is $($Script:CoName)"
 	
 	#the following values were attained from 
-	#http://groovy.codehaus.org/modules/scriptom/1.6.0/scriptom-office-2K3-tlb/apidocs/
 	#http://msdn.microsoft.com/en-us/library/office/aa211923(v=office.11).aspx
 	[int]$wdAlignPageNumberRight = 2
 	[long]$wdColorGray15 = 14277081
@@ -1342,6 +1357,7 @@ If($MSWord -or $PDF)
 	[int]$wdStory = 6
 	[long]$wdColorRed = 255
 	[int]$wdColorBlack = 0
+	[long]$wdColorYellow = 65535 #added in ADDS script V2.22
 	[int]$wdWord2007 = 12
 	[int]$wdWord2010 = 14
 	[int]$wdWord2013 = 15
@@ -1554,8 +1570,6 @@ Function GetComputerWMIInfo
 		WriteHTMLLine 4 0 "General Computer"
 	}
 	
-	[bool]$GotComputerItems = $True
-	
 	Try
 	{
 		$Results = Get-WmiObject -computername $RemoteComputerName win32_computersystem
@@ -1639,8 +1653,6 @@ Function GetComputerWMIInfo
 		WriteHTMLLine 4 0 "Drive(s)"
 	}
 
-	[bool]$GotDrives = $True
-	
 	Try
 	{
 		$Results = Get-WmiObject -computername $RemoteComputerName Win32_LogicalDisk
@@ -1708,7 +1720,6 @@ Function GetComputerWMIInfo
 		}
 	}
 	
-
 	#Get CPU's and stepping
 	Write-Verbose "$(Get-Date): `t`t`tProcessor information"
 
@@ -1725,8 +1736,6 @@ Function GetComputerWMIInfo
 		WriteHTMLLine 4 0 "Processor(s)"
 	}
 
-	[bool]$GotProcessors = $True
-	
 	Try
 	{
 		$Results = Get-WmiObject -computername $RemoteComputerName win32_Processor
@@ -1823,7 +1832,7 @@ Function GetComputerWMIInfo
 		$Nics = $Results | Where-Object {$Null -ne $_.ipaddress}
 		$Results = $Null
 
-		If($Nics -eq $Null ) 
+		If($Null -eq $Nics) 
 		{ 
 			$GotNics = $False 
 		} 
@@ -2923,7 +2932,7 @@ Function BuildDCDNSIPConfigTable
 		$Nics = $Results | Where-Object {$Null -ne $_.ipaddress}
 		$Results = $Null
 
-		If($Nics -eq $Null ) 
+		If($Null -eq $Nics) 
 		{ 
 			$GotNics = $False 
 		} 
@@ -3427,7 +3436,8 @@ Function CheckWordPrereq
 	$SessionID = (Get-Process -PID $PID).SessionId
 	
 	#Find out if winword is running in our session
-	[bool]$wordrunning = ((Get-Process 'WinWord' -ea 0)|Where-Object {$_.SessionId -eq $SessionID}) -ne $Null
+	#[bool]$wordrunning = ((Get-Process 'WinWord' -ea 0)|Where-Object {$_.SessionId -eq $SessionID}) -ne $Null
+	[bool]$wordrunning = $null –ne ((Get-Process 'WinWord' -ea 0) | Where-Object {$_.SessionId -eq $SessionID})	
 	If($wordrunning)
 	{
 		$ErrorActionPreference = $SaveEAPreference
@@ -6644,11 +6654,11 @@ Function ProcessForestInformation
 	}
 	ElseIf($Text)
 	{
-		Line 0 "Forest Information"
+		Line 0 "///  Forest Information  \\\"
 	}
 	ElseIf($HTML)
 	{
-		WriteHTMLLine 1 0 "Forest Information"
+		WriteHTMLLine 1 0 "///&nbsp;&nbsp;Forest Information&nbsp;&nbsp;\\\"
 	}
 
 	Switch ($Script:Forest.ForestMode)
@@ -6686,7 +6696,7 @@ Function ProcessForestInformation
 	
 	$TombstoneLifetime = $DirectoryServicesConfigPartition.tombstoneLifetime
 	
-	If($TombstoneLifetime -eq $Null -or $TombstoneLifetime -eq 0)
+	If($Null -eq $TombstoneLifetime -or $TombstoneLifetime -eq 0)
 	{
 		$TombstoneLifetime = 60
 	}
@@ -7567,9 +7577,10 @@ Function ProcessCAInformation
 			}
 		}
 	}
-	ElseIf($Null -eq $rootObj)
+	#ElseIf($Null -eq $rootObj) changed in V2.22 by Michael B. Smith
+	If($RootCnt -eq 0 -or $Null -eq $rootObj)
 	{
-		$txt = "No Certification Authority Root(s) information was retrieved"
+		$txt = "No Certification Authority Root(s) were retrieved"
 		Write-Warning $txt
 		If($MSWORD -or $PDF)
 		{
@@ -8130,11 +8141,11 @@ Function ProcessSiteInformation
 	}
 	ElseIf($Text)
 	{
-		Line 0 "Sites and Services"
+		Line 0 "///  Sites and Services  \\\"
 	}
 	ElseIf($HTML)
 	{
-		WriteHTMLLine 1 0 "Sites and Services"
+		WriteHTMLLine 1 0 "///&nbsp;&nbsp;Sites and Services&nbsp;&nbsp;\\\"
 	}
 	
 	#get site information
@@ -8436,6 +8447,7 @@ Function ProcessSiteInformation
 		}
 		ElseIf($Text)
 		{
+			Line 0 "///  Inter-Site Transports  \\\"
 			If($? -and $Null -ne $AllSiteLinks)
 			{
 				ForEach($SiteLink in $AllSiteLinks)
@@ -8529,7 +8541,7 @@ Function ProcessSiteInformation
 			ForEach($Site in $Sites)
 			{
 				Write-Verbose "$(Get-Date): `tProcessing site $($Site.Name)"
-				Line 0 "Site: " $Site.Name
+				Line 0 "///  Site: $($Site.Name)  \\\"
 
 				Line 1 "Subnets"
 				Write-Verbose "$(Get-Date): `t`tProcessing subnets"
@@ -8672,7 +8684,7 @@ Function ProcessSiteInformation
 		}
 		ElseIf($HTML)
 		{
-			WriteHTMLLine 2 0 "Inter-Site Transports"
+			WriteHTMLLine 2 0 "///&nbsp;&nbsp;Inter-Site Transports&nbsp;&nbsp;\\\"
 			#adapted from code provided by Goatee PFE
 			#http://blogs.technet.com/b/ashleymcglone/archive/2011/06/29/report-and-edit-ad-site-links-from-powershell-turbo-your-ad-replication.aspx
 			# Report of all site links and related settings
@@ -8775,7 +8787,7 @@ Function ProcessSiteInformation
 			ForEach($Site in $Sites)
 			{
 				Write-Verbose "$(Get-Date): `tProcessing site $($Site.Name)"
-				WriteHTMLLine 2 0 "Site: " $Site.Name
+				WriteHTMLLine 2 0 "///&nbsp;&nbsp;Site: $($Site.Name)&nbsp;&nbsp;\\\"
 
 				WriteHTMLLine 3 0 "Subnets"
 				Write-Verbose "$(Get-Date): `t`tProcessing subnets"
@@ -8979,11 +8991,11 @@ Function ProcessDomains
 	}
 	ElseIf($Text)
 	{
-		Line 0 "Domain Information"
+		Line 0 "///  Domain Information  \\\"
 	}
 	ElseIf($HTML)
 	{
-		WriteHTMLLine 1 0 "Domain Information"
+		WriteHTMLLine 1 0 "///&nbsp;&nbsp;Domain Information&nbsp;&nbsp;\\\"
 	}
 
 	$Script:AllDomainControllers = New-Object System.Collections.ArrayList
@@ -9004,7 +9016,7 @@ Function ProcessDomains
 	"69" = "Windows Server 2012 R2";
 	"72" = "Windows Server 2016 TP4";
 	"87" = "Windows Server 2016";
-	"88" = "Windows Server 2019 Preview";	#added V2.20
+	"88" = "Windows Server 2019";	#added V2.20, updated in 2.22
 	"4397" = "Exchange 2000 RTM"; 
 	"4406" = "Exchange 2000 SP3";
 	"6870" = "Exchange 2003 RTM, SP1, SP2"; 
@@ -9029,7 +9041,8 @@ Function ProcessDomains
 	"15325" = "Exchange 2016 CU2";
 	"15326" = "Exchange 2016 CU3/CU4/CU5"; #added in 2.16
 	"15330" = "Exchange 2016 CU6"; #added in 2.16
-	"15332" = "Exchange 2016 CU7 through CU10" #added in 2.16 and updated in 2.20
+	"15332" = "Exchange 2016 CU7 through CU11"; #added in 2.16 and updated in 2.20, updated in 2.22
+	"17000" = "Exchange 2019 RTM"; #added in 2.22
 	}
 
 	ForEach($Domain in $Script:Domains)
@@ -9054,11 +9067,11 @@ Function ProcessDomains
 				}
 				ElseIf($Text)
 				{
-					Line 0 "$($Domain) (Forest Root)"
+					Line 0 "///  $($Domain) (Forest Root)  \\\"
 				}
 				ElseIf($HTML)
 				{
-					WriteHTMLLine 2 0 "$($Domain) (Forest Root)"
+					WriteHTMLLine 2 0 "///&nbsp;&nbsp;$($Domain) (Forest Root)&nbsp;&nbsp;\\\"
 				}
 			}
 			Else
@@ -9069,11 +9082,11 @@ Function ProcessDomains
 				}
 				ElseIf($Text)
 				{
-					Line 0 $Domain
+					Line 0 "///  $($Domain)  \\\"
 				}
 				ElseIf($HTML)
 				{
-					WriteHTMLLine 2 0 $Domain
+					WriteHTMLLine 2 0 "///&nbsp;&nbsp;$($Domain)&nbsp;&nbsp;\\\"
 				}
 			}
 
@@ -9111,7 +9124,7 @@ Function ProcessDomains
 			{
 				$ADSchemaVersion = $ADSchemaInfo.objectversion
 				$ADSchemaVersionName = $SchemaVersionTable.Get_Item("$ADSchemaVersion")
-				If($ADSchemaVersionName -eq $Null)
+				If($Null -eq $ADSchemaVersionName)
 				{
 					$ADSchemaVersionName = "Unknown"
 				}
@@ -9253,7 +9266,7 @@ Function ProcessDomains
 					}
 				}
 				$Replicas = $DomainInfo.ReplicaDirectoryServers | Sort-Object 
-				If($Replicas -eq $Null)
+				If($Null -eq $Replicas)
 				{
 					$ScriptInformation += @{ Data = "Replica directory servers"; Value = "<None>"; }
 				}
@@ -9317,7 +9330,7 @@ Function ProcessDomains
 				WriteWordLine 0 0 ""
 
 				Write-Verbose "$(Get-Date): `t`tGetting domain trusts"
-				WriteWordLine 3 0 "Domain trusts"
+				WriteWordLine 3 0 "Domain Trusts"
 				
 				$ADDomainTrusts = $Null
 				$ADDomainTrusts = Get-ADObject -Filter {ObjectClass -eq "trustedDomain"} `
@@ -9703,7 +9716,7 @@ Function ProcessDomains
 				}
 				Line 1 "Replica directory servers`t`t: " -NoNewLine
 				$Replicas = $DomainInfo.ReplicaDirectoryServers | Sort-Object 
-				If($Replicas -eq $Null)
+				If($Null -eq $Replicas)
 				{
 					Line 0 "<None>"
 				}
@@ -9751,7 +9764,7 @@ Function ProcessDomains
 				Line 1 "Systems container`t`t`t: " $DomainInfo.SystemsContainer
 				
 				Write-Verbose "$(Get-Date): `t`tGetting domain trusts"
-				Line 0 "Domain trusts: "
+				Line 0 "Domain Trusts: "
 				
 				$ADDomainTrusts = $Null
 				$ADDomainTrusts = Get-ADObject -Filter {ObjectClass -eq "trustedDomain"} -Server $Domain -Properties * -EA 0
@@ -10089,7 +10102,7 @@ Function ProcessDomains
 					}
 				}
 				$Replicas = $DomainInfo.ReplicaDirectoryServers | Sort-Object 
-				If($Replicas -eq $Null)
+				If($Null -eq $Replicas)
 				{
 					$rowdata += @(,('Replica directory servers',($htmlsilver -bor $htmlbold),"None",$htmlwhite))
 				}
@@ -10141,7 +10154,7 @@ Function ProcessDomains
 				WriteHTMLLine 0 0 " "
 
 				Write-Verbose "$(Get-Date): `t`tGetting domain trusts"
-				WriteHTMLLine 3 0 "Domain trusts"
+				WriteHTMLLine 3 0 "Domain Trusts"
 				
 				$ADDomainTrusts = $Null
 				$ADDomainTrusts = Get-ADObject -Filter {ObjectClass -eq "trustedDomain"} -Server $Domain -Properties * -EA 0
@@ -10450,11 +10463,11 @@ Function ProcessDomainControllers
 	}
 	ElseIf($Text)
 	{
-		Line 0 "Domain Controllers in $($Script:ForestName)"
+		Line 0 "///  Domain Controllers in $($Script:ForestName)  \\\"
 	}
 	ElseIf($HTML)
 	{
-		WriteHTMLLine 1 0 "Domain Controllers in $($Script:ForestName)"
+		WriteHTMLLine 1 0 "///&nbsp;&nbsp;Domain Controllers in $($Script:ForestName)&nbsp;&nbsp;\\\"
 	}
 
 	$Script:DCDNSIPInfo = New-Object System.Collections.ArrayList
@@ -10606,7 +10619,7 @@ Function ProcessDomainControllers
 		}
 		ElseIf($Text)
 		{
-			Line 0 "DC: " $DC.Name
+			Line 0 "///  DC: $($DC.Name)  \\\"
 			Line 1 "Default partition`t`t: " $DC.DefaultPartition
 			Line 1 "Domain`t`t`t`t: " $DC.domain
 			If($DC.Enabled -eq $True)
@@ -10717,7 +10730,7 @@ Function ProcessDomainControllers
 		}
 		ElseIf($HTML)
 		{
-			WriteHTMLLine 2 0 $DC.Name
+			WriteHTMLLine 2 0 "///&nbsp;&nbsp;$($DC.Name)&nbsp;&nbsp;\\\"
 			$rowdata = @()
 			$columnHeaders = @("Default partition",($htmlsilver -bor $htmlbold),$DC.DefaultPartition,$htmlwhite)
 			$rowdata += @(,('Domain',($htmlsilver -bor $htmlbold),$DC.domain,$htmlwhite))
@@ -11265,19 +11278,18 @@ Function OutputEventLogInfo
 Function ProcessOrganizationalUnits
 {
 	Write-Verbose "$(Get-Date): Writing OU data by Domain"
-	$txt = "Organizational Units"
 	If($MSWORD -or $PDF)
 	{
 		$Script:selection.InsertNewPage()
-		WriteWordLine 1 0 $txt
+		WriteWordLine 1 0 "Organizational Units"
 	}
 	ElseIf($Text)
 	{
-		Line 0 $txt
+		Line 0 "///  Organizational Units  \\\"
 	}
 	ElseIf($HTML)
 	{
-		WriteHTMLLine 1 0 $txt
+		WriteHTMLLine 1 0 "///&nbsp;&nbsp;Organizational Units&nbsp;&nbsp;\\\"
 	}
 	$First = $True
 
@@ -11300,11 +11312,11 @@ Function ProcessOrganizationalUnits
 			}
 			ElseIf($Text)
 			{
-				Line 0 $txt
+				Line 0 "///  $($txt)  \\\"
 			}
 			ElseIf($HTML)
 			{
-				WriteHTMLLine 2 0 $txt
+				WriteHTMLLine 2 0 "///&nbsp;&nbsp;$($txt)&nbsp;&nbsp;\\\"
 			}
 		}
 		Else
@@ -11316,11 +11328,11 @@ Function ProcessOrganizationalUnits
 			}
 			ElseIf($Text)
 			{
-				Line 0 $txt
+				Line 0 "///  $($txt)  \\\"
 			}
 			ElseIf($HTML)
 			{
-				WriteHTMLLine 2 0 $txt
+				WriteHTMLLine 2 0 "///&nbsp;&nbsp;$($txt)&nbsp;&nbsp;\\\"
 			}
 		}
 		
@@ -11342,6 +11354,7 @@ Function ProcessOrganizationalUnits
 				[int]$Rows = $OUs.Count + 1
 				[int]$NumOUs = $OUs.Count
 				[int]$xRow = 1
+				[int]$UnprotectedOUs = 0 #added in V2.22
 
 				$Table = $doc.Tables.Add($TableRange, $Rows, $Columns)
 				$Table.AutoFitBehavior($wdAutoFitFixed)
@@ -11413,6 +11426,10 @@ Function ProcessOrganizationalUnits
 					Else
 					{
 						$Table.Cell($xRow,3).Range.Text = "No"
+						#not added in V2.22 now
+						##$Table.Cell($xRow,3).Shading.BackgroundPatternColor = $wdColorYellow
+						$Table.Cell($xRow,3).Range.Font.Bold = $True
+						$UnprotectedOUs++
 					}
 					
 					[string]$UserCountStr = "{0,7:N0}" -f $UserCount
@@ -11458,17 +11475,23 @@ Function ProcessOrganizationalUnits
 
 				#move to the end of the current document
 				$selection.EndKey($wdStory,$wdMove) | Out-Null
-				WriteWordLine 0 0 ""
 				$TableRange = $Null
 				$Table = $Null
 				$Results = $Null
 				$UserCountStr = $Null
 				$ComputerCountStr = $Null
 				$GroupCountStr = $Null
+
+				#added in V2.22
+				If($UnprotectedOUs -gt 0)
+				{
+					WriteWordLine 0 0 "There are $($UnprotectedOUs) unprotected OUs out of $($NumOUs) OUs"
+				}
 			}
 			ElseIf($Text)
 			{
 				[int]$NumOUs = $OUs.Count
+				[int]$UnprotectedOUs = 0 #added in V2.22
 				#V2.16 addition
 				[int]$MaxOUNameLength = ($OUs.CanonicalName.SubString($OUs[0].CanonicalName.IndexOf("/")+1) | measure-object -maximum -property length).maximum
 				
@@ -11516,7 +11539,8 @@ Function ProcessOrganizationalUnits
 					}
 					Else
 					{
-						$tmp = "No"
+						$tmp = "NO"
+						$UnprotectedOUs++
 					}
 					[string]$UserCountStr = "{0,7:N0}" -f $UserCount
 					[string]$ComputerCountStr = "{0,11:N0}" -f $ComputerCount
@@ -11539,6 +11563,11 @@ Function ProcessOrganizationalUnits
 					$GroupCountStr = $Null
 				}
 				Line 0 ""
+				#added in V2.22
+				If($UnprotectedOUs -gt 0)
+				{
+					Line 0 "There are $($UnprotectedOUs) unprotected OUs out of $($NumOUs) OUs"
+				}
 				$Results = $Null
 				$UserCountStr = $Null
 				$ComputerCountStr = $Null
@@ -11547,6 +11576,7 @@ Function ProcessOrganizationalUnits
 			ElseIf($HTML)
 			{
 				[int]$NumOUs = $OUs.Count
+				[int]$UnprotectedOUs = 0 #added in V2.22
 				$rowdata = @()
 				ForEach($OU in $OUs)
 				{
@@ -11579,18 +11609,26 @@ Function ProcessOrganizationalUnits
 					If($OU.ProtectedFromAccidentalDeletion -eq $True)
 					{
 						$Protected = "Yes"
+						$rowdata += @(,(
+						$OUDisplayName,$htmlwhite,
+						$OU.Created.ToString(),$htmlwhite,
+						$Protected,$htmlwhite,
+						$UserCountStr,$htmlwhite,
+						$ComputerCountStr,$htmlwhite,
+						$GroupCountStr,$htmlwhite))
 					}
 					Else
 					{
 						$Protected = "No"
+						$UnprotectedOUs++
+						$rowdata += @(,(
+						$OUDisplayName,$htmlwhite,
+						$OU.Created.ToString(),$htmlwhite,
+						$Protected,$htmlwhite,
+						$UserCountStr,$htmlwhite,
+						$ComputerCountStr,$htmlwhite,
+						$GroupCountStr,$htmlwhite))
 					}
-					$rowdata += @(,(
-					$OUDisplayName,$htmlwhite,
-					$OU.Created.ToString(),$htmlwhite,
-					$Protected,$htmlwhite,
-					$UserCountStr,$htmlwhite,
-					$ComputerCountStr,$htmlwhite,
-					$GroupCountStr,$htmlwhite))
 
 					$Results = $Null
 					$UserCountStr = $Null
@@ -11607,7 +11645,11 @@ Function ProcessOrganizationalUnits
 				$msg = ""
 				$columnWidths = @("214","68","56","56","75","56")
 				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "525"
-				WriteHTMLLine 0 0 " "
+				#added in V2.22
+				If($UnprotectedOUs -gt 0)
+				{
+					WriteHTMLLine 0 0 "There are $($UnprotectedOUs) unprotected OUs out of $($NumOUs) OUs"
+				}
 			}
 		}
 		ElseIf(!$?)
@@ -11654,19 +11696,18 @@ Function ProcessGroupInformation
 {
 	Write-Verbose "$(Get-Date): Writing group data"
 
-	$txt = "Groups"
 	If($MSWORD -or $PDF)
 	{
 		$Script:selection.InsertNewPage()
-		WriteWordLine 1 0 $txt
+		WriteWordLine 1 0 "Groups"
 	}
 	ElseIf($Text)
 	{
-		Line 0 $txt
+		Line 0 "///  Groups  \\\"
 	}
 	ElseIf($HTML)
 	{
-		WriteHTMLLine 1 0 $txt
+		WriteHTMLLine 1 0 "///&nbsp;&nbsp;Groups&nbsp;&nbsp;\\\"
 	}
 
 	$First = $True
@@ -11689,11 +11730,11 @@ Function ProcessGroupInformation
 			}
 			ElseIf($Text)
 			{
-				Line 0 $txt
+				Line 0 "///  $($txt)  \\\"
 			}
 			ElseIf($HTML)
 			{
-				WriteHTMLLine 2 0 $txt
+				WriteHTMLLine 2 0 "///&nbsp;&nbsp;$($txt)&nbsp;&nbsp;\\\"
 			}
 		}
 		Else
@@ -11705,11 +11746,11 @@ Function ProcessGroupInformation
 			}
 			ElseIf($Text)
 			{
-				Line 0 $txt
+				Line 0 "///  $($txt)  \\\"
 			}
 			ElseIf($HTML)
 			{
-				WriteHTMLLine 2 0 $txt
+				WriteHTMLLine 2 0 "///&nbsp;&nbsp;$($txt)&nbsp;&nbsp;\\\"
 			}
 		}
 
@@ -11939,7 +11980,7 @@ Function ProcessGroupInformation
 						If($? -and $Null -ne $User)
 						{
 							$Table.Cell($xRow,1).Range.Text = $User.Name
-							If($User.PasswordLastSet -eq $Null)
+							If($Null -eq $User.PasswordLastSet)
 							{
 								$Table.Cell($xRow,2).Shading.BackgroundPatternColor = $wdColorRed
 								$Table.Cell($xRow,2).Range.Font.Bold  = $True
@@ -12022,7 +12063,7 @@ Function ProcessGroupInformation
 
 						If($? -and $Null -ne $User)
 						{
-							If($User.PasswordLastSet -eq $Null)
+							If($Null -eq $User.PasswordLastSet)
 							{
 								$PasswordLastSet = "No Date Set"
 							}
@@ -12069,7 +12110,7 @@ Function ProcessGroupInformation
 						If($? -and $Null -ne $User)
 						{
 							$UserName = $User.Name
-							If($User.PasswordLastSet -eq $Null)
+							If($Null -eq $User.PasswordLastSet)
 							{
 								$PasswordLastSet = "No Date Set"
 							}
@@ -12236,7 +12277,7 @@ Function ProcessGroupInformation
 								{
 									$Table.Cell($xRow,1).Range.Text = $User.Name
 									$Table.Cell($xRow,2).Range.Text = $xServer
-									If($User.PasswordLastSet -eq $Null)
+									If($Null -eq $User.PasswordLastSet)
 									{
 										$Table.Cell($xRow,3).Shading.BackgroundPatternColor = $wdColorRed
 										$Table.Cell($xRow,3).Range.Font.Bold  = $True
@@ -12356,7 +12397,7 @@ Function ProcessGroupInformation
 							{
 								If($Admin.ObjectClass -eq 'user')
 								{
-									If($User.PasswordLastSet -eq $Null)
+									If($Null -eq $User.PasswordLastSet)
 									{
 										$PasswordLastSet = "No Date Set"
 									}
@@ -12427,7 +12468,7 @@ Function ProcessGroupInformation
 								{
 									$UserName = $User.Name
 									$Domain = $xServer
-									If($User.PasswordLastSet -eq $Null)
+									If($Null -eq $User.PasswordLastSet)
 									{
 										$PasswordLastSet = "No Date Set"
 									}
@@ -12602,7 +12643,7 @@ Function ProcessGroupInformation
 								{
 									$Table.Cell($xRow,1).Range.Text = $User.Name
 									$Table.Cell($xRow,2).Range.Text = $xServer
-									If($User.PasswordLastSet -eq $Null)
+									If($Null -eq $User.PasswordLastSet)
 									{
 										$Table.Cell($xRow,3).Shading.BackgroundPatternColor = $wdColorRed
 										$Table.Cell($xRow,3).Range.Font.Bold  = $True
@@ -12723,7 +12764,7 @@ Function ProcessGroupInformation
 							{
 								If($Admin.ObjectClass -eq 'user')
 								{
-									If($User.PasswordLastSet -eq $Null)
+									If($Null -eq $User.PasswordLastSet)
 									{
 										$PasswordLastSet = "No Date Set"
 									}
@@ -12794,7 +12835,7 @@ Function ProcessGroupInformation
 								{
 									$UserName = $User.Name
 									$Domain = $xServer
-									If($User.PasswordLastSet -eq $Null)
+									If($Null -eq $User.PasswordLastSet)
 									{
 										$PasswordLastSet = "No Date Set"
 									}
@@ -12932,7 +12973,7 @@ Function ProcessGroupInformation
 						If($? -and $Null -ne $User)
 						{
 							$Table.Cell($xRow,1).Range.Text = $User.Name
-							If($User.PasswordLastSet -eq $Null)
+							If($Null -eq $User.PasswordLastSet)
 							{
 								$Table.Cell($xRow,2).Shading.BackgroundPatternColor = $wdColorRed
 								$Table.Cell($xRow,2).Range.Font.Bold  = $True
@@ -13006,7 +13047,7 @@ Function ProcessGroupInformation
 
 						If($? -and $Null -ne $User)
 						{
-							If($User.PasswordLastSet -eq $Null)
+							If($Null -eq $User.PasswordLastSet)
 							{
 								$PasswordLastSet = "No Date Set"
 							}
@@ -13053,7 +13094,7 @@ Function ProcessGroupInformation
 						If($? -and $Null -ne $User)
 						{
 							$UserName = $User.Name
-							If($User.PasswordLastSet -eq $Null)
+							If($Null -eq $User.PasswordLastSet)
 							{
 								$PasswordLastSet = "No Date Set"
 							}
@@ -13410,19 +13451,18 @@ Function ProcessGPOsByDomain
 {
 	Write-Verbose "$(Get-Date): Writing domain group policy data"
 
-	$txt = "Group Policies by Domain"
 	If($MSWORD -or $PDF)
 	{
 		$Script:selection.InsertNewPage()
-		WriteWordLine 1 0 $txt
+		WriteWordLine 1 0 "Group Policies by Domain"
 	}
 	ElseIf($Text)
 	{
-		Line 0 $txt
+		Line 0 "///  Group Policies by Domain  \\\"
 	}
 	ElseIf($HTML)
 	{
-		WriteHTMLLine 1 0 $txt
+		WriteHTMLLine 1 0 "///&nbsp;&nbsp;Group Policies by Domain&nbsp;&nbsp;\\\"
 	}
 	$First = $True
 
@@ -13449,11 +13489,11 @@ Function ProcessGPOsByDomain
 				}
 				ElseIf($Text)
 				{
-					Line 1 $txt
+					Line 1 "///  $($txt)  \\\"
 				}
 				ElseIf($HTML)
 				{
-					WriteHTMLLine 2 0 $txt
+					WriteHTMLLine 2 0 "///&nbsp;&nbsp;$($txt)&nbsp;&nbsp;\\\"
 				}
 			}
 			Else
@@ -13464,11 +13504,11 @@ Function ProcessGPOsByDomain
 				}
 				ElseIf($Text)
 				{
-					Line 1 $Domain
+					Line 1 "///  $($Domain)  \\\"
 				}
 				ElseIf($HTML)
 				{
-					WriteHTMLLine 2 0 $Domain
+					WriteHTMLLine 2 0 "///&nbsp;&nbsp;$($Domain)&nbsp;&nbsp;\\\"
 				}
 			}
 
@@ -13622,19 +13662,18 @@ Function ProcessGPOsByDomain
 Function ProcessgGPOsByOUOld
 {
 	Write-Verbose "$(Get-Date): Writing Group Policy data by Domain by OU"
-	$txt = "Group Policies by Organizational Unit"
 	If($MSWORD -or $PDF)
 	{
 		$Script:selection.InsertNewPage()
-		WriteWordLine 1 0 $txt
+		WriteWordLine 1 0 "Group Policies by Organizational Unit"
 	}
 	ElseIf($Text)
 	{
-		Line 0 $txt
+		Line 0 "///  Group Policies by Organizational Unit  \\\"
 	}
 	ElseIf($HTML)
 	{
-		WriteHTMLLine 1 0 $txt
+		WriteHTMLLine 1 0 "///&nbsp;&nbsp;Group Policies by Organizational Unit&nbsp;&nbsp;\\\"
 	}
 	$First = $True
 
@@ -13659,12 +13698,12 @@ Function ProcessgGPOsByOUOld
 			}
 			ElseIf($Text)
 			{
-				Line 0 $txt
+				Line 0 "///  $($txt)  \\\"
 				Line 0 $Disclaimer
 			}
 			ElseIf($HTML)
 			{
-				WriteHTMLLine 2 0 $txt
+				WriteHTMLLine 2 0 "///&nbsp;&nbsp;$($txt)&nbsp;&nbsp;\\\"
 				WriteHTMLLine 0 0 $Disclaimer "" $Null 1 $True $True
 			}
 		}
@@ -13678,12 +13717,12 @@ Function ProcessgGPOsByOUOld
 			}
 			ElseIf($Text)
 			{
-				Line 1 $txt
+				Line 1 "///  $($txt)  \\\"
 				Line 1 $Disclaimer
 			}
 			ElseIf($HTML)
 			{
-				WriteHTMLLine 2 0 $txt
+				WriteHTMLLine 2 0 "///&nbsp;&nbsp;$($txt)&nbsp;&nbsp;\\\"
 				WriteHTMLLine 0 0 $Disclaimer "" $Null 1 $True $True
 			}
 		}
@@ -13857,19 +13896,18 @@ Function ProcessgGPOsByOUOld
 Function ProcessgGPOsByOUNew
 {
 	Write-Verbose "$(Get-Date): Writing Group Policy data by Domain by OU"
-	$txt = "Group Policies by Organizational Unit"
 	If($MSWORD -or $PDF)
 	{
 		$Script:selection.InsertNewPage()
-		WriteWordLine 1 0 $txt
+		WriteWordLine 1 0 "Group Policies by Organizational Unit"
 	}
 	ElseIf($Text)
 	{
-		Line 0 $txt
+		Line 0 "///  Group Policies by Organizational Unit  \\\"
 	}
 	ElseIf($HTML)
 	{
-		WriteHTMLLine 1 0 $txt
+		WriteHTMLLine 1 0 "///&nbsp;&nbsp;Group Policies by Organizational Unit&nbsp;&nbsp;\\\"
 	}
 	$First = $True
 
@@ -13894,12 +13932,12 @@ Function ProcessgGPOsByOUNew
 			}
 			ElseIf($Text)
 			{
-				Line 0 $txt
+				Line 0 "///  $($txt)  \\\"
 				Line 0 $Disclaimer
 			}
 			ElseIf($HTML)
 			{
-				WriteHTMLLine 2 0 $txt
+				WriteHTMLLine 2 0 "///&nbsp;&nbsp;$($txt)&nbsp;&nbsp;\\\"
 				WriteHTMLLine 0 0 $Disclaimer "" $Null 1 $True $True
 			}
 		}
@@ -13913,12 +13951,12 @@ Function ProcessgGPOsByOUNew
 			}
 			ElseIf($Text)
 			{
-				Line 1 $txt
+				Line 1 "///  $($txt)  \\\"
 				Line 1 $Disclaimer
 			}
 			ElseIf($HTML)
 			{
-				WriteHTMLLine 2 0 $txt
+				WriteHTMLLine 2 0 "///&nbsp;&nbsp;$($txt)&nbsp;&nbsp;\\\"
 				WriteHTMLLine 0 0 $Disclaimer "" $Null 1 $True $True
 			}
 		}
@@ -14257,19 +14295,18 @@ Function ProcessMiscDataByDomain
 {
 	Write-Verbose "$(Get-Date): Writing miscellaneous data by domain"
 
-		$txt = "Miscellaneous Data by Domain"
 	If($MSWORD -or $PDF)
 	{
 		$Script:selection.InsertNewPage()
-		WriteWordLine 1 0 $txt
+		WriteWordLine 1 0 "Miscellaneous Data by Domain"
 	}
 	ElseIf($Text)
 	{
-		Line 0 $txt
+		Line 0 "///  Miscellaneous Data by Domain  \\\"
 	}
 	ElseIf($HTML)
 	{
-		WriteHTMLLine 1 0 $txt
+		WriteHTMLLine 1 0 "///&nbsp;&nbsp;Miscellaneous Data by Domain&nbsp;&nbsp;\\\"
 	}
 	
 	$First = $True
@@ -14297,11 +14334,11 @@ Function ProcessMiscDataByDomain
 				}
 				ElseIf($Text)
 				{
-					Line 0 $txt
+					Line 0 "///  $($txt)  \\\"
 				}
 				ElseIf($HTML)
 				{
-					WriteHTMLLine 2 0 $txt
+					WriteHTMLLine 2 0 "///&nbsp;&nbsp;$($txt)&nbsp;&nbsp;\\\"
 				}
 			}
 			Else
@@ -14312,11 +14349,11 @@ Function ProcessMiscDataByDomain
 				}
 				ElseIf($Text)
 				{
-					Line 0 $Domain
+					Line 0 "///  $($Domain)  \\\"
 				}
 				ElseIf($HTML)
 				{
-					WriteHTMLLine 2 0 $Domain
+					WriteHTMLLine 2 0 "///&nbsp;&nbsp;$($Domain)&nbsp;&nbsp;\\\"
 				}
 			}
 
@@ -14333,6 +14370,14 @@ Function ProcessMiscDataByDomain
 			{
 				[int]$UsersCount = $Users.Count
 				
+				#added in V2.22
+				If($UsersCount -gt 100000)
+				{
+					Write-Verbose "$(Get-Date): `t`t`t******************************************************************************************************"
+					Write-Verbose "$(Get-Date): `t`t`tThere are $($UsersCount) user accounts to process. The following 17 actions will take a long time. Be patient."
+					Write-Verbose "$(Get-Date): `t`t`t******************************************************************************************************"
+				}
+				
 				Write-Verbose "$(Get-Date): `t`t`tDisabled users"
 				#V2.20 changed to @()
 				$DisabledUsers = @($Users | Where-Object {$_.Enabled -eq $False})
@@ -14341,7 +14386,7 @@ Function ProcessMiscDataByDomain
 				
 				Write-Verbose "$(Get-Date): `t`t`tUnknown users"
 				#V2.20 changed to @()
-				$UnknownUsers = @($Users | Where-Object {$_.Enabled -eq $Null})
+				$UnknownUsers = @($Users | Where-Object {$Null -eq $_.Enabled})
 			
 				[int]$UsersUnknowncnt = $UnknownUsers.Count
 
@@ -14436,7 +14481,7 @@ Function ProcessMiscDataByDomain
 
 				Write-Verbose "$(Get-Date): `t`t`tActive Users no lastLogonTimestamp"
 				#V2.20 changed to @()
-				$Results = @($EnabledUsers | Where-Object {$_.lastLogonTimestamp -eq $Null})
+				$Results = @($EnabledUsers | Where-Object {$Null -eq $_.lastLogonTimestamp})
 			
 				[int]$ActiveUserslastLogonTimestamp = $Results.Count
 			}
@@ -15385,22 +15430,21 @@ Function ProcessDCDNSInfo
 		#sort by site then by DC
 		$xDCDNSIPInfo = $Script:DCDNSIPInfo | Sort-Object DCSite, DCName
 		
-		$txt = "Domain Controller DNS IP Configuration"
 		If($MSWord -or $PDF)
 		{
 			$Script:selection.InsertNewPage()
-			WriteWordLine 1 0 $txt
+			WriteWordLine 1 0 "Domain Controller DNS IP Configuration"
 			[System.Collections.Hashtable[]] $ItemsWordTable = @();
 			[int] $CurrentServiceIndex = 2;
 		}
 		ElseIf($Text)
 		{
-			Line 0 $txt
+			Line 0 "///  Domain Controller DNS IP Configuration  \\\"
 			Line 0 ""
 		}
 		ElseIf($HTML)
 		{
-			WriteHTMLLine 1 0 $txt
+			WriteHTMLLine 1 0 "///&nbsp;&nbsp;Domain Controller DNS IP Configuration&nbsp;&nbsp;\\\"
 			$rowdata = @()
 		}
 
@@ -15513,23 +15557,22 @@ Function ProcessTimeServerInfo
 	
 	#sort by DC
 	$xTimeServerInfo = $Script:TimeServerInfo | Sort-Object DCName
-	$txt = "Domain Controller Time Server Configuration"
 	
 	If($MSWord -or $PDF)
 	{
 		$Script:selection.InsertNewPage()
-		WriteWordLine 1 0 $txt
+		WriteWordLine 1 0 "Domain Controller Time Server Configuration"
 		[System.Collections.Hashtable[]] $ItemsWordTable = @();
 		[int] $CurrentServiceIndex = 2;
 	}
 	ElseIf($Text)
 	{
-		Line 0 $txt
+		Line 0 "///  Domain Controller Time Server Configuration  \\\"
 		Line 0 ""
 	}
 	ElseIf($HTML)
 	{
-		WriteHTMLLine 1 0 $txt
+		WriteHTMLLine 1 0 "///&nbsp;&nbsp;Domain Controller Time Server Configuration&nbsp;&nbsp;\\\"
 		$rowdata = @()
 	}
 
@@ -15649,12 +15692,11 @@ Function ProcessEventLogInfo
 	#sort by DC and then event log name
 	#V2.20 changed to @()
 	$xEventLogInfo = @($Script:DCEventLogInfo | Sort-Object EventLogName, DCName)
-	$txt = "Domain Controller Event Log Data"
 	
 	If($MSWord -or $PDF)
 	{
 		$Script:selection.InsertNewPage()
-		WriteWordLine 1 0 $txt
+		WriteWordLine 1 0 "Domain Controller Event Log Data"
 		$TableRange = $doc.Application.Selection.Range
 		[int]$Columns = 3
 		[int]$Rows = $xEventLogInfo.Count + 1
@@ -15680,12 +15722,12 @@ Function ProcessEventLogInfo
 	}
 	ElseIf($Text)
 	{
-		Line 0 $txt
+		Line 0 "///  Domain Controller Event Log Data  \\\"
 		Line 0 ""
 	}
 	ElseIf($HTML)
 	{
-		WriteHTMLLine 1 0 $txt
+		WriteHTMLLine 1 0 "///&nbsp;&nbsp;Domain Controller Event Log Data&nbsp;&nbsp;\\\"
 		$rowdata = @()
 	}
 
