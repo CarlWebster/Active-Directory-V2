@@ -42,3 +42,6 @@
 #	Updated Function OutputNicItem with a $ComputerName parameter
 #		Update Function GetComputerWMIInfo to pass the computer name parameter to the OutputNicItem function
 #	Updated Function SendEmail with corrections made by MBS
+#
+#	You can now select multiple output formats. This required extensive code changes.
+#	HTML is now the default output format.
