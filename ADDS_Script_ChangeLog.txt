@@ -4,6 +4,13 @@
 #@carlwebster on Twitter
 #http://www.CarlWebster.com
 
+#Version 2.23
+#	Fix Swedish Table of Contents (Thanks to Johan Kallio)
+#		From 
+#			'sv-'	{ 'Automatisk innehållsförteckning2'; Break }
+#		To
+#			'sv-'	{ 'Automatisk innehållsförteckn2'; Break }
+
 #Version 2.22 14-Feb-2019
 #	Added a line under the OU table stating how many OUs are not protected
 #	Added color $wdColorYellow
