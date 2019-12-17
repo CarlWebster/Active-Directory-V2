@@ -1,15 +1,21 @@
-#Original Script created April, 2014 by Carl Webster with a lot of help from Michael B. Smith Exchange MVP
-#Carl Webster is a Sr. Solutions Architect with Choice Solutions, LLC
+#Original Script created April, 2014
+#Created by Carl Webster and Michael B. Smith
 #webster@carlwebster.com
 #@carlwebster on Twitter
-#http://www.CarlWebster.com
+#https://www.CarlWebster.com
+#
+#michael@smithcons.com
+#@essentialexch on Twitter
+#https://www.essential.exchange/blog/
+#
 
-#Version 2.23
+#Version 2.23 17-Dec-2019
 #	Fix Swedish Table of Contents (Thanks to Johan Kallio)
 #		From 
 #			'sv-'	{ 'Automatisk innehållsförteckning2'; Break }
 #		To
 #			'sv-'	{ 'Automatisk innehållsförteckn2'; Break }
+#	Updated help text
 
 #Version 2.22 14-Feb-2019
 #	Added a line under the OU table stating how many OUs are not protected
