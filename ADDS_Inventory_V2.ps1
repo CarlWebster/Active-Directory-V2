@@ -186,8 +186,8 @@
 .PARAMETER AddDateTime
 	Adds a date time stamp to the end of the file name.
 	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2019 at 6PM is 2019-06-01_1800.
-	Output filename will be ReportName_2019-06-01_1800.docx (or .pdf).
+	June 1, 2020 at 6PM is 2020-06-01_1800.
+	Output filename will be ReportName_2020-06-01_1800.docx (or .pdf).
 	This parameter is disabled by default.
 .PARAMETER ADForest
 	Specifies an Active Directory forest object by providing one of the following 
@@ -641,8 +641,8 @@
 
 	Adds a date time stamp to the end of the file name.
 	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2019 at 6PM is 2019-06-01_1800.
-	Output filename will be company.tld_2019-06-01_1800.docx.
+	June 1, 2020 at 6PM is 2020-06-01_1800.
+	Output filename will be company.tld_2020-06-01_1800.docx.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -PDF -ADForest corp.carlwebster.com 
 	-AddDateTime
@@ -664,8 +664,8 @@
 
 	Adds a date time stamp to the end of the file name.
 	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2019 at 6PM is 2019-06-01_1800.
-	Output filename will be corp.carlwebster.com_2019-06-01_1800.PDF
+	June 1, 2020 at 6PM is 2020-06-01_1800.
+	Output filename will be corp.carlwebster.com_2020-06-01_1800.PDF
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1 -ADForest corp.carlwebster.com 
 	-Folder \\FileServer\ShareName
@@ -802,9 +802,9 @@
 	No objects are output from this script.  This script creates a Word or PDF document.
 .NOTES
 	NAME: ADDS_Inventory_V2.ps1
-	VERSION: 2.22
-	AUTHOR: Carl Webster, Sr. Solutions Architect, Choice Solutions, LLC and Michael B. Smith
-	LASTEDIT: February 13, 2019
+	VERSION: 2.23
+	AUTHOR: Carl Webster and Michael B. Smith
+	LASTEDIT: December 17, 2019
 #>
 
 
@@ -945,14 +945,28 @@ Param(
 
 	
 #webster@carlwebster.com
-#Sr. Solutions Architect at Choice Solutions, LLC
+#Created by Carl Webster and Michael B. Smith
+#webster@carlwebster.com
 #@carlwebster on Twitter
-#http://www.CarlWebster.com
+#https://www.CarlWebster.com
+#
+#michael@smithcons.com
+#@essentialexch on Twitter
+#https://www.essential.exchange/blog/
+#
 #Created on April 10, 2014
 
 #Version 1.0 released to the community on May 31, 2014
 #
 #Version 2.0 is based on version 1.20
+#
+#Version 2.23 17-Dec-2019
+#	Fix Swedish Table of Contents (Thanks to Johan Kallio)
+#		From 
+#			'sv-'	{ 'Automatisk innehållsförteckning2'; Break }
+#		To
+#			'sv-'	{ 'Automatisk innehållsförteckn2'; Break }
+#	Updated help text
 #
 #Version 2.22 14-Feb-2019
 #	Added a line under the OU table stating how many OUs are not protected
@@ -3085,7 +3099,8 @@ Function SetWordHashTable
 			'nb-'	{ 'Automatisk tabell 2'; Break }
 			'nl-'	{ 'Automatische inhoudsopgave 2'; Break }
 			'pt-'	{ 'Sumário Automático 2'; Break }
-			'sv-'	{ 'Automatisk innehållsförteckning2'; Break }
+			# fix in 2.23 thanks to Johan Kallio 'sv-'	{ 'Automatisk innehållsförteckning2'; Break }
+			'sv-'	{ 'Automatisk innehållsförteckn2'; Break }
 			'zh-'	{ '自动目录 2'; Break }
 		}
 	)
@@ -15991,6 +16006,13 @@ Function ProcessScriptEnd
 		}
 	}
 	$ErrorActionPreference = $SaveEAPreference
+	
+	Write-Host "                                                                                    " -BackgroundColor Black -ForegroundColor White
+	Write-Host "               This FREE script was brought to you by Conversant Group              " -BackgroundColor Black -ForegroundColor White
+	Write-Host "We design, build, and manage infrastructure for a secure, dependable user experience" -BackgroundColor Black -ForegroundColor White
+	Write-Host "                       Visit our website conversantgroup.com                        " -BackgroundColor Black -ForegroundColor White
+	Write-Host "                                                                                    " -BackgroundColor Black -ForegroundColor White
+
 }
 #endregion
 
