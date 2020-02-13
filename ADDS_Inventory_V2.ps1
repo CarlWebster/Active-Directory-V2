@@ -802,9 +802,9 @@
 	No objects are output from this script.  This script creates a Word or PDF document.
 .NOTES
 	NAME: ADDS_Inventory_V2.ps1
-	VERSION: 2.23
+	VERSION: 2.24
 	AUTHOR: Carl Webster and Michael B. Smith
-	LASTEDIT: December 17, 2019
+	LASTEDIT: February 13, 2020
 #>
 
 
@@ -959,6 +959,16 @@ Param(
 #Version 1.0 released to the community on May 31, 2014
 #
 #Version 2.0 is based on version 1.20
+#
+#Version 2.24 13-Feb-2020
+#	Fixed several variable name typos
+#	General code cleanup
+#	Updated the following Exchange Schema Versions:
+#		"15312" = "Exchange 2013 CU7 through CU23"
+#		"15317" = "Exchange 2016 Preview and RTM"
+#		"15332" = "Exchange 2016 CU7 through CU15"
+#		"17000" = "Exchange 2019 RTM/CU1"
+#		"17001" = "Exchange 2019 CU2-CU4"
 #
 #Version 2.23 17-Dec-2019
 #	Fix Swedish Table of Contents (Thanks to Johan Kallio)
@@ -8329,7 +8339,7 @@ Function ProcessSiteInformation
 				#build array of connect objects
 				Write-Verbose "$(Get-Date): `t`t`tProcessing automatic connection objects"
 				$Connections = New-Object System.Collections.ArrayList
-				$ConnnectionObjects = $Null
+				$ConnectionObjects = $Null
 				$ConnectionObjects = Get-ADObject -Filter 'objectClass -eq "nTDSConnection" -and options -bor 1' -Searchbase $Script:ConfigNC -Property DistinguishedName, fromServer -Server $ADForest -EA 0
 				
 				If($? -and $Null -ne $ConnectionObjects)
@@ -8590,7 +8600,7 @@ Function ProcessSiteInformation
 				#build array of connect objects
 				Write-Verbose "$(Get-Date): `t`t`tProcessing automatic connection objects"
 				$Connections = New-Object System.Collections.ArrayList
-				$ConnnectionObjects = $Null
+				$ConnectionObjects = $Null
 				$ConnectionObjects = Get-ADObject -Filter 'objectClass -eq "nTDSConnection" -and options -bor 1' `
 				-Searchbase $Script:ConfigNC -Property DistinguishedName, fromServer -Server $ADForest -EA 0
 				
@@ -8840,7 +8850,7 @@ Function ProcessSiteInformation
 				#build array of connect objects
 				Write-Verbose "$(Get-Date): `t`t`tProcessing automatic connection objects"
 				$Connections = New-Object System.Collections.ArrayList
-				$ConnnectionObjects = $Null
+				$ConnectionObjects = $Null
 				$ConnectionObjects = Get-ADObject -Filter 'objectClass -eq "nTDSConnection" -and options -bor 1' `
 				-Searchbase $Script:ConfigNC -Property DistinguishedName, fromServer -Server $ADForest -EA 0
 				
@@ -9050,14 +9060,15 @@ Function ProcessDomains
 	"15292" = "Exchange 2013 SP1/CU4";
 	"15300" = "Exchange 2013 CU5";
 	"15303" = "Exchange 2013 CU6";
-	"15312" = "Exchange 2013 CU7 through CU 21"; #updated in 2.20
-	"15317" = "Exchange 2016";
+	"15312" = "Exchange 2013 CU7 through CU23"; #updated in 2.20, updated in 2.24
+	"15317" = "Exchange 2016 Preview and RTM"; #updated in 2.24
 	"15323" = "Exchange 2016 CU1";
 	"15325" = "Exchange 2016 CU2";
 	"15326" = "Exchange 2016 CU3/CU4/CU5"; #added in 2.16
 	"15330" = "Exchange 2016 CU6"; #added in 2.16
-	"15332" = "Exchange 2016 CU7 through CU11"; #added in 2.16 and updated in 2.20, updated in 2.22
-	"17000" = "Exchange 2019 RTM"; #added in 2.22
+	"15332" = "Exchange 2016 CU7 through CU15"; #added in 2.16 and updated in 2.20, updated in 2.22, updated in 2.24
+	"17000" = "Exchange 2019 RTM/CU1"; #added in 2.22, updated in 2.24
+	"17001" = "Exchange 2019 CU2-CU4"; #added in 2.24
 	}
 
 	ForEach($Domain in $Script:Domains)
@@ -10451,18 +10462,18 @@ Function ProcessDomains
 			}
 		}
 	}
-	$ADDomainTrusts = $Null
-	$ADSchemaInfo = $Null
-	$ChildDomains = $Null
-	$DNSSuffixes = $Null
-	$DomainControllers = $Null
-	$ExchangeSchemaInfo = $Null
-	$FGPPs = $Null
-	$First = $Null
-	$ReadOnlyReplicas = $Null
-	$Replicas = $Null
+	$ADDomainTrusts        = $Null
+	$ADSchemaInfo          = $Null
+	$ChildDomains          = $Null
+	$DNSSuffixes           = $Null
+	$DomainControllers     = $Null
+	$ExchangeSchemaInfo    = $Null
+	$FGPPs                 = $Null
+	$First                 = $Null
+	$ReadOnlyReplicas      = $Null
+	$Replicas              = $Null
 	$SubordinateReferences = $Null
-	$Table = $Null
+	$Table                 = $Null
 }
 #endregion
 
@@ -10973,14 +10984,14 @@ Function OutputTimeServerRegistryKeys
 	#HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\W32Time\TimeProviders\NtpClient	SpecialPollInterval
 	#HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\W32Time\TimeProviders\VMICTimeProvider Enabled
 	
-	$AnnounceFlags = Get-RegistryValue "HKLM:\SYSTEM\CurrentControlSet\Services\W32Time\Config" "AnnounceFlags" $DCName
-	$MaxNegPhaseCorrection = Get-RegistryValue "HKLM:\SYSTEM\CurrentControlSet\Services\W32Time\Config" "MaxNegPhaseCorrection" $DCName
-	$MaxPosPhaseCorrection = Get-RegistryValue "HKLM:\SYSTEM\CurrentControlSet\Services\W32Time\Config" "MaxPosPhaseCorrection" $DCName
-	$NtpServer = Get-RegistryValue "HKLM:\SYSTEM\CurrentControlSet\Services\W32Time\Parameters" "NtpServer" $DCName
-	$NtpType = Get-RegistryValue "HKLM:\SYSTEM\CurrentControlSet\Services\W32Time\Parameters" "Type" $DCName
-	$SpecialPollInterval = Get-RegistryValue "HKLM:\SYSTEM\CurrentControlSet\Services\W32Time\TimeProviders\NtpClient" "SpecialPollInterval" $DCName
+	$AnnounceFlags           = Get-RegistryValue "HKLM:\SYSTEM\CurrentControlSet\Services\W32Time\Config" "AnnounceFlags" $DCName
+	$MaxNegPhaseCorrection   = Get-RegistryValue "HKLM:\SYSTEM\CurrentControlSet\Services\W32Time\Config" "MaxNegPhaseCorrection" $DCName
+	$MaxPosPhaseCorrection   = Get-RegistryValue "HKLM:\SYSTEM\CurrentControlSet\Services\W32Time\Config" "MaxPosPhaseCorrection" $DCName
+	$NtpServer               = Get-RegistryValue "HKLM:\SYSTEM\CurrentControlSet\Services\W32Time\Parameters" "NtpServer" $DCName
+	$NtpType                 = Get-RegistryValue "HKLM:\SYSTEM\CurrentControlSet\Services\W32Time\Parameters" "Type" $DCName
+	$SpecialPollInterval     = Get-RegistryValue "HKLM:\SYSTEM\CurrentControlSet\Services\W32Time\TimeProviders\NtpClient" "SpecialPollInterval" $DCName
 	$VMICTimeProviderEnabled = Get-RegistryValue "HKLM:\SYSTEM\CurrentControlSet\Services\W32Time\TimeProviders\VMICTimeProvider" "Enabled" $DCName
-	$NTPSource = w32tm /query /computer:$DCName /source
+	$NTPSource               = w32tm /query /computer:$DCName /source
 	
 	If($VMICTimeProviderEnabled -eq 0)
 	{
@@ -11779,12 +11790,12 @@ Function ProcessGroupInformation
 			
 			Write-Verbose "$(Get-Date): `t`tGetting counts"
 			
-			[int]$SecurityCount = 0
-			[int]$DistributionCount = 0
-			[int]$GlobalCount = 0
-			[int]$UniversalCount = 0
-			[int]$DomainLocalCount = 0
-			[int]$ContactsCount = 0
+			[int]$SecurityCount        = 0
+			[int]$DistributionCount    = 0
+			[int]$GlobalCount          = 0
+			[int]$UniversalCount       = 0
+			[int]$DomainLocalCount     = 0
+			[int]$ContactsCount        = 0
 			[int]$GroupsWithSIDHistory = 0
 			
 			Write-Verbose "$(Get-Date): `t`t`tSecurity Groups"
@@ -11831,14 +11842,14 @@ Function ProcessGroupInformation
 
 			[int]$ContactsCount = $Results.Count
 
-			[string]$TotalCountStr = "{0,7:N0}" -f ($SecurityCount + $DistributionCount)
-			[string]$SecurityCountStr = "{0,7:N0}" -f $SecurityCount
-			[string]$DomainLocalCountStr = "{0,7:N0}" -f $DomainLocalCount
-			[string]$GlobalCountStr = "{0,7:N0}" -f $GlobalCount
-			[string]$UniversalCountStr = "{0,7:N0}" -f $UniversalCount
-			[string]$DistributionCountStr = "{0,7:N0}" -f $DistributionCount
+			[string]$TotalCountStr           = "{0,7:N0}" -f ($SecurityCount + $DistributionCount)
+			[string]$SecurityCountStr        = "{0,7:N0}" -f $SecurityCount
+			[string]$DomainLocalCountStr     = "{0,7:N0}" -f $DomainLocalCount
+			[string]$GlobalCountStr          = "{0,7:N0}" -f $GlobalCount
+			[string]$UniversalCountStr       = "{0,7:N0}" -f $UniversalCount
+			[string]$DistributionCountStr    = "{0,7:N0}" -f $DistributionCount
 			[string]$GroupsWithSIDHistoryStr = "{0,7:N0}" -f $GroupsWithSIDHistory
-			[string]$ContactsCountStr = "{0,7:N0}" -f $ContactsCount
+			[string]$ContactsCountStr        = "{0,7:N0}" -f $ContactsCount
 			
 			Write-Verbose "$(Get-Date): `t`tBuild groups table"
 			If($MSWORD -or $PDF)
@@ -11939,15 +11950,15 @@ Function ProcessGroupInformation
 			
 			If($? -and $Null -ne $DomainInfo)
 			{
-				$DomainAdminsSID = "$($DomainInfo.DomainSID)-512"
+				$DomainAdminsSID     = "$($DomainInfo.DomainSID)-512"
 				$EnterpriseAdminsSID = "$($DomainInfo.DomainSID)-519"
-				$SchemaAdminsSID = "$($DomainInfo.DomainSID)-518"
+				$SchemaAdminsSID     = "$($DomainInfo.DomainSID)-518"
 			}
 			Else
 			{
-				$DomainAdminsSID = $Null
+				$DomainAdminsSID     = $Null
 				$EnterpriseAdminsSID = $Null
-				$SchemaAdminsSID = $Null
+				$SchemaAdminsSID     = $Null
 			}
 			
 			Write-Verbose "$(Get-Date): `t`tListing domain admins"
@@ -12946,7 +12957,7 @@ Function ProcessGroupInformation
 			#http://www.shariqsheikh.com/blog/index.php/200908/use-powershell-to-look-up-admincount-from-adminsdholder-and-sdprop/		
 			Write-Verbose "$(Get-Date): `t`tListing users with AdminCount=1"
 			#V2.20 changed to @()
-			$AdminCounts = @(Get-ADUser -LDAPFilter "(admincount=1)"  -Server $Domain -EA 0)
+			$AdminCounts = @(Get-ADUser -LDAPFilter "(admincount=1)" -Server $Domain -EA 0)
 			
 			If($? -and $Null -ne $AdminCounts)
 			{
@@ -14445,7 +14456,7 @@ Function ProcessMiscDataByDomain
 				#2.16
 				Write-Verbose "$(Get-Date): `t`t`tAll users with Homedrive set in ADUC"
 				#V2.20 changed to @()
-				$HomeDriveUsers = @($Users | Where-Object {$_.HomeDrive -ne $Null})
+				$HomeDriveUsers = @($Users | Where-Object {$Null -ne $_.HomeDrive}) #fixed in 2.24
 			
 				[int]$UsersHomeDrivecnt = $HomeDriveUsers.Count
 				
@@ -14502,44 +14513,44 @@ Function ProcessMiscDataByDomain
 			}
 			Else
 			{
-				[int]$UsersCount = 0
-				[int]$UsersDisabledcnt = 0
-				[int]$UsersLockedOutcnt = 0
-				[int]$UsersPasswordExpiredcnt = 0
-				[int]$UsersPasswordNeverExpirescnt = 0
-				[int]$UsersPasswordNotRequiredcnt = 0
-				[int]$UsersCannotChangePasswordcnt = 0
-				[int]$UsersWithSIDHistorycnt = 0
-				[int]$UsersHomeDrivecnt = 0
-				[int]$UsersPrimaryGroupcnt = 0
-				[int]$UsersRDSHomeDrivecnt = 0
-				[int]$ActiveUsersCountcnt = 0
-				[int]$ActiveUsersPasswordExpiredcnt = 0
-				[int]$ActiveUsersPasswordNeverExpirescnt = 0
-				[int]$ActiveUsersPasswordNotRequiredcnt = 0
-				[int]$ActiveUsersCannotChangePasswordcnt = 0
-				[int]$ActiveUserslastLogonTimestampcnt = 0
+				[int]$UsersCount                      = 0
+				[int]$UsersDisabledcnt                = 0
+				[int]$UsersLockedOutcnt               = 0
+				[int]$UsersPasswordExpiredcnt         = 0
+				[int]$UsersPasswordNeverExpirescnt    = 0
+				[int]$UsersPasswordNotRequiredcnt     = 0
+				[int]$UsersCannotChangePasswordcnt    = 0
+				[int]$UsersWithSIDHistorycnt          = 0
+				[int]$UsersHomeDrivecnt               = 0
+				[int]$UsersPrimaryGroupcnt            = 0
+				[int]$UsersRDSHomeDrivecnt            = 0
+				[int]$ActiveUsersCount                = 0 #fixed 2.24
+				[int]$ActiveUsersPasswordExpired      = 0 #fixed 2.24
+				[int]$ActiveUsersPasswordNeverExpires = 0 #fixed 2.24
+				[int]$ActiveUsersPasswordNotRequired  = 0 #fixed 2.24
+				[int]$ActiveUsersCannotChangePassword = 0 #fixed 2.24
+				[int]$ActiveUserslastLogonTimestamp   = 0 #fixed 2.24
 			}
 
 			Write-Verbose "$(Get-Date): `t`tFormat numbers into strings"
-			[string]$UsersCountStr = "{0,7:N0}" -f $UsersCount
-			[string]$UsersDisabledStr = "{0,7:N0}" -f $UsersDisabledcnt
-			[string]$UsersUnknownStr = "{0,7:N0}" -f $UsersUnknowncnt
-			[string]$UsersLockedOutStr = "{0,7:N0}" -f $UsersLockedOutcnt
-			[string]$UsersPasswordExpiredStr = "{0,7:N0}" -f $UsersPasswordExpiredcnt
-			[string]$UsersPasswordNeverExpiresStr = "{0,7:N0}" -f $UsersPasswordNeverExpirescnt
-			[string]$UsersPasswordNotRequiredStr = "{0,7:N0}" -f $UsersPasswordNotRequiredcnt
-			[string]$UsersCannotChangePasswordStr = "{0,7:N0}" -f $UsersCannotChangePasswordcnt
-			[string]$UsersWithSIDHistoryStr = "{0,7:N0}" -f $UsersWithSIDHistorycnt
-			[string]$UsersHomeDriveStr = "{0,7:N0}" -f $UsersHomeDrivecnt
-			[string]$UsersPrimaryGroupStr = "{0,7:N0}" -f $UsersPrimaryGroupcnt
-			[string]$UsersRDSHomeDriveStr = "{0,7:N0}" -f $UsersRDSHomeDrivecnt
-			[string]$ActiveUsersCountStr = "{0,7:N0}" -f $ActiveUsersCount
-			[string]$ActiveUsersPasswordExpiredStr = "{0,7:N0}" -f $ActiveUsersPasswordExpired
+			[string]$UsersCountStr                      = "{0,7:N0}" -f $UsersCount
+			[string]$UsersDisabledStr                   = "{0,7:N0}" -f $UsersDisabledcnt
+			[string]$UsersUnknownStr                    = "{0,7:N0}" -f $UsersUnknowncnt
+			[string]$UsersLockedOutStr                  = "{0,7:N0}" -f $UsersLockedOutcnt
+			[string]$UsersPasswordExpiredStr            = "{0,7:N0}" -f $UsersPasswordExpiredcnt
+			[string]$UsersPasswordNeverExpiresStr       = "{0,7:N0}" -f $UsersPasswordNeverExpirescnt
+			[string]$UsersPasswordNotRequiredStr        = "{0,7:N0}" -f $UsersPasswordNotRequiredcnt
+			[string]$UsersCannotChangePasswordStr       = "{0,7:N0}" -f $UsersCannotChangePasswordcnt
+			[string]$UsersWithSIDHistoryStr             = "{0,7:N0}" -f $UsersWithSIDHistorycnt
+			[string]$UsersHomeDriveStr                  = "{0,7:N0}" -f $UsersHomeDrivecnt
+			[string]$UsersPrimaryGroupStr               = "{0,7:N0}" -f $UsersPrimaryGroupcnt
+			[string]$UsersRDSHomeDriveStr               = "{0,7:N0}" -f $UsersRDSHomeDrivecnt
+			[string]$ActiveUsersCountStr                = "{0,7:N0}" -f $ActiveUsersCount
+			[string]$ActiveUsersPasswordExpiredStr      = "{0,7:N0}" -f $ActiveUsersPasswordExpired
 			[string]$ActiveUsersPasswordNeverExpiresStr = "{0,7:N0}" -f $ActiveUsersPasswordNeverExpires
-			[string]$ActiveUsersPasswordNotRequiredStr = "{0,7:N0}" -f $ActiveUsersPasswordNotRequired
+			[string]$ActiveUsersPasswordNotRequiredStr  = "{0,7:N0}" -f $ActiveUsersPasswordNotRequired
 			[string]$ActiveUsersCannotChangePasswordStr = "{0,7:N0}" -f $ActiveUsersCannotChangePassword
-			[string]$ActiveUserslastLogonTimestampStr = "{0,7:N0}" -f $ActiveUserslastLogonTimestamp
+			[string]$ActiveUserslastLogonTimestampStr   = "{0,7:N0}" -f $ActiveUserslastLogonTimestamp
 
 			If($MSWORD -or $PDF)
 			{
