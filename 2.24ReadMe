@@ -1,9 +1,0 @@
-#Version 2.24 13-Feb-2020
-#	Fixed several variable name typos
-#	General code cleanup
-#	Updated the following Exchange Schema Versions:
-#		"15312" = "Exchange 2013 CU7 through CU23"
-#		"15317" = "Exchange 2016 Preview and RTM"
-#		"15332" = "Exchange 2016 CU7 through CU15"
-#		"17000" = "Exchange 2019 RTM/CU1"
-#		"17001" = "Exchange 2019 CU2-CU4"
