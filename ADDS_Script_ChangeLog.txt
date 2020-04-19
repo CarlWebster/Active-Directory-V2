@@ -9,6 +9,10 @@
 #https://www.essential.exchange/blog/
 #
 
+#Version 2.25 19-Apr-2020
+#	Update Function SendEmail to handle anonymous unauthenticated email
+#		Update Help Text with examples
+
 #Version 2.24 13-Feb-2020
 #	Fixed several variable name typos
 #	General code cleanup
