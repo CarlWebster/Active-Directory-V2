@@ -63,6 +63,70 @@
 	Remote Server Administration Tools for Windows 10
 		http://www.microsoft.com/en-us/download/details.aspx?id=45520
 	
+.PARAMETER HTML
+	Creates an HTML file with an .html extension.
+	This parameter is disabled by default.
+.PARAMETER MSWord
+	SaveAs DOCX file
+	This parameter is set True if no other output format is selected.
+.PARAMETER PDF
+	SaveAs PDF file instead of DOCX file.
+	This parameter is disabled by default.
+	The PDF file is roughly 5X to 10X larger than the DOCX file.
+	This parameter requires Microsoft Word to be installed.
+	This parameter uses the Word SaveAs PDF capability.
+.PARAMETER Text
+	Creates a formatted text file with a .txt extension.
+	This parameter is disabled by default.
+.PARAMETER AddDateTime
+	Adds a date time stamp to the end of the file name.
+	The timestamp is in the format of yyyy-MM-dd_HHmm.
+	June 1, 2020 at 6PM is 2020-06-01_1800.
+	Output filename will be ReportName_2020-06-01_1800.docx (or .pdf).
+	This parameter is disabled by default.
+.PARAMETER ADDomain
+	Specifies an Active Directory domain object by providing one of the following 
+	property values. The identifier in parentheses is the LDAP display name for the 
+	attribute. All values are for the domainDNS object that represents the domain.
+
+	Distinguished Name
+
+	Example: DC=tullahoma,DC=corp,DC=labaddomain,DC=com
+
+	GUID (objectGUID)
+
+	Example: b9fa5fbd-4334-4a98-85f1-3a3a44069fc6
+
+	Security Identifier (objectSid)
+
+	Example: S-1-5-21-3643273344-1505409314-3732760578
+
+	DNS domain name
+
+	Example: tullahoma.corp.labaddomain.com
+
+	NetBIOS domain name
+
+	Example: Tullahoma
+
+	If both ADForest and ADDomain are specified, ADDomain takes precedence.
+.PARAMETER ADForest
+	Specifies an Active Directory forest object by providing one of the following 
+	attribute values. 
+	The identifier in parentheses is the LDAP display name for the attribute.
+
+	Fully qualified domain name
+		Example: labaddomain.com
+	GUID (objectGUID)
+		Example: 599c3d2e-e61e-4d20-7b77-030d99495e19
+	DNS host name
+		Example: labaddomain.com
+	NetBIOS name
+		Example: labaddomain
+	
+	Default value is $Env:USERDNSDOMAIN	
+	
+	If both ADForest and ADDomain are specified, ADDomain takes precedence.
 .PARAMETER CompanyAddress
 	Company Address to use for the Cover Page, if the Cover Page has the Address field.
 	
@@ -163,75 +227,6 @@
 	The default value is Sideline.
 	This parameter has an alias of CP.
 	This parameter is only valid with the MSWORD and PDF output parameters.
-.PARAMETER UserName
-	Username to use for the Cover Page and Footer.
-	Default value is contained in $env:username
-	This parameter has an alias of UN.
-	This parameter is only valid with the MSWORD and PDF output parameters.
-.PARAMETER HTML
-	Creates an HTML file with an .html extension.
-	This parameter is disabled by default.
-.PARAMETER MSWord
-	SaveAs DOCX file
-	This parameter is set True if no other output format is selected.
-.PARAMETER PDF
-	SaveAs PDF file instead of DOCX file.
-	This parameter is disabled by default.
-	The PDF file is roughly 5X to 10X larger than the DOCX file.
-	This parameter requires Microsoft Word to be installed.
-	This parameter uses the Word SaveAs PDF capability.
-.PARAMETER Text
-	Creates a formatted text file with a .txt extension.
-	This parameter is disabled by default.
-.PARAMETER AddDateTime
-	Adds a date time stamp to the end of the file name.
-	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2020 at 6PM is 2020-06-01_1800.
-	Output filename will be ReportName_2020-06-01_1800.docx (or .pdf).
-	This parameter is disabled by default.
-.PARAMETER ADForest
-	Specifies an Active Directory forest object by providing one of the following 
-	attribute values. 
-	The identifier in parentheses is the LDAP display name for the attribute.
-
-	Fully qualified domain name
-		Example: labaddomain.com
-	GUID (objectGUID)
-		Example: 599c3d2e-e61e-4d20-7b77-030d99495e19
-	DNS host name
-		Example: labaddomain.com
-	NetBIOS name
-		Example: labaddomain
-	
-	Default value is $Env:USERDNSDOMAIN	
-	
-	If both ADForest and ADDomain are specified, ADDomain takes precedence.
-.PARAMETER ADDomain
-	Specifies an Active Directory domain object by providing one of the following 
-	property values. The identifier in parentheses is the LDAP display name for the 
-	attribute. All values are for the domainDNS object that represents the domain.
-
-	Distinguished Name
-
-	Example: DC=tullahoma,DC=corp,DC=labaddomain,DC=com
-
-	GUID (objectGUID)
-
-	Example: b9fa5fbd-4334-4a98-85f1-3a3a44069fc6
-
-	Security Identifier (objectSid)
-
-	Example: S-1-5-21-3643273344-1505409314-3732760578
-
-	DNS domain name
-
-	Example: tullahoma.corp.labaddomain.com
-
-	NetBIOS domain name
-
-	Example: Tullahoma
-
-	If both ADForest and ADDomain are specified, ADDomain takes precedence.
 .PARAMETER ComputerName
 	Specifies which domain controller to use to run the script against.
 	If ADForest is a trusted forest, then ComputerName is required to detect the 
@@ -250,6 +245,14 @@
 	using an account with permission to retrieve hardware information (i.e. Domain 
 	Admin).
 	Selecting this parameter will add an extra section to the report.
+	This parameter is disabled by default.
+.PARAMETER Dev
+	Clears errors at the beginning of the script.
+	Outputs all errors to a text file at the end of the script.
+	
+	This is used when the script developer requests more troubleshooting data.
+	The text file is placed in the same folder from where the script is run.
+	
 	This parameter is disabled by default.
 .PARAMETER Folder
 	Specifies the optional output folder to save the output report. 
@@ -291,6 +294,8 @@
 	
 	This parameter is disabled by default.
 	This parameter has an alias of IU.
+.PARAMETER Log
+	Generates a log file for troubleshooting.
 .PARAMETER MaxDetails
 	Adds maximum detail to the report.
 	
@@ -305,6 +310,12 @@
 	can take a very long time to run.
 
 	This parameter has an alias of MAX.
+.PARAMETER ScriptInfo
+	Outputs information about the script to a text file.
+	The text file is placed in the same folder from where the script is run.
+	
+	This parameter is disabled by default.
+	This parameter has an alias of SI.
 .PARAMETER Services
 	Gather information on all services running on domain controllers.
 	Servers that are configured to automatically start but are not running will be 
@@ -333,6 +344,11 @@
 	
 	Multiple sections are separated by a comma. -Section forest, domains
 	
+.PARAMETER UserName
+	Username to use for the Cover Page and Footer.
+	Default value is contained in $env:username
+	This parameter has an alias of UN.
+	This parameter is only valid with the MSWORD and PDF output parameters.
 .PARAMETER SmtpServer
 	Specifies the optional email server to send the output report. 
 .PARAMETER SmtpPort
@@ -347,22 +363,6 @@
 .PARAMETER To
 	Specifies the username for the To email address.
 	If SmtpServer is used, this is a required parameter.
-.PARAMETER Dev
-	Clears errors at the beginning of the script.
-	Outputs all errors to a text file at the end of the script.
-	
-	This is used when the script developer requests more troubleshooting data.
-	The text file is placed in the same folder from where the script is run.
-	
-	This parameter is disabled by default.
-.PARAMETER ScriptInfo
-	Outputs information about the script to a text file.
-	The text file is placed in the same folder from where the script is run.
-	
-	This parameter is disabled by default.
-	This parameter has an alias of SI.
-.PARAMETER Log
-	Generates a log file for troubleshooting.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V2.ps1
 	
@@ -854,7 +854,7 @@
 	NAME: ADDS_Inventory_V2.ps1
 	VERSION: 2.25
 	AUTHOR: Carl Webster and Michael B. Smith
-	LASTEDIT: April 19, 2020
+	LASTEDIT: April 21, 2020
 #>
 
 
@@ -862,87 +862,73 @@
 [CmdletBinding(SupportsShouldProcess = $False, ConfirmImpact = "None", DefaultParameterSetName = "Word") ]
 
 Param(
-	[parameter(ParameterSetName="Word",Mandatory=$False)] 
-	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Alias("CA")]
-	[ValidateNotNullOrEmpty()]
-	[string]$CompanyAddress="",
-    
-	[parameter(ParameterSetName="Word",Mandatory=$False)] 
-	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Alias("CE")]
-	[ValidateNotNullOrEmpty()]
-	[string]$CompanyEmail="",
-    
-	[parameter(ParameterSetName="Word",Mandatory=$False)] 
-	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Alias("CF")]
-	[ValidateNotNullOrEmpty()]
-	[string]$CompanyFax="",
-    
-	[parameter(ParameterSetName="Word",Mandatory=$False)] 
-	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Alias("CN")]
-	[ValidateNotNullOrEmpty()]
-	[string]$CompanyName="",
-    
-	[parameter(ParameterSetName="Word",Mandatory=$False)] 
-	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Alias("CPh")]
-	[ValidateNotNullOrEmpty()]
-	[string]$CompanyPhone="",
-    
-	[parameter(ParameterSetName="Word",Mandatory=$False)] 
-	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Alias("CP")]
-	[ValidateNotNullOrEmpty()]
-	[string]$CoverPage="Sideline", 
-
-	[parameter(ParameterSetName="Word",Mandatory=$False)] 
-	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Alias("UN")]
-	[ValidateNotNullOrEmpty()]
-	[string]$UserName=$env:username,
-
 	[parameter(ParameterSetName="HTML",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
 	[Switch]$HTML=$False,
 
 	[parameter(ParameterSetName="Word",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
 	[Switch]$MSWord=$False,
 
 	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
 	[Switch]$PDF=$False,
 
 	[parameter(ParameterSetName="Text",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
 	[Switch]$Text=$False,
 
 	[parameter(Mandatory=$False)] 
 	[Switch]$AddDateTime=$False,
 	
 	[parameter(Mandatory=$False)] 
-	[string]$ADForest=$Env:USERDNSDOMAIN, 
-
-	[parameter(Mandatory=$False)] 
 	[string]$ADDomain="", 
 
+	[parameter(Mandatory=$False)] 
+	[string]$ADForest=$Env:USERDNSDOMAIN, 
+
+	[parameter(ParameterSetName="Word",Mandatory=$False)] 
+	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
+	[Alias("CA")]
+	[ValidateNotNullOrEmpty()]
+	[string]$CompanyAddress="",
+    
+	[parameter(ParameterSetName="Word",Mandatory=$False)] 
+	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
+	[Alias("CE")]
+	[ValidateNotNullOrEmpty()]
+	[string]$CompanyEmail="",
+    
+	[parameter(ParameterSetName="Word",Mandatory=$False)] 
+	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
+	[Alias("CF")]
+	[ValidateNotNullOrEmpty()]
+	[string]$CompanyFax="",
+    
+	[parameter(ParameterSetName="Word",Mandatory=$False)] 
+	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
+	[Alias("CN")]
+	[ValidateNotNullOrEmpty()]
+	[string]$CompanyName="",
+    
+	[parameter(ParameterSetName="Word",Mandatory=$False)] 
+	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
+	[Alias("CPh")]
+	[ValidateNotNullOrEmpty()]
+	[string]$CompanyPhone="",
+    
 	[parameter(Mandatory=$False)] 
 	[Alias("ServerName")]
 	[string]$ComputerName=$Env:USERDNSDOMAIN,
 	
+	[parameter(ParameterSetName="Word",Mandatory=$False)] 
+	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
+	[Alias("CP")]
+	[ValidateNotNullOrEmpty()]
+	[string]$CoverPage="Sideline", 
+
 	[parameter(Mandatory=$False)] 
 	[Switch]$DCDNSInfo=$False, 
 
+	[parameter(Mandatory=$False)] 
+	[Switch]$Dev=$False,
+	
 	[parameter(Mandatory=$False)] 
 	[string]$Folder="",
 	
@@ -957,40 +943,43 @@ Param(
 	[Switch]$IncludeUserInfo=$False,
 	
 	[parameter(Mandatory=$False)] 
+	[Switch]$Log=$False,
+	
+	[parameter(Mandatory=$False)] 
 	[Alias("MAX")]
 	[Switch]$MaxDetails=$False,
 
-	[parameter(Mandatory=$False )] 
-	[Switch]$Services=$False,
-	
-	[parameter(Mandatory=$False)] 
-	[array]$Section="All",
-	
-	[parameter(ParameterSetName="SMTP",Mandatory=$True)] 
-	[string]$SmtpServer="",
-
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[int]$SmtpPort=25,
-
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[switch]$UseSSL=$False,
-
-	[parameter(ParameterSetName="SMTP",Mandatory=$True)] 
-	[string]$From="",
-
-	[parameter(ParameterSetName="SMTP",Mandatory=$True)] 
-	[string]$To="",
-
-	[parameter(Mandatory=$False)] 
-	[Switch]$Dev=$False,
-	
 	[parameter(Mandatory=$False)] 
 	[Alias("SI")]
 	[Switch]$ScriptInfo=$False,
 	
 	[parameter(Mandatory=$False)] 
-	[Switch]$Log=$False
+	[array]$Section="All",
 	
+	[parameter(Mandatory=$False )] 
+	[Switch]$Services=$False,
+	
+	[parameter(ParameterSetName="Word",Mandatory=$False)] 
+	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
+	[Alias("UN")]
+	[ValidateNotNullOrEmpty()]
+	[string]$UserName=$env:username,
+
+	[parameter(Mandatory=$False)] 
+	[string]$SmtpServer="",
+
+	[parameter(Mandatory=$False)] 
+	[int]$SmtpPort=25,
+
+	[parameter(Mandatory=$False)] 
+	[switch]$UseSSL=$False,
+
+	[parameter(Mandatory=$False)] 
+	[string]$From="",
+
+	[parameter(Mandatory=$False)] 
+	[string]$To=""
+
 	)
 
 	
@@ -1010,7 +999,9 @@ Param(
 #
 #Version 2.0 is based on version 1.20
 #
-#Version 2.25 19-Apr-2020
+#Version 2.25 21-Apr-2020
+#	Remove the SMTP parameterset and manually verify the parameters
+#	Reorder parameters
 #	Update Function SendEmail to handle anonymous unauthenticated email
 #		Update Help Text with examples
 #
@@ -1413,6 +1404,68 @@ If($Folder -ne "")
 		Write-Error "Folder $Folder does not exist.  Script cannot continue"
 		Exit
 	}
+}
+
+
+If(![String]::IsNullOrEmpty($SmtpServer) -and [String]::IsNullOrEmpty($From) -and [String]::IsNullOrEmpty($To))
+{
+	Write-Error "
+	`n`n
+	`tYou specified an SmtpServer but did not include a From or To email address.
+	`n`n
+	`tScript cannot continue.
+	`n`n"
+	Exit
+}
+If(![String]::IsNullOrEmpty($SmtpServer) -and [String]::IsNullOrEmpty($From) -and ![String]::IsNullOrEmpty($To))
+{
+	Write-Error "
+	`n`n
+	`tYou specified an SmtpServer and a To email address but did not include a From email address.
+	`n`n
+	`tScript cannot continue.
+	`n`n"
+	Exit
+}
+If(![String]::IsNullOrEmpty($SmtpServer) -and [String]::IsNullOrEmpty($To) -and ![String]::IsNullOrEmpty($From))
+{
+	Write-Error "
+	`n`n
+	`tYou specified an SmtpServer and a From email address but did not include a To email address.
+	`n`n
+	`tScript cannot continue.
+	`n`n"
+	Exit
+}
+If(![String]::IsNullOrEmpty($From) -and ![String]::IsNullOrEmpty($To) -and [String]::IsNullOrEmpty($SmtpServer))
+{
+	Write-Error "
+	`n`n
+	`tYou specified From and To email addresses but did not include the SmtpServer.
+	`n`n
+	`tScript cannot continue.
+	`n`n"
+	Exit
+}
+If(![String]::IsNullOrEmpty($From) -and [String]::IsNullOrEmpty($SmtpServer))
+{
+	Write-Error "
+	`n`n
+	`tYou specified a From email address but did not include the SmtpServer.
+	`n`n
+	`tScript cannot continue.
+	`n`n"
+	Exit
+}
+If(![String]::IsNullOrEmpty($To) -and [String]::IsNullOrEmpty($SmtpServer))
+{
+	Write-Error "
+	`n`n
+	`tYou specified a To email address but did not include the SmtpServer.
+	`n`n
+	`tScript cannot continue.
+	`n`n"
+	Exit
 }
 
 #region initialize variables for word html and text

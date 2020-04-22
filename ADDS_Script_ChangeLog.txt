@@ -9,7 +9,9 @@
 #https://www.essential.exchange/blog/
 #
 
-#Version 2.25 19-Apr-2020
+#Version 2.25 21-Apr-2020
+#	Remove the SMTP parameterset and manually verify the parameters
+#	Reorder parameters
 #	Update Function SendEmail to handle anonymous unauthenticated email
 #		Update Help Text with examples
 
