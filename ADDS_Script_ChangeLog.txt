@@ -9,6 +9,13 @@
 #https://www.essential.exchange/blog/
 #
 
+#Version 2.26
+#	Add checking for a Word version of 0, which indicates the Office installation needs repairing
+#	Add Receive Side Scaling setting to Function OutputNICItem
+#	Change Text output to use [System.Text.StringBuilder]
+#		Updated Functions Line and SaveAndCloseTextDocument
+#	Update Functions GetComputerWMIInfo and OutputNicInfo to fix two bugs in NIC Power Management settings
+
 #Version 2.25 21-Apr-2020
 #	Remove the SMTP parameterset and manually verify the parameters
 #	Reorder parameters
