@@ -999,11 +999,13 @@ Param(
 #
 #Version 2.0 is based on version 1.20
 #
-#Version 2.26
+#Version 2.26 28-Apr-2020
 #	Add checking for a Word version of 0, which indicates the Office installation needs repairing
 #	Add Receive Side Scaling setting to Function OutputNICItem
+#	Change location of the -Dev, -Log, and -ScriptInfo output files from the script folder to the -Folder location (Thanks to Guy Leech for the "suggestion")
 #	Change Text output to use [System.Text.StringBuilder]
 #		Updated Functions Line and SaveAndCloseTextDocument
+#	Reformatted the terminating Write-Error messages to make them more visible and readable in the console
 #	Update Functions GetComputerWMIInfo and OutputNicInfo to fix two bugs in NIC Power Management settings
 #
 #Version 2.25 21-Apr-2020
@@ -1245,32 +1247,6 @@ $PSDefaultParameterValues = @{"*:Verbose"=$True}
 $SaveEAPreference = $ErrorActionPreference
 $ErrorActionPreference = 'SilentlyContinue'
 
-#V2.18 added
-If($Log) 
-{
-	#start transcript logging
-	$Script:ThisScriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
-	$Script:LogPath = "$Script:ThisScriptPath\ADDSDocScriptTranscript_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
-	
-	try 
-	{
-		Start-Transcript -Path $Script:LogPath -Force -Verbose:$false | Out-Null
-		Write-Verbose "$(Get-Date): Transcript/log started at $Script:LogPath"
-		$Script:StartLog = $true
-	} 
-	catch 
-	{
-		Write-Verbose "$(Get-Date): Transcript/log failed at $Script:LogPath"
-		$Script:StartLog = $false
-	}
-}
-
-If($Dev)
-{
-	$Error.Clear()
-	$Script:DevErrorFile = "$($pwd.Path)\ADInventoryScriptErrors_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
-}
-
 If($Null -eq $MSWord)
 {
 	If($Text -or $HTML -or $PDF)
@@ -1444,6 +1420,47 @@ If($Folder -ne "")
 		"
 		Exit
 	}
+}
+
+If($Folder -eq "")
+{
+	$Script:pwdpath = $pwd.Path
+}
+Else
+{
+	$Script:pwdpath = $Folder
+}
+
+If($Script:pwdpath.EndsWith("\"))
+{
+	#remove the trailing \
+	$Script:pwdpath = $Script:pwdpath.SubString(0, ($Script:pwdpath.Length - 1))
+}
+
+
+#V2.18 added
+If($Log) 
+{
+	#start transcript logging
+	$Script:LogPath = "$($Script:pwdpath)\ADDSDocScriptTranscript_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
+	
+	try 
+	{
+		Start-Transcript -Path $Script:LogPath -Force -Verbose:$false | Out-Null
+		Write-Verbose "$(Get-Date): Transcript/log started at $Script:LogPath"
+		$Script:StartLog = $true
+	} 
+	catch 
+	{
+		Write-Verbose "$(Get-Date): Transcript/log failed at $Script:LogPath"
+		$Script:StartLog = $false
+	}
+}
+
+If($Dev)
+{
+	$Error.Clear()
+	$Script:DevErrorFile = "$($Script:pwdpath)\ADInventoryScriptErrors_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
 }
 
 
@@ -5015,16 +5032,17 @@ Function SetupHTML
 	Write-Verbose "$(Get-Date): Setting up HTML"
 	If(!$AddDateTime)
 	{
-		[string]$Script:FileName1 = "$($pwdpath)\$($OutputFileName).html"
+		[string]$Script:FileName1 = "$($Script:pwdpath)\$($OutputFileName).html"
 	}
 	ElseIf($AddDateTime)
 	{
-		[string]$Script:FileName1 = "$($pwdpath)\$($OutputFileName)_$(Get-Date -f yyyy-MM-dd_HHmm).html"
+		[string]$Script:FileName1 = "$($Script:pwdpath)\$($OutputFileName)_$(Get-Date -f yyyy-MM-dd_HHmm).html"
 	}
 
 	$htmlhead = "<html><head><meta http-equiv='Content-Language' content='da'><title>" + $Script:Title + "</title></head><body>"
 	out-file -FilePath $Script:Filename1 -Force -InputObject $HTMLHead 4>$Null
-}#endregion
+}
+#endregion
 
 #region Iain's Word table functions
 
@@ -6593,28 +6611,13 @@ Function SetFileName1andFileName2
 {
 	Param([string]$OutputFileName)
 	
-	If($Folder -eq "")
-	{
-		$pwdpath = $pwd.Path
-	}
-	Else
-	{
-		$pwdpath = $Folder
-	}
-
-	If($pwdpath.EndsWith("\"))
-	{
-		#remove the trailing \
-		$pwdpath = $pwdpath.SubString(0, ($pwdpath.Length - 1))
-	}
-
 	#set $filename1 and $filename2 with no file extension
 	If($AddDateTime)
 	{
-		[string]$Script:FileName1 = "$($pwdpath)\$($OutputFileName)"
+		[string]$Script:FileName1 = "$($Script:pwdpath)\$($OutputFileName)"
 		If($PDF)
 		{
-			[string]$Script:FileName2 = "$($pwdpath)\$($OutputFileName)"
+			[string]$Script:FileName2 = "$($Script:pwdpath)\$($OutputFileName)"
 		}
 	}
 
@@ -6624,10 +6627,10 @@ Function SetFileName1andFileName2
 
 		If(!$AddDateTime)
 		{
-			[string]$Script:FileName1 = "$($pwdpath)\$($OutputFileName).docx"
+			[string]$Script:FileName1 = "$($Script:pwdpath)\$($OutputFileName).docx"
 			If($PDF)
 			{
-				[string]$Script:FileName2 = "$($pwdpath)\$($OutputFileName).pdf"
+				[string]$Script:FileName2 = "$($Script:pwdpath)\$($OutputFileName).pdf"
 			}
 		}
 
@@ -6637,7 +6640,7 @@ Function SetFileName1andFileName2
 	{
 		If(!$AddDateTime)
 		{
-			[string]$Script:FileName1 = "$($pwdpath)\$($OutputFileName).txt"
+			[string]$Script:FileName1 = "$($Script:pwdpath)\$($OutputFileName).txt"
 		}
 		ShowScriptOptions
 	}
@@ -6645,7 +6648,7 @@ Function SetFileName1andFileName2
 	{
 		If(!$AddDateTime)
 		{
-			[string]$Script:FileName1 = "$($pwdpath)\$($OutputFileName).html"
+			[string]$Script:FileName1 = "$($Script:pwdpath)\$($OutputFileName).html"
 		}
 		SetupHTML
 		ShowScriptOptions
@@ -16318,7 +16321,7 @@ Function ProcessScriptEnd
 
 	If($ScriptInfo)
 	{
-		$SIFile = "$($pwd.Path)\ADInventoryScriptInfo_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
+		$SIFile = "$($Script:pwdpath)\ADInventoryScriptInfo_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
 		Out-File -FilePath $SIFile -InputObject "" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "Add DateTime   : $AddDateTime" 4>$Null
 		If($MSWORD -or $PDF)
