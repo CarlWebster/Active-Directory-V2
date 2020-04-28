@@ -8,7 +8,7 @@
 	Creates a complete inventory of a Microsoft Active Directory Forest.
 .DESCRIPTION
 	Creates a complete inventory of a Microsoft Active Directory Forest using Microsoft 
-	PowerShell, Word, plain text or HTML.
+	PowerShell, Word, plain text, or HTML.
 	
 	Creates a Word or PDF document, text or HTML file named after the Active Directory Forest.
 	
@@ -852,9 +852,9 @@
 	No objects are output from this script.  This script creates a Word or PDF document.
 .NOTES
 	NAME: ADDS_Inventory_V2.ps1
-	VERSION: 2.25
+	VERSION: 2.26
 	AUTHOR: Carl Webster and Michael B. Smith
-	LASTEDIT: April 21, 2020
+	LASTEDIT: April 26, 2020
 #>
 
 
@@ -998,6 +998,15 @@ Param(
 #Version 1.0 released to the community on May 31, 2014
 #
 #Version 2.0 is based on version 1.20
+#
+#Version 2.26 28-Apr-2020
+#	Add checking for a Word version of 0, which indicates the Office installation needs repairing
+#	Add Receive Side Scaling setting to Function OutputNICItem
+#	Change location of the -Dev, -Log, and -ScriptInfo output files from the script folder to the -Folder location (Thanks to Guy Leech for the "suggestion")
+#	Change Text output to use [System.Text.StringBuilder]
+#		Updated Functions Line and SaveAndCloseTextDocument
+#	Reformatted the terminating Write-Error messages to make them more visible and readable in the console
+#	Update Functions GetComputerWMIInfo and OutputNicInfo to fix two bugs in NIC Power Management settings
 #
 #Version 2.25 21-Apr-2020
 #	Remove the SMTP parameterset and manually verify the parameters
@@ -1238,32 +1247,6 @@ $PSDefaultParameterValues = @{"*:Verbose"=$True}
 $SaveEAPreference = $ErrorActionPreference
 $ErrorActionPreference = 'SilentlyContinue'
 
-#V2.18 added
-If($Log) 
-{
-	#start transcript logging
-	$Script:ThisScriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
-	$Script:LogPath = "$Script:ThisScriptPath\ADDSDocScriptTranscript_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
-	
-	try 
-	{
-		Start-Transcript -Path $Script:LogPath -Force -Verbose:$false | Out-Null
-		Write-Verbose "$(Get-Date): Transcript/log started at $Script:LogPath"
-		$Script:StartLog = $true
-	} 
-	catch 
-	{
-		Write-Verbose "$(Get-Date): Transcript/log failed at $Script:LogPath"
-		$Script:StartLog = $false
-	}
-}
-
-If($Dev)
-{
-	$Error.Clear()
-	$Script:DevErrorFile = "$($pwd.Path)\ADInventoryScriptErrors_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
-}
-
 If($Null -eq $MSWord)
 {
 	If($Text -or $HTML -or $PDF)
@@ -1326,7 +1309,15 @@ Else
 		Write-Verbose "$(Get-Date): Text is $($Text)"
 		Write-Verbose "$(Get-Date): HTML is $($HTML)"
 	}
-	Write-Error "Unable to determine output parameter.  Script cannot continue"
+	Write-Error "
+	`n`n
+	`t`t
+	Unable to determine output parameter.
+	`n`n
+	`t`t
+	Script cannot continue.
+	`n`n
+	"
 	Exit
 }
 
@@ -1364,7 +1355,13 @@ Switch ($Section)
 If($ValidSection -eq $False)
 {
 	$ErrorActionPreference = $SaveEAPreference
-	Write-Error -Message "`n`tThe Section parameter specified, $($Section), is an invalid Section option.`n`tValid options are:
+	Write-Error -Message "
+	`n`n
+	`t`t
+	The Section parameter specified, $($Section), is an invalid Section option.
+	`n`n
+	`t`t
+	Valid options are:
 	
 	`t`tForest
 	`t`tSites
@@ -1375,7 +1372,10 @@ If($ValidSection -eq $False)
 	`t`tMisc
 	`t`tAll
 	
-	`tScript cannot continue."
+	`t`t
+	Script cannot continue.
+	`n`n
+	"
 	Exit
 }
 
@@ -1394,16 +1394,73 @@ If($Folder -ne "")
 		Else
 		{
 			#it exists but it is a file not a folder
-			Write-Error "Folder $Folder is a file, not a folder.  Script cannot continue"
+			Write-Error "
+			`n`n
+			`t`t
+			Folder $Folder is a file, not a folder.
+			`n`n
+			`t`t
+			Script cannot continue.
+			`n`n
+			"
 			Exit
 		}
 	}
 	Else
 	{
 		#does not exist
-		Write-Error "Folder $Folder does not exist.  Script cannot continue"
+		Write-Error "
+		`n`n
+		`t`t
+		Folder $Folder does not exist.
+		`n`n
+		`t`t
+		Script cannot continue.
+		`n`n
+		"
 		Exit
 	}
+}
+
+If($Folder -eq "")
+{
+	$Script:pwdpath = $pwd.Path
+}
+Else
+{
+	$Script:pwdpath = $Folder
+}
+
+If($Script:pwdpath.EndsWith("\"))
+{
+	#remove the trailing \
+	$Script:pwdpath = $Script:pwdpath.SubString(0, ($Script:pwdpath.Length - 1))
+}
+
+
+#V2.18 added
+If($Log) 
+{
+	#start transcript logging
+	$Script:LogPath = "$($Script:pwdpath)\ADDSDocScriptTranscript_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
+	
+	try 
+	{
+		Start-Transcript -Path $Script:LogPath -Force -Verbose:$false | Out-Null
+		Write-Verbose "$(Get-Date): Transcript/log started at $Script:LogPath"
+		$Script:StartLog = $true
+	} 
+	catch 
+	{
+		Write-Verbose "$(Get-Date): Transcript/log failed at $Script:LogPath"
+		$Script:StartLog = $false
+	}
+}
+
+If($Dev)
+{
+	$Error.Clear()
+	$Script:DevErrorFile = "$($Script:pwdpath)\ADInventoryScriptErrors_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
 }
 
 
@@ -1411,9 +1468,11 @@ If(![String]::IsNullOrEmpty($SmtpServer) -and [String]::IsNullOrEmpty($From) -an
 {
 	Write-Error "
 	`n`n
-	`tYou specified an SmtpServer but did not include a From or To email address.
+	`t`t
+	You specified an SmtpServer but did not include a From or To email address.
 	`n`n
-	`tScript cannot continue.
+	`t`t
+	Script cannot continue.
 	`n`n"
 	Exit
 }
@@ -1421,9 +1480,11 @@ If(![String]::IsNullOrEmpty($SmtpServer) -and [String]::IsNullOrEmpty($From) -an
 {
 	Write-Error "
 	`n`n
-	`tYou specified an SmtpServer and a To email address but did not include a From email address.
+	`t`t
+	You specified an SmtpServer and a To email address but did not include a From email address.
 	`n`n
-	`tScript cannot continue.
+	`t`t
+	Script cannot continue.
 	`n`n"
 	Exit
 }
@@ -1431,9 +1492,11 @@ If(![String]::IsNullOrEmpty($SmtpServer) -and [String]::IsNullOrEmpty($To) -and 
 {
 	Write-Error "
 	`n`n
-	`tYou specified an SmtpServer and a From email address but did not include a To email address.
+	`t`t
+	You specified an SmtpServer and a From email address but did not include a To email address.
 	`n`n
-	`tScript cannot continue.
+	`t`t
+	Script cannot continue.
 	`n`n"
 	Exit
 }
@@ -1441,9 +1504,11 @@ If(![String]::IsNullOrEmpty($From) -and ![String]::IsNullOrEmpty($To) -and [Stri
 {
 	Write-Error "
 	`n`n
-	`tYou specified From and To email addresses but did not include the SmtpServer.
+	`t`t
+	You specified From and To email addresses but did not include the SmtpServer.
 	`n`n
-	`tScript cannot continue.
+	`t`t
+	Script cannot continue.
 	`n`n"
 	Exit
 }
@@ -1451,9 +1516,11 @@ If(![String]::IsNullOrEmpty($From) -and [String]::IsNullOrEmpty($SmtpServer))
 {
 	Write-Error "
 	`n`n
-	`tYou specified a From email address but did not include the SmtpServer.
+	`t`t
+	You specified a From email address but did not include the SmtpServer.
 	`n`n
-	`tScript cannot continue.
+	`t`t
+	Script cannot continue.
 	`n`n"
 	Exit
 }
@@ -1461,9 +1528,11 @@ If(![String]::IsNullOrEmpty($To) -and [String]::IsNullOrEmpty($SmtpServer))
 {
 	Write-Error "
 	`n`n
-	`tYou specified a To email address but did not include the SmtpServer.
+	`t`t
+	You specified a To email address but did not include the SmtpServer.
 	`n`n
-	`tScript cannot continue.
+	`t`t
+	Script cannot continue.
 	`n`n"
 	Exit
 }
@@ -1580,7 +1649,7 @@ If($HTML)
 
 If($TEXT)
 {
-	$global:output = ""
+	[System.Text.StringBuilder] $global:Output = New-Object System.Text.StringBuilder( 16384 )
 }
 #endregion
 
@@ -2028,7 +2097,7 @@ Function GetComputerWMIInfo
 				
 				If($? -and $Null -ne $ThisNic)
 				{
-					OutputNicItem $Nic $ThisNic
+					OutputNicItem $Nic $ThisNic $RemoteComputerName
 				}
 				ElseIf(!$?)
 				{
@@ -2455,9 +2524,9 @@ Function OutputProcessorItem
 
 Function OutputNicItem
 {
-	Param([object]$Nic, [object]$ThisNic)
+	Param([object]$Nic, [object]$ThisNic, [string]$RemoteComputerName)
 	
-	$powerMgmt = Get-WmiObject MSPower_DeviceEnable -Namespace root\wmi | Where-Object {$_.InstanceName -match [regex]::Escape($ThisNic.PNPDeviceID)}
+	$powerMgmt = Get-WmiObject -computername $RemoteComputerName MSPower_DeviceEnable -Namespace root\wmi | Where-Object{$_.InstanceName -match [regex]::Escape($ThisNic.PNPDeviceID)}
 
 	If($? -and $Null -ne $powerMgmt)
 	{
@@ -2476,28 +2545,50 @@ Function OutputNicItem
 	}
 	
 	$xAvailability = ""
-	Switch ($processor.availability)
+	Switch ($ThisNic.availability)
 	{
-		1	{$xAvailability = "Other"; Break}
-		2	{$xAvailability = "Unknown"; Break}
-		3	{$xAvailability = "Running or Full Power"; Break}
-		4	{$xAvailability = "Warning"; Break}
-		5	{$xAvailability = "In Test"; Break}
-		6	{$xAvailability = "Not Applicable"; Break}
-		7	{$xAvailability = "Power Off"; Break}
-		8	{$xAvailability = "Off Line"; Break}
-		9	{$xAvailability = "Off Duty"; Break}
-		10	{$xAvailability = "Degraded"; Break}
-		11	{$xAvailability = "Not Installed"; Break}
-		12	{$xAvailability = "Install Error"; Break}
-		13	{$xAvailability = "Power Save - Unknown"; Break}
-		14	{$xAvailability = "Power Save - Low Power Mode"; Break}
-		15	{$xAvailability = "Power Save - Standby"; Break}
-		16	{$xAvailability = "Power Cycle"; Break}
-		17	{$xAvailability = "Power Save - Warning"; Break}
+		1		{$xAvailability = "Other"; Break}
+		2		{$xAvailability = "Unknown"; Break}
+		3		{$xAvailability = "Running or Full Power"; Break}
+		4		{$xAvailability = "Warning"; Break}
+		5		{$xAvailability = "In Test"; Break}
+		6		{$xAvailability = "Not Applicable"; Break}
+		7		{$xAvailability = "Power Off"; Break}
+		8		{$xAvailability = "Off Line"; Break}
+		9		{$xAvailability = "Off Duty"; Break}
+		10		{$xAvailability = "Degraded"; Break}
+		11		{$xAvailability = "Not Installed"; Break}
+		12		{$xAvailability = "Install Error"; Break}
+		13		{$xAvailability = "Power Save - Unknown"; Break}
+		14		{$xAvailability = "Power Save - Low Power Mode"; Break}
+		15		{$xAvailability = "Power Save - Standby"; Break}
+		16		{$xAvailability = "Power Cycle"; Break}
+		17		{$xAvailability = "Power Save - Warning"; Break}
 		Default	{$xAvailability = "Unknown"; Break}
 	}
 
+	#attempt to get Receive Side Scaling setting
+	$RSSEnabled = "N/A"
+	Try
+	{
+		#https://ios.developreference.com/article/10085450/How+do+I+enable+VRSS+(Virtual+Receive+Side+Scaling)+for+a+Windows+VM+without+relying+on+Enable-NetAdapterRSS%3F
+		$RSSEnabled = (Get-WmiObject -ComputerName $RemoteComputerName MSFT_NetAdapterRssSettingData -Namespace "root\StandardCimV2" -ea 0).Enabled
+
+		If($RSSEnabled)
+		{
+			$RSSEnabled = "Enabled"
+		}
+		ELse
+		{
+			$RSSEnabled = "Disabled"
+		}
+	}
+	
+	Catch
+	{
+		$RSSEnabled = "Not available on $Script:RunningOS"
+	}
+	
 	$xIPAddress = New-Object System.Collections.ArrayList
 	ForEach($IPAddress in $Nic.ipaddress)
 	{
@@ -2574,6 +2665,7 @@ Function OutputNicItem
 		}
 		$NicInformation.Add(@{ Data = "Availability"; Value = $xAvailability; }) > $Null
 		$NicInformation.Add(@{ Data = "Allow the computer to turn off this device to save power"; Value = $PowerSaving; }) > $Null
+		$NicInformation.Add(@{ Data = "Receive Side Scaling"; Value = $RSSEnabled; }) > $Null
 		$NicInformation.Add(@{ Data = "Physical Address"; Value = $Nic.macaddress; }) > $Null
 		If($xIPAddress.Count -gt 1)
 		{
@@ -2685,6 +2777,7 @@ Function OutputNicItem
 		Line 2 "Availability`t`t: " $xAvailability
 		Line 2 "Allow computer to turn "
 		Line 2 "off device to save power: " $PowerSaving
+		Line 2 "Receive Side Scaling`t: " $RSSEnabled
 		Line 2 "Physical Address`t: " $nic.macaddress
 		Line 2 "IP Address`t`t: " $xIPAddress[0]
 		$cnt = -1
@@ -2786,6 +2879,7 @@ Function OutputNicItem
 		$rowdata += @(,('Availability',($htmlsilver -bor $htmlbold),$xAvailability,$htmlwhite))
 		$rowdata += @(,('Allow the computer to turn off this device to save power',($htmlsilver -bor $htmlbold),$PowerSaving,$htmlwhite))
 		$rowdata += @(,('Physical Address',($htmlsilver -bor $htmlbold),$Nic.macaddress,$htmlwhite))
+		$rowdata += @(,('Receive Side Scaling',($htmlsilver -bor $htmlbold),$RSSEnabled,$htmlwhite))
 		$rowdata += @(,('IP Address',($htmlsilver -bor $htmlbold),$xIPAddress[0],$htmlwhite))
 		$cnt = -1
 		ForEach($tmp in $xIPAddress)
@@ -3699,7 +3793,18 @@ Function SetupWord
 	{
 		Write-Warning "The Word object could not be created.  You may need to repair your Word installation."
 		$ErrorActionPreference = $SaveEAPreference
-		Write-Error "`n`n`t`tThe Word object could not be created.  You may need to repair your Word installation.`n`n`t`tScript cannot continue.`n`n"
+		Write-Error "
+		`n`n
+		`t`t
+		The Word object could not be created.
+		`n`n
+		`t`t
+		You may need to repair your Word installation.
+		`n`n
+		`t`t
+		Script cannot continue.
+		`n`n
+		"
 		Exit
 	}
 
@@ -3716,7 +3821,15 @@ Function SetupWord
 	If(!($Script:WordLanguageValue -gt -1))
 	{
 		$ErrorActionPreference = $SaveEAPreference
-		Write-Error "`n`n`t`tUnable to determine the Word language value.`n`n`t`tScript cannot continue.`n`n"
+		Write-Error "
+		`n`n
+		`t`t
+		Unable to determine the Word language value.
+		`n`n
+		`t`t
+		Script cannot continue.
+		`n`n
+		"
 		AbortScript
 	}
 	Write-Verbose "$(Get-Date): Word language value is $($Script:WordLanguageValue)"
@@ -3741,13 +3854,45 @@ Function SetupWord
 	ElseIf($Script:WordVersion -eq $wdWord2007)
 	{
 		$ErrorActionPreference = $SaveEAPreference
-		Write-Error "`n`n`t`tMicrosoft Word 2007 is no longer supported.`n`n`t`tScript will end.`n`n"
+		Write-Error "
+		`n`n
+		`t`t
+		Microsoft Word 2007 is no longer supported.
+		`n`n
+		`t`t
+		Script will end.
+		`n`n
+		"
 		AbortScript
+	}
+	ElseIf($Script:WordVersion -eq 0)
+	{
+		Write-Error "
+		`n`n
+		`t`t
+		The Word Version is 0. You should run a full online repair of your Office installation.
+		`n`n
+		`t`t
+		Script cannot continue.
+		`n`n
+		"
+		Exit
 	}
 	Else
 	{
 		$ErrorActionPreference = $SaveEAPreference
-		Write-Error "`n`n`t`tYou are running an untested or unsupported version of Microsoft Word.`n`n`t`tScript will end.`n`n`t`tPlease send info on your version of Word to webster@carlwebster.com`n`n"
+		Write-Error "
+		`n`n
+		`t`t
+		You are running an untested or unsupported version of Microsoft Word.
+		`n`n
+		`t`t
+		Script will end.
+		`n`n
+		`t`t
+		Please send info on your version of Word to webster@carlwebster.com
+		`n`n
+		"
 		AbortScript
 	}
 
@@ -3889,7 +4034,15 @@ Function SetupWord
 		$ErrorActionPreference = $SaveEAPreference
 		Write-Verbose "$(Get-Date): Word language value $($Script:WordLanguageValue)"
 		Write-Verbose "$(Get-Date): Culture code $($Script:WordCultureCode)"
-		Write-Error "`n`n`t`tFor $($Script:WordProduct), $($CoverPage) is not a valid Cover Page option.`n`n`t`tScript cannot continue.`n`n"
+		Write-Error "
+		`n`n
+		`t`t
+		For $($Script:WordProduct), $($CoverPage) is not a valid Cover Page option.
+		`n`n
+		`t`t
+		Script cannot continue.
+		`n`n
+		"
 		AbortScript
 	}
 
@@ -3952,7 +4105,15 @@ Function SetupWord
 	{
 		Write-Verbose "$(Get-Date): "
 		$ErrorActionPreference = $SaveEAPreference
-		Write-Error "`n`n`t`tAn empty Word document could not be created.`n`n`t`tScript cannot continue.`n`n"
+		Write-Error "
+		`n`n
+		`t`t
+		An empty Word document could not be created.
+		`n`n
+		`t`t
+		Script cannot continue.
+		`n`n
+		"
 		AbortScript
 	}
 
@@ -3961,7 +4122,15 @@ Function SetupWord
 	{
 		Write-Verbose "$(Get-Date): "
 		$ErrorActionPreference = $SaveEAPreference
-		Write-Error "`n`n`t`tAn unknown error happened selecting the entire Word document for default formatting options.`n`n`t`tScript cannot continue.`n`n"
+		Write-Error "
+		`n`n
+		`t`t
+		An unknown error happened selecting the entire Word document for default formatting options.
+		`n`n
+		`t`t
+		Script cannot continue.
+		`n`n
+		"
 		AbortScript
 	}
 
@@ -4171,21 +4340,35 @@ Function Get-RegistryValue
 #region word, text and html line output functions
 Function line
 #function created by Michael B. Smith, Exchange MVP
-#@essentialexchange on Twitter
-#http://TheEssentialExchange.com
+#@essentialexch on Twitter
+#https://essential.exchange/blog
 #for creating the formatted text report
 #created March 2011
 #updated March 2014
+# updated March 2019 to use StringBuilder (about 100 times more efficient than simple strings)
 {
-	Param( [int]$tabs = 0, [string]$name = '', [string]$value = '', [string]$newline = "`r`n", [switch]$nonewline )
-	While( $tabs -gt 0 ) { $Global:Output += "`t"; $tabs--; }
+	Param
+	(
+		[Int]    $tabs = 0, 
+		[String] $name = '', 
+		[String] $value = '', 
+		[String] $newline = [System.Environment]::NewLine, 
+		[Switch] $nonewline
+	)
+
+	while( $tabs -gt 0 )
+	{
+		$null = $global:Output.Append( "`t" )
+		$tabs--
+	}
+
 	If( $nonewline )
 	{
-		$Global:Output += $name + $value
+		$null = $global:Output.Append( $name + $value )
 	}
 	Else
 	{
-		$Global:Output += $name + $value + $newline
+		$null = $global:Output.AppendLine( $name + $value )
 	}
 }
 	
@@ -4849,16 +5032,17 @@ Function SetupHTML
 	Write-Verbose "$(Get-Date): Setting up HTML"
 	If(!$AddDateTime)
 	{
-		[string]$Script:FileName1 = "$($pwdpath)\$($OutputFileName).html"
+		[string]$Script:FileName1 = "$($Script:pwdpath)\$($OutputFileName).html"
 	}
 	ElseIf($AddDateTime)
 	{
-		[string]$Script:FileName1 = "$($pwdpath)\$($OutputFileName)_$(Get-Date -f yyyy-MM-dd_HHmm).html"
+		[string]$Script:FileName1 = "$($Script:pwdpath)\$($OutputFileName)_$(Get-Date -f yyyy-MM-dd_HHmm).html"
 	}
 
 	$htmlhead = "<html><head><meta http-equiv='Content-Language' content='da'><title>" + $Script:Title + "</title></head><body>"
 	out-file -FilePath $Script:Filename1 -Force -InputObject $HTMLHead 4>$Null
-}#endregion
+}
+#endregion
 
 #region Iain's Word table functions
 
@@ -6415,7 +6599,7 @@ Function SaveandCloseTextDocument
 		$Script:FileName1 += "_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
 	}
 
-	Write-Output $Global:Output | Out-File $Script:Filename1 4>$Null
+	Write-Output $global:Output.ToString() | Out-File $Script:Filename1 4>$Null
 }
 
 Function SaveandCloseHTMLDocument
@@ -6427,28 +6611,13 @@ Function SetFileName1andFileName2
 {
 	Param([string]$OutputFileName)
 	
-	If($Folder -eq "")
-	{
-		$pwdpath = $pwd.Path
-	}
-	Else
-	{
-		$pwdpath = $Folder
-	}
-
-	If($pwdpath.EndsWith("\"))
-	{
-		#remove the trailing \
-		$pwdpath = $pwdpath.SubString(0, ($pwdpath.Length - 1))
-	}
-
 	#set $filename1 and $filename2 with no file extension
 	If($AddDateTime)
 	{
-		[string]$Script:FileName1 = "$($pwdpath)\$($OutputFileName)"
+		[string]$Script:FileName1 = "$($Script:pwdpath)\$($OutputFileName)"
 		If($PDF)
 		{
-			[string]$Script:FileName2 = "$($pwdpath)\$($OutputFileName)"
+			[string]$Script:FileName2 = "$($Script:pwdpath)\$($OutputFileName)"
 		}
 	}
 
@@ -6458,10 +6627,10 @@ Function SetFileName1andFileName2
 
 		If(!$AddDateTime)
 		{
-			[string]$Script:FileName1 = "$($pwdpath)\$($OutputFileName).docx"
+			[string]$Script:FileName1 = "$($Script:pwdpath)\$($OutputFileName).docx"
 			If($PDF)
 			{
-				[string]$Script:FileName2 = "$($pwdpath)\$($OutputFileName).pdf"
+				[string]$Script:FileName2 = "$($Script:pwdpath)\$($OutputFileName).pdf"
 			}
 		}
 
@@ -6471,7 +6640,7 @@ Function SetFileName1andFileName2
 	{
 		If(!$AddDateTime)
 		{
-			[string]$Script:FileName1 = "$($pwdpath)\$($OutputFileName).txt"
+			[string]$Script:FileName1 = "$($Script:pwdpath)\$($OutputFileName).txt"
 		}
 		ShowScriptOptions
 	}
@@ -6479,7 +6648,7 @@ Function SetFileName1andFileName2
 	{
 		If(!$AddDateTime)
 		{
-			[string]$Script:FileName1 = "$($pwdpath)\$($OutputFileName).html"
+			[string]$Script:FileName1 = "$($Script:pwdpath)\$($OutputFileName).html"
 		}
 		SetupHTML
 		ShowScriptOptions
@@ -6691,7 +6860,15 @@ Function ProcessScriptSetup
 				If(!$?)
 				{
 					$ErrorActionPreference = $SaveEAPreference
-					Write-Error "`n`n`t`t$ComputerName is not a domain controller for $ADForest.`n`t`tScript cannot continue.`n`n"
+					Write-Error "
+					`n`n
+					`t`t
+					$ComputerName is not a domain controller for $ADForest.
+					`n`n
+					`t`t
+					Script cannot continue.
+					`n`n
+					"
 					Exit
 				}
 				Else
@@ -6710,7 +6887,15 @@ Function ProcessScriptSetup
 		{
 			Write-Verbose "$(Get-Date): Computer $ComputerName is offline"
 			$ErrorActionPreference = $SaveEAPreference
-			Write-Error "`n`n`t`tComputer $ComputerName is offline.`nScript cannot continue.`n`n"
+			Write-Error "
+			`n`n
+			`t`t
+			Computer $ComputerName is offline.
+			`n`n
+			`t`t
+			Script cannot continue.
+			`n`n
+			"
 			Exit
 		}
 	}
@@ -6726,7 +6911,15 @@ Function ProcessScriptSetup
 			If(!$?)
 			{
 				$ErrorActionPreference = $SaveEAPreference
-				Write-Error "`n`n`t`tCould not find a forest identified by: $ADForest.`nScript cannot continue.`n`n"
+				Write-Error "
+				`n`n
+				`t`t
+				Could not find a forest identified by: $ADForest.
+				`n`n
+				`t`t
+				Script cannot continue.
+				`n`n
+				"
 				Exit
 			}
 		}
@@ -6737,7 +6930,18 @@ Function ProcessScriptSetup
 			If(!$?)
 			{
 				$ErrorActionPreference = $SaveEAPreference
-				Write-Error "`n`n`t`tCould not find a forest with the name of $ADForest.`n`n`t`tScript cannot continue.`n`n`t`tIs $ComputerName running Active Directory Web Services?"
+				Write-Error "
+				`n`n
+				`t`t
+				Could not find a forest with the name of $ADForest.
+				`n`n
+				`t`t
+				Script cannot continue.
+				`n`n
+				`t`t
+				Is $ComputerName running Active Directory Web Services?
+				`n`n
+				"
 				Exit
 			}
 		}
@@ -6756,7 +6960,15 @@ Function ProcessScriptSetup
 			If(!$?)
 			{
 				$ErrorActionPreference = $SaveEAPreference
-				Write-Error "`n`n`t`tCould not find a domain identified by: $ADDomain.`nScript cannot continue.`n`n"
+				Write-Error "
+				`n`n
+				`t`t
+				Could not find a domain identified by: $ADDomain.
+				`n`n
+				`t`t
+				Script cannot continue.
+				`n`n
+				"
 				Exit
 			}
 		}
@@ -6767,7 +6979,18 @@ Function ProcessScriptSetup
 			If(!$?)
 			{
 				$ErrorActionPreference = $SaveEAPreference
-				Write-Error "`n`n`t`tCould not find a domain with the name of $ADDomain.`n`n`t`tScript cannot continue.`n`n`t`tIs $ComputerName running Active Directory Web Services?"
+				Write-Error "
+				`n`n
+				`t`t
+				Could not find a domain with the name of $ADDomain.
+				`n`n
+				`t`t
+				Script cannot continue.
+				`n`n
+				`t`t
+				Is $ComputerName running Active Directory Web Services?
+				`n`n
+				"
 				Exit
 			}
 		}
@@ -6786,7 +7009,15 @@ Function ProcessScriptSetup
 			If(!$?)
 			{
 				$ErrorActionPreference = $SaveEAPreference
-				Write-Error "`n`n`t`tCould not find a forest identified by: $tmp.`nScript cannot continue.`n`n"
+				Write-Error "
+				`n`n
+				`t`t
+				Could not find a forest identified by: $tmp.
+				`n`n
+				`t`t
+				Script cannot continue.
+				`n`n
+				"
 				Exit
 			}
 		}
@@ -6797,7 +7028,18 @@ Function ProcessScriptSetup
 			If(!$?)
 			{
 				$ErrorActionPreference = $SaveEAPreference
-				Write-Error "`n`n`t`tCould not find a forest with the name of $tmp.`n`n`t`tScript cannot continue.`n`n`t`tIs $ComputerName running Active Directory Web Services?"
+				Write-Error "
+				`n`n
+				`t`t
+				Could not find a forest with the name of $tmp.
+				`n`n
+				`t`t
+				Script cannot continue.
+				`n`n
+				`t`t
+				Is $ComputerName running Active Directory Web Services?
+				`n`n
+				"
 				Exit
 			}
 		}
@@ -16079,7 +16321,7 @@ Function ProcessScriptEnd
 
 	If($ScriptInfo)
 	{
-		$SIFile = "$($pwd.Path)\ADInventoryScriptInfo_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
+		$SIFile = "$($Script:pwdpath)\ADInventoryScriptInfo_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
 		Out-File -FilePath $SIFile -InputObject "" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "Add DateTime   : $AddDateTime" 4>$Null
 		If($MSWORD -or $PDF)
