@@ -51,6 +51,25 @@
 #
 #	You can now select multiple output formats. This required extensive code changes.
 #	HTML is now the default output format.
+#	Add checking for a Word version of 0, which indicates the Office installation needs repairing
+#	Add Receive Side Scaling setting to Function OutputNICItem
+#	Change color variables $wdColorGray15 and $wdColorGray05 from [long] to [int]
+#	Change location of the -Dev, -Log, and -ScriptInfo output files from the script folder to the -Folder location (Thanks to Guy Leech for the "suggestion")
+#	Fix Swedish Table of Contents (Thanks to Johan Kallio)
+#		From 
+#			'sv-'	{ 'Automatisk innehållsförteckning2'; Break }
+#		To
+#			'sv-'	{ 'Automatisk innehållsförteckn2'; Break }
+#	Reformatted the terminating Write-Error messages to make them more visible and readable in the console
+#	Update Function SendEmail to handle anonymous unauthenticated email
+#	Update Functions GetComputerWMIInfo and OutputNicInfo to fix two bugs in NIC Power Management settings
+#	Updated help text
+#	Updated the following Exchange Schema Versions:
+#		"15312" = "Exchange 2013 CU7 through CU23"
+#		"15317" = "Exchange 2016 Preview and RTM"
+#		"15332" = "Exchange 2016 CU7 through CU15"
+#		"17000" = "Exchange 2019 RTM/CU1"
+#		"17001" = "Exchange 2019 CU2-CU4"
 
 #Version 2.22 14-Feb-2019
 #	Added a line under the OU table stating how many OUs are not protected

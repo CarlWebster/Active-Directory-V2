@@ -8,11 +8,12 @@
 	Creates a complete inventory of a Microsoft Active Directory Forest.
 .DESCRIPTION
 	Creates a complete inventory of a Microsoft Active Directory Forest using Microsoft 
-	PowerShell, Word, plain text or HTML.
+	PowerShell, Word, plain text, or HTML.
 	
-	Creates a Word or PDF document, text or HTML file named after the Active Directory Forest.
+	Creates a Word or PDF document, text, or HTML file named after the Active Directory 
+	Forest.
 	
-	Version 3.0 chnages the default output report from Word to HTML.
+	Version 3.0 changes the default output report from Word to HTML.
 	
 	Word and PDF document includes a Cover Page, Table of Contents and Footer.
 	Includes support for the following language versions of Microsoft Word:
@@ -67,44 +68,38 @@
 	
 .PARAMETER HTML
 	Creates an HTML file with an .html extension.
+	
+	HTML is now the default report format.
+	
 	This parameter is set True if no other output format is selected.
 .PARAMETER MSWord
 	SaveAs DOCX file
+	
+	Microsoft Word is no longer the default report format.
 	This parameter is disabled by default.
 .PARAMETER PDF
 	SaveAs PDF file instead of DOCX file.
-	This parameter is disabled by default.
-
+	
 	The PDF file is roughly 5X to 10X larger than the DOCX file.
-
+	
 	This parameter requires Microsoft Word to be installed.
-	This parameter uses the Word SaveAs PDF capability.
+	This parameter uses Word's SaveAs PDF capability.
+
+	This parameter is disabled by default.
 .PARAMETER Text
 	Creates a formatted text file with a .txt extension.
+	
 	This parameter is disabled by default.
 .PARAMETER AddDateTime
-	Adds a date time stamp to the end of the file name.
+	Adds a date timestamp to the end of the file name.
+	
 	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2019 at 6PM is 2019-06-01_1800.
-	Output filename will be ReportName_2019-06-01_1800.docx (or .pdf).
+	June 1, 2020 at 6PM is 2020-06-01_1800.
+	
+	Output filename will be ReportName_2020-06-01_1800.docx (or .pdf).
+	
 	This parameter is disabled by default.
-.PARAMETER ADForest
-	Specifies an Active Directory forest object by providing one of the following 
-	attribute values. 
-	The identifier in parentheses is the LDAP display name for the attribute.
-
-	Fully qualified domain name
-		Example: labaddomain.com
-	GUID (objectGUID)
-		Example: 599c3d2e-e61e-4d20-7b77-030d99495e19
-	DNS host name
-		Example: labaddomain.com
-	NetBIOS name
-		Example: labaddomain
-	
-	Default value is $Env:USERDNSDOMAIN	
-	
-	If both ADForest and ADDomain are specified, ADDomain takes precedence.
+	This parameter has an alias of ADT.
 .PARAMETER ADDomain
 	Specifies an Active Directory domain object by providing one of the following 
 	property values. The identifier in parentheses is the LDAP display name for the 
@@ -130,6 +125,23 @@
 
 	Example: Tullahoma
 
+	If both ADForest and ADDomain are specified, ADDomain takes precedence.
+.PARAMETER ADForest
+	Specifies an Active Directory forest object by providing one of the following 
+	attribute values. 
+	The identifier in parentheses is the LDAP display name for the attribute.
+
+	Fully qualified domain name
+		Example: labaddomain.com
+	GUID (objectGUID)
+		Example: 599c3d2e-e61e-4d20-7b77-030d99495e19
+	DNS host name
+		Example: labaddomain.com
+	NetBIOS name
+		Example: labaddomain
+	
+	Default value is $Env:USERDNSDOMAIN	
+	
 	If both ADForest and ADDomain are specified, ADDomain takes precedence.
 .PARAMETER CompanyAddress
 	Company Address to use for the Cover Page, if the Cover Page has the Address field.
@@ -260,6 +272,10 @@
 	This parameter is disabled by default.
 .PARAMETER Folder
 	Specifies the optional output folder to save the output report. 
+.PARAMETER From
+	Specifies the username for the From email address.
+	
+	If SmtpServer or To are used, this is a required parameter.
 .PARAMETER GPOInheritance
 	In the Group Policies by OU section, adds Inherited GPOs in addition to the GPOs 
 	directly linked.
@@ -347,25 +363,26 @@
 	Selecting this parameter will add to both the time it takes to run the script and 
 	size of the report.
 	This parameter is disabled by default.
+.PARAMETER SmtpPort
+	Specifies the SMTP port for the SmtpServer. 
+
+	The default is 25.
+.PARAMETER SmtpServer
+	Specifies the optional email server to send the output report(s). 
+	
+	If From or To are used, this is a required parameter.
+.PARAMETER To
+	Specifies the username for the To email address.
+	
+	If SmtpServer or From are used, this is a required parameter.
 .PARAMETER UserName
 	Username to use for the Cover Page and Footer.
 	Default value is contained in $env:username
 	This parameter has an alias of UN.
 	This parameter is only valid with the MSWORD and PDF output parameters.
-.PARAMETER SmtpServer
-	Specifies the optional email server to send the output report. 
-.PARAMETER SmtpPort
-	Specifies the SMTP port. 
-	The default is 25.
 .PARAMETER UseSSL
 	Specifies whether to use SSL for the SmtpServer.
 	The default is False.
-.PARAMETER From
-	Specifies the username for the From email address.
-	If SmtpServer is used, this is a required parameter.
-.PARAMETER To
-	Specifies the username for the To email address.
-	If SmtpServer is used, this is a required parameter.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V3.ps1
 	
@@ -644,8 +661,8 @@
 
 	Adds a date time stamp to the end of the file name.
 	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2019 at 6PM is 2019-06-01_1800.
-	Output filename will be company.tld_2019-06-01_1800.docx.
+	June 1, 2020 at 6PM is 2020-06-01_1800.
+	Output filename will be company.tld_2020-06-01_1800.docx.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V3.ps1 -PDF -ADForest corp.carlwebster.com 
 	-AddDateTime
@@ -667,8 +684,8 @@
 
 	Adds a date time stamp to the end of the file name.
 	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2019 at 6PM is 2019-06-01_1800.
-	Output filename will be corp.carlwebster.com_2019-06-01_1800.PDF
+	June 1, 2020 at 6PM is 2020-06-01_1800.
+	Output filename will be corp.carlwebster.com_2020-06-01_1800.PDF
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V3.ps1 -ADForest corp.carlwebster.com 
 	-Folder \\FileServer\ShareName
@@ -689,58 +706,6 @@
 	value for ComputerName.
 	
 	The output file will be saved in the path \\FileServer\ShareName.
-.EXAMPLE
-	PS C:\PSScript > .\ADDS_Inventory_V3.ps1 -ADForest corp.carlwebster.com 
-	-SmtpServer mail.domain.tld 
-	-From XDAdmin@domain.tld 
-	-To ITGroup@domain.tld 
-	-ComputerName Server01
-	
-	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
-	Webster" or
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
-	$env:username = Administrator
-
-	Carl Webster for the Company Name.
-	Sideline for the Cover Page format.
-	Administrator for the User Name.
-	corp.carlwebster.com for the AD Forest.
-	
-	The script will be run remotely against server Server01.
-	
-	The script will use the email server mail.domain.tld, sending from XDAdmin@domain.tld, 
-	sending to ITGroup@domain.tld.
-	The script will use the default SMPTP port 25 and will not use SSL.
-	If the current user's credentials are not valid to send email, the user will be prompted 
-	to enter valid credentials.
-.EXAMPLE
-	PS C:\PSScript > .\ADDS_Inventory_V3.ps1 -ADForest corp.carlwebster.com 
-	-SmtpServer smtp.office365.com 
-	-SmtpPort 587 
-	-UseSSL 
-	-From Webster@CarlWebster.com 
-	-To ITGroup@CarlWebster.com
-	
-	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
-	Webster" or
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
-	$env:username = Administrator
-	corp.carlwebster.com for the AD Forest
-
-	ComputerName defaults to the value of $Env:USERDNSDOMAIN, then the script queries for 
-	a domain controller that is also a global catalog server and will use that as the 
-	value for ComputerName.
-
-	Carl Webster for the Company Name.
-	Sideline for the Cover Page format.
-	Administrator for the User Name.
-	
-	The script will use the email server smtp.office365.com on port 587 using SSL, sending 
-	from webster@carlwebster.com, sending to ITGroup@carlwebster.com.
-	If the current user's credentials are not valid to send email, the user will be prompted 
-	to enter valid credentials.
 .EXAMPLE
 	PS C:\PSScript > .\ADDS_Inventory_V3.ps1 -Section Forest
 
@@ -799,6 +764,95 @@
 		Services        = True
 		
 		Section         = "All"
+.EXAMPLE
+	PS C:\PSScript > .\ADDS_Inventory_V3.ps1 
+	-SmtpServer mail.domain.tld
+	-From XDAdmin@domain.tld 
+	-To ITGroup@domain.tld	
+
+	The script will use the email server mail.domain.tld, sending from XDAdmin@domain.tld, 
+	sending to ITGroup@domain.tld.
+
+	The script will use the default SMTP port 25 and will not use SSL.
+
+	If the current user's credentials are not valid to send email, 
+	the user will be prompted to enter valid credentials.
+.EXAMPLE
+	PS C:\PSScript > .\ADDS_Inventory_V3.ps1 
+	-SmtpServer mailrelay.domain.tld
+	-From Anonymous@domain.tld 
+	-To ITGroup@domain.tld	
+
+	***SENDING UNAUTHENTICATED EMAIL***
+
+	The script will use the email server mailrelay.domain.tld, sending from 
+	anonymous@domain.tld, sending to ITGroup@domain.tld.
+
+	To send unauthenticated email using an email relay server requires the From email account 
+	to use the name Anonymous.
+
+	The script will use the default SMTP port 25 and will not use SSL.
+	
+	***GMAIL/G SUITE SMTP RELAY***
+	https://support.google.com/a/answer/2956491?hl=en
+	https://support.google.com/a/answer/176600?hl=en
+
+	To send email using a Gmail or g-suite account, you may have to turn ON
+	the "Less secure app access" option on your account.
+	***GMAIL/G SUITE SMTP RELAY***
+
+	The script will generate an anonymous secure password for the anonymous@domain.tld 
+	account.
+.EXAMPLE
+	PS C:\PSScript > .\ADDS_Inventory_V3.ps1 
+	-SmtpServer labaddomain-com.mail.protection.outlook.com
+	-UseSSL
+	-From SomeEmailAddress@labaddomain.com 
+	-To ITGroupDL@labaddomain.com	
+
+	***OFFICE 365 Example***
+
+	https://docs.microsoft.com/en-us/exchange/mail-flow-best-practices/how-to-set-up-a-multifunction-device-or-application-to-send-email-using-office-3
+	
+	This uses Option 2 from the above link.
+	
+	***OFFICE 365 Example***
+
+	The script will use the email server labaddomain-com.mail.protection.outlook.com, 
+	sending from SomeEmailAddress@labaddomain.com, sending to ITGroupDL@labaddomain.com.
+
+	The script will use the default SMTP port 25 and will use SSL.
+.EXAMPLE
+	PS C:\PSScript > .\ADDS_Inventory_V3.ps1 
+	-SmtpServer smtp.office365.com 
+	-SmtpPort 587
+	-UseSSL 
+	-From Webster@CarlWebster.com 
+	-To ITGroup@CarlWebster.com	
+
+	The script will use the email server smtp.office365.com on port 587 using SSL, 
+	sending from webster@carlwebster.com, sending to ITGroup@carlwebster.com.
+
+	If the current user's credentials are not valid to send email, 
+	the user will be prompted to enter valid credentials.
+.EXAMPLE
+	PS C:\PSScript > .\ADDS_Inventory_V3.ps1 
+	-SmtpServer smtp.gmail.com 
+	-SmtpPort 587
+	-UseSSL 
+	-From Webster@CarlWebster.com 
+	-To ITGroup@CarlWebster.com	
+
+	*** NOTE ***
+	To send email using a Gmail or g-suite account, you may have to turn ON
+	the "Less secure app access" option on your account.
+	*** NOTE ***
+	
+	The script will use the email server smtp.gmail.com on port 587 using SSL, 
+	sending from webster@gmail.com, sending to ITGroup@carlwebster.com.
+
+	If the current user's credentials are not valid to send email, 
+	the user will be prompted to enter valid credentials.
 .INPUTS
 	None.  You cannot pipe objects to this script.
 .OUTPUTS
@@ -806,8 +860,8 @@
 .NOTES
 	NAME: ADDS_Inventory_V3.ps1
 	VERSION: 3.00
-	AUTHOR: Carl Webster, Sr. Solutions Architect, Choice Solutions, LLC and Michael B. Smith
-	LASTEDIT: April 28, 2019
+	AUTHOR: Carl Webster and Michael B. Smith
+	LASTEDIT: May 15, 2020
 #>
 
 
@@ -832,10 +886,10 @@ Param(
 	[Switch]$AddDateTime=$False,
 	
 	[parameter(Mandatory=$False)] 
-	[string]$ADForest=$Env:USERDNSDOMAIN, 
+	[string]$ADDomain="", 
 
 	[parameter(Mandatory=$False)] 
-	[string]$ADDomain="", 
+	[string]$ADForest=$Env:USERDNSDOMAIN, 
 
 	[parameter(ParameterSetName="WordPDF",Mandatory=$False)] 
 	[Alias("CA")]
@@ -862,15 +916,15 @@ Param(
 	[ValidateNotNullOrEmpty()]
 	[string]$CompanyPhone="",
     
+	[parameter(Mandatory=$False)] 
+	[Alias("ServerName")]
+	[string]$ComputerName=$Env:USERDNSDOMAIN,
+	
 	[parameter(ParameterSetName="WordPDF",Mandatory=$False)] 
 	[Alias("CP")]
 	[ValidateNotNullOrEmpty()]
 	[string]$CoverPage="Sideline", 
 
-	[parameter(Mandatory=$False)] 
-	[Alias("ServerName")]
-	[string]$ComputerName=$Env:USERDNSDOMAIN,
-	
 	[parameter(Mandatory=$False)] 
 	[Switch]$DCDNSInfo=$False, 
 
@@ -880,6 +934,9 @@ Param(
 	[parameter(Mandatory=$False)] 
 	[string]$Folder="",
 	
+	[parameter(Mandatory=$False)] 
+	[string]$From="",
+
 	[parameter(Mandatory=$False)] 
 	[Switch]$GPOInheritance=$False, 
 
@@ -907,42 +964,44 @@ Param(
 	[parameter(Mandatory=$False )] 
 	[Switch]$Services=$False,
 	
+	[parameter(Mandatory=$False)] 
+	[int]$SmtpPort=25,
+
+	[parameter(Mandatory=$False)] 
+	[string]$SmtpServer="",
+
 	[Parameter( Mandatory = $false )]
 	[Switch]$SuperVerbose = $false,
 	
+	[parameter(Mandatory=$False)] 
+	[string]$To="",
+
 	[parameter(ParameterSetName="WordPDF",Mandatory=$False)] 
 	[Alias("UN")]
 	[ValidateNotNullOrEmpty()]
 	[string]$UserName=$env:username,
 
 	[parameter(Mandatory=$False)] 
-	[string]$SmtpServer="",
-
-	[parameter(Mandatory=$False)] 
-	[int]$SmtpPort=25,
-
-	[parameter(Mandatory=$False)] 
-	[switch]$UseSSL=$False,
-
-	[parameter(Mandatory=$False)] 
-	[string]$From="",
-
-	[parameter(Mandatory=$False)] 
-	[string]$To=""
+	[switch]$UseSSL=$False
 
 	)
 	
+#Created by Carl Webster and Michael B. Smith
 #webster@carlwebster.com
-#Sr. Solutions Architect at Choice Solutions, LLC
 #@carlwebster on Twitter
-#http://www.CarlWebster.com
+#https://www.CarlWebster.com
+#
+#michael@smithcons.com
+#@essentialexch on Twitter
+#https://www.essential.exchange/blog/
+
 #Created on April 10, 2014
 
 #Version 1.0 released to the community on May 31, 2014
 #
 #Version 2.0 is based on version 1.20
 #
-#Version 3.00 The Michael B. Smith Update and is based on version 2.22
+#Version 3.00 The Michael B. Smith Update and is based on version 2.22 and updated with the changes made up to 2.26
 #	This is the "user/OU speedup" release. Significant efforts were spent to make the script run
 #	faster in environments where large numbers of users and OUs exist.
 #
@@ -990,6 +1049,26 @@ Param(
 #	You can now select multiple output formats. This required extensive code changes.
 #	HTML is now the default output format.
 #
+#	Add checking for a Word version of 0, which indicates the Office installation needs repairing
+#	Add Receive Side Scaling setting to Function OutputNICItem
+#	Change color variables $wdColorGray15 and $wdColorGray05 from [long] to [int]
+#	Change location of the -Dev, -Log, and -ScriptInfo output files from the script folder to the -Folder location (Thanks to Guy Leech for the "suggestion")
+#	Fix Swedish Table of Contents (Thanks to Johan Kallio)
+#		From 
+#			'sv-'	{ 'Automatisk innehållsförteckning2'; Break }
+#		To
+#			'sv-'	{ 'Automatisk innehållsförteckn2'; Break }
+#	Reformatted the terminating Write-Error messages to make them more visible and readable in the console
+#	Update Function SendEmail to handle anonymous unauthenticated email
+#	Update Functions GetComputerWMIInfo and OutputNicInfo to fix two bugs in NIC Power Management settings
+#	Updated help text
+#	Updated the following Exchange Schema Versions:
+#		"15312" = "Exchange 2013 CU7 through CU23"
+#		"15317" = "Exchange 2016 Preview and RTM"
+#		"15332" = "Exchange 2016 CU7 through CU15"
+#		"17000" = "Exchange 2019 RTM/CU1"
+#		"17001" = "Exchange 2019 CU2-CU4"
+#
 
 
 Set-StrictMode -Version Latest
@@ -1008,31 +1087,6 @@ function wv
 {
 	$s = $args -join ''
 	Write-Verbose $s
-}
-
-If($Log) 
-{
-	#start transcript logging
-	$Script:ThisScriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
-	$Script:LogPath = "$Script:ThisScriptPath\ADDSDocScriptTranscript_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
-	
-	try 
-	{
-		Start-Transcript -Path $Script:LogPath -Force -Verbose:$false | Out-Null
-		Write-Verbose "$(Get-Date): Transcript/log started at $Script:LogPath"
-		$Script:StartLog = $true
-	} 
-	catch 
-	{
-		Write-Verbose "$(Get-Date): Transcript/log failed at $Script:LogPath"
-		$Script:StartLog = $false
-	}
-}
-
-If($Dev)
-{
-	$Error.Clear()
-	$Script:DevErrorFile = "$($pwd.Path)\ADInventoryScriptErrors_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
 }
 
 If($MSWord -eq $False -and $PDF -eq $False -and $Text -eq $False -and $HTML -eq $False)
@@ -1059,7 +1113,6 @@ If($HTML)
 
 If($ADForest -ne "" -and $ADDomain -ne "")
 {
-	#2.16
 	#Make ADForest equal to ADDomain so no code has to change in the script
 	$ADForest = $ADDomain
 }
@@ -1091,7 +1144,13 @@ Switch ($Section)
 If($ValidSection -eq $False)
 {
 	$ErrorActionPreference = $SaveEAPreference
-	Write-Error -Message "`n`tThe Section parameter specified, $($Section), is an invalid Section option.`n`tValid options are:
+	Write-Error -Message "
+	`n`n
+	`t`t
+	The Section parameter specified, $($Section), is an invalid Section option.
+	`n`n
+	`t`t
+	Valid options are:
 	
 	`t`tForest
 	`t`tSites
@@ -1102,7 +1161,9 @@ If($ValidSection -eq $False)
 	`t`tMisc
 	`t`tAll
 	
-	`tScript cannot continue."
+	`t`t
+	Script cannot continue.
+	`n`n"
 	Exit
 }
 
@@ -1121,16 +1182,140 @@ If($Folder -ne "")
 		Else
 		{
 			#it exists but it is a file not a folder
-			Write-Error "Folder $Folder is a file, not a folder.  Script cannot continue"
+			Write-Error "
+			`n`n
+			`tFolder $Folder is a file, not a folder.
+			`n`n
+			`tScript cannot continue.
+			`n`n"
 			Exit
 		}
 	}
 	Else
 	{
 		#does not exist
-		Write-Error "Folder $Folder does not exist.  Script cannot continue"
+		Write-Error "
+		`n`n
+		`t`t
+		Folder $Folder does not exist.
+		`n`n
+		`t`t
+		Script cannot continue.
+		`n`n"
 		Exit
 	}
+}
+
+If($Folder -eq "")
+{
+	$Script:pwdpath = $pwd.Path
+}
+Else
+{
+	$Script:pwdpath = $Folder
+}
+
+If($Script:pwdpath.EndsWith("\"))
+{
+	#remove the trailing \
+	$Script:pwdpath = $Script:pwdpath.SubString(0, ($Script:pwdpath.Length - 1))
+}
+
+If($Log) 
+{
+	#start transcript logging
+	$Script:LogPath = "$Script:pwdpath\ADDSDocScriptTranscript_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
+	
+	try 
+	{
+		Start-Transcript -Path $Script:LogPath -Force -Verbose:$false | Out-Null
+		Write-Verbose "$(Get-Date): Transcript/log started at $Script:LogPath"
+		$Script:StartLog = $true
+	} 
+	catch 
+	{
+		Write-Verbose "$(Get-Date): Transcript/log failed at $Script:LogPath"
+		$Script:StartLog = $false
+	}
+}
+
+If($Dev)
+{
+	$Error.Clear()
+	$Script:DevErrorFile = "$Script:pwdpath\ADInventoryScriptErrors_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
+}
+
+If(![String]::IsNullOrEmpty($SmtpServer) -and [String]::IsNullOrEmpty($From) -and [String]::IsNullOrEmpty($To))
+{
+	Write-Error "
+	`n`n
+	`t`t
+	You specified an SmtpServer but did not include a From or To email address.
+	`n`n
+	`t`t
+	Script cannot continue.
+	`n`n"
+	Exit
+}
+If(![String]::IsNullOrEmpty($SmtpServer) -and [String]::IsNullOrEmpty($From) -and ![String]::IsNullOrEmpty($To))
+{
+	Write-Error "
+	`n`n
+	`t`t
+	You specified an SmtpServer and a To email address but did not include a From email address.
+	`n`n
+	`t`t
+	Script cannot continue.
+	`n`n"
+	Exit
+}
+If(![String]::IsNullOrEmpty($SmtpServer) -and [String]::IsNullOrEmpty($To) -and ![String]::IsNullOrEmpty($From))
+{
+	Write-Error "
+	`n`n
+	`t`t
+	You specified an SmtpServer and a From email address but did not include a To email address.
+	`n`n
+	`t`t
+	Script cannot continue.
+	`n`n"
+	Exit
+}
+If(![String]::IsNullOrEmpty($From) -and ![String]::IsNullOrEmpty($To) -and [String]::IsNullOrEmpty($SmtpServer))
+{
+	Write-Error "
+	`n`n
+	`t`t
+	You specified From and To email addresses but did not include the SmtpServer.
+	`n`n
+	`t`t
+	Script cannot continue.
+	`n`n"
+	Exit
+}
+If(![String]::IsNullOrEmpty($From) -and [String]::IsNullOrEmpty($SmtpServer))
+{
+	Write-Error "
+	`n`n
+	`t`t
+	You specified a From email address but did not include the SmtpServer.
+	`n`n
+	`t`t
+	Script cannot continue.
+	`n`n"
+	Exit
+}
+If(![String]::IsNullOrEmpty($To) -and [String]::IsNullOrEmpty($SmtpServer))
+{
+	Write-Error "
+	`n`n
+	`t`t
+	You specified a To email address but did not include the SmtpServer.
+	`n`n
+	`t`t
+	Script cannot continue.
+	`n`n"
+	Exit
 }
 
 #region initialize variables for word html and text
@@ -1145,15 +1330,15 @@ If($MSWord -or $PDF)
 	#the following values were attained from 
 	#http://msdn.microsoft.com/en-us/library/office/aa211923(v=office.11).aspx
 	[int]$wdAlignPageNumberRight = 2
-	[long]$wdColorGray15 = 14277081
-	[long]$wdColorGray05 = 15987699 
+	[int]$wdColorGray15 = 14277081
+	[int]$wdColorGray05 = 15987699 
 	[int]$wdMove = 0
 	[int]$wdSeekMainDocument = 0
 	[int]$wdSeekPrimaryFooter = 4
 	[int]$wdStory = 6
-	[long]$wdColorRed = 255
+	[int]$wdColorRed = 255
 	[int]$wdColorBlack = 0
-	[long]$wdColorYellow = 65535 #added in ADDS script V2.22
+	[int]$wdColorYellow = 65535 #added in ADDS script V2.22
 	[int]$wdWord2007 = 12
 	[int]$wdWord2010 = 14
 	[int]$wdWord2013 = 15
@@ -1272,15 +1457,16 @@ If($HTML)
 #region email function
 Function SendEmail
 {
-	Param([string]$Attachments)
+	Param([array]$Attachments)
 	Write-Verbose "$(Get-Date): Prepare to email"
-	
+
 	$emailAttachment = $Attachments
 	$emailSubject = $Script:Title
 	$emailBody = @"
 Hello, <br />
 <br />
 $Script:Title is attached.
+
 "@ 
 
 	If($Dev)
@@ -1289,71 +1475,104 @@ $Script:Title is attached.
 	}
 
 	$error.Clear()
-
-	If($UseSSL)
+	
+	If($From -Like "anonymous@*")
 	{
-		Write-Verbose "$(Get-Date): Trying to send email using current user's credentials with SSL"
-		Send-MailMessage -Attachments $emailAttachment -Body $emailBody -BodyAsHtml -From $From `
-		-Port $SmtpPort -SmtpServer $SmtpServer -Subject $emailSubject -To $To `
-		-UseSSL *>$Null
-	}
-	Else
-	{
-		Write-Verbose  "$(Get-Date): Trying to send email using current user's credentials without SSL"
-		Send-MailMessage -Attachments $emailAttachment -Body $emailBody -BodyAsHtml -From $From `
-		-Port $SmtpPort -SmtpServer $SmtpServer -Subject $emailSubject -To $To *>$Null
-	}
+		#https://serverfault.com/questions/543052/sending-unauthenticated-mail-through-ms-exchange-with-powershell-windows-server
+		$anonUsername = "anonymous"
+		$anonPassword = ConvertTo-SecureString -String "anonymous" -AsPlainText -Force
+		$anonCredentials = New-Object System.Management.Automation.PSCredential($anonUsername,$anonPassword)
 
-	If(!$?)
-	{
-		$e = $error[0]
-
-		If(($null -ne $e.Exception -and $e.Exception.ToString().Contains("5.7.57")))
+		If($UseSSL)
 		{
-			#The server response was: 5.7.57 SMTP; Client was not authenticated to send anonymous mail during MAIL FROM
-			Write-Verbose "$(Get-Date): Current user's credentials failed. Ask for usable credentials."
-
-			If($Dev)
-			{
-				Out-File -FilePath $Script:DevErrorFile -InputObject $error -Append 4>$Null
-			}
-
-			$error.Clear()
-
-			If($Null -eq $global:emailCredentials)
-			{
-				$global:emailCredentials = Get-Credential -UserName $From -Message "Enter the email account and password to send email"
-			}
-
-			If($UseSSL)
-			{
-				Send-MailMessage -Attachments $emailAttachment -Body $emailBody -BodyAsHtml -From $From `
-				-Port $SmtpPort -SmtpServer $SmtpServer -Subject $emailSubject -To $To `
-				-UseSSL -credential $global:emailCredentials *>$Null 
-			}
-			Else
-			{
-				Send-MailMessage -Attachments $emailAttachment -Body $emailBody -BodyAsHtml -From $From `
-				-Port $SmtpPort -SmtpServer $SmtpServer -Subject $emailSubject -To $To `
-				-credential $global:emailCredentials *>$Null 
-			}
-
-			If($?)
-			{
-				Write-Verbose "$(Get-Date): Email successfully sent using new credentials"
-			}
-			ElseIf(!$?)
-			{
-				$e = $error[0]
-
-				Write-Verbose "$(Get-Date): Email was not sent:"
-				Write-Warning "$(Get-Date): Exception: $e.Exception" 
-			}
+			Send-MailMessage -Attachments $emailAttachment -Body $emailBody -BodyAsHtml -From $From `
+			-Port $SmtpPort -SmtpServer $SmtpServer -Subject $emailSubject -To $To `
+			-UseSSL -credential $anonCredentials *>$Null 
 		}
 		Else
 		{
+			Send-MailMessage -Attachments $emailAttachment -Body $emailBody -BodyAsHtml -From $From `
+			-Port $SmtpPort -SmtpServer $SmtpServer -Subject $emailSubject -To $To `
+			-credential $anonCredentials *>$Null 
+		}
+		
+		If($?)
+		{
+			Write-Verbose "$(Get-Date): Email successfully sent using anonymous credentials"
+		}
+		ElseIf(!$?)
+		{
+			$e = $error[0]
+
 			Write-Verbose "$(Get-Date): Email was not sent:"
 			Write-Warning "$(Get-Date): Exception: $e.Exception" 
+		}
+	}
+	Else
+	{
+		If($UseSSL)
+		{
+			Write-Verbose "$(Get-Date): Trying to send email using current user's credentials with SSL"
+			Send-MailMessage -Attachments $emailAttachment -Body $emailBody -BodyAsHtml -From $From `
+			-Port $SmtpPort -SmtpServer $SmtpServer -Subject $emailSubject -To $To `
+			-UseSSL *>$Null
+		}
+		Else
+		{
+			Write-Verbose  "$(Get-Date): Trying to send email using current user's credentials without SSL"
+			Send-MailMessage -Attachments $emailAttachment -Body $emailBody -BodyAsHtml -From $From `
+			-Port $SmtpPort -SmtpServer $SmtpServer -Subject $emailSubject -To $To *>$Null
+		}
+
+		If(!$?)
+		{
+			$e = $error[0]
+			
+			#error 5.7.57 is O365 and error 5.7.0 is gmail
+			If($null -ne $e.Exception -and $e.Exception.ToString().Contains("5.7"))
+			{
+				#The server response was: 5.7.xx SMTP; Client was not authenticated to send anonymous mail during MAIL FROM
+				Write-Verbose "$(Get-Date): Current user's credentials failed. Ask for usable credentials."
+
+				If($Dev)
+				{
+					Out-File -FilePath $Script:DevErrorFile -InputObject $error -Append 4>$Null
+				}
+
+				$error.Clear()
+
+				$emailCredentials = Get-Credential -UserName $From -Message "Enter the password to send email"
+
+				If($UseSSL)
+				{
+					Send-MailMessage -Attachments $emailAttachment -Body $emailBody -BodyAsHtml -From $From `
+					-Port $SmtpPort -SmtpServer $SmtpServer -Subject $emailSubject -To $To `
+					-UseSSL -credential $emailCredentials *>$Null 
+				}
+				Else
+				{
+					Send-MailMessage -Attachments $emailAttachment -Body $emailBody -BodyAsHtml -From $From `
+					-Port $SmtpPort -SmtpServer $SmtpServer -Subject $emailSubject -To $To `
+					-credential $emailCredentials *>$Null 
+				}
+
+				If($?)
+				{
+					Write-Verbose "$(Get-Date): Email successfully sent using new credentials"
+				}
+				ElseIf(!$?)
+				{
+					$e = $error[0]
+
+					Write-Verbose "$(Get-Date): Email was not sent:"
+					Write-Warning "$(Get-Date): Exception: $e.Exception" 
+				}
+			}
+			Else
+			{
+				Write-Verbose "$(Get-Date): Email was not sent:"
+				Write-Warning "$(Get-Date): Exception: $e.Exception" 
+			}
 		}
 	}
 }
@@ -2106,59 +2325,69 @@ Function OutputProcessorItem
 
 Function OutputNicItem
 {
-	Param([object]$Nic, [object]$ThisNic, [string] $ComputerName)
+	Param([object]$Nic, [object]$ThisNic, [string]$RemoteComputerName)
 	
-	If(validObject $ThisNic PowerManagementSupported)
-	{
-		$powerMgmt = $ThisNic.PowerManagementSupported
-	}
-	
-	If($powerMgmt)
-	{
-		$powerMgmt = Get-WmiObject -ComputerName MSPower_DeviceEnable -Namespace root\wmi | Where-Object {$_.InstanceName -match [regex]::Escape($ThisNic.PNPDeviceID)}
+	$powerMgmt = Get-WmiObject -computername $RemoteComputerName MSPower_DeviceEnable -Namespace root\wmi | Where-Object{$_.InstanceName -match [regex]::Escape($ThisNic.PNPDeviceID)}
 
-		If($? -and $Null -ne $powerMgmt)
+	If($? -and $Null -ne $powerMgmt)
+	{
+		If($powerMgmt.Enable -eq $True)
 		{
-			If($powerMgmt.Enable -eq $True)
-			{
-				$PowerSaving = "Enabled"
-			}
-			Else
-			{
-				$PowerSaving = "Disabled"
-			}
+			$PowerSaving = "Enabled"
 		}
 		Else
 		{
-			$PowerSaving = "N/A"
+			$PowerSaving = "Disabled"
 		}
 	}
 	Else
 	{
-		$PowerSaving = "Not Supported"
+        $PowerSaving = "N/A"
 	}
 	
 	$xAvailability = ""
-	Switch ($processor.availability)
+	Switch ($ThisNic.availability)
 	{
-		1	{$xAvailability = "Other"; Break}
-		2	{$xAvailability = "Unknown"; Break}
-		3	{$xAvailability = "Running or Full Power"; Break}
-		4	{$xAvailability = "Warning"; Break}
-		5	{$xAvailability = "In Test"; Break}
-		6	{$xAvailability = "Not Applicable"; Break}
-		7	{$xAvailability = "Power Off"; Break}
-		8	{$xAvailability = "Off Line"; Break}
-		9	{$xAvailability = "Off Duty"; Break}
-		10	{$xAvailability = "Degraded"; Break}
-		11	{$xAvailability = "Not Installed"; Break}
-		12	{$xAvailability = "Install Error"; Break}
-		13	{$xAvailability = "Power Save - Unknown"; Break}
-		14	{$xAvailability = "Power Save - Low Power Mode"; Break}
-		15	{$xAvailability = "Power Save - Standby"; Break}
-		16	{$xAvailability = "Power Cycle"; Break}
-		17	{$xAvailability = "Power Save - Warning"; Break}
+		1		{$xAvailability = "Other"; Break}
+		2		{$xAvailability = "Unknown"; Break}
+		3		{$xAvailability = "Running or Full Power"; Break}
+		4		{$xAvailability = "Warning"; Break}
+		5		{$xAvailability = "In Test"; Break}
+		6		{$xAvailability = "Not Applicable"; Break}
+		7		{$xAvailability = "Power Off"; Break}
+		8		{$xAvailability = "Off Line"; Break}
+		9		{$xAvailability = "Off Duty"; Break}
+		10		{$xAvailability = "Degraded"; Break}
+		11		{$xAvailability = "Not Installed"; Break}
+		12		{$xAvailability = "Install Error"; Break}
+		13		{$xAvailability = "Power Save - Unknown"; Break}
+		14		{$xAvailability = "Power Save - Low Power Mode"; Break}
+		15		{$xAvailability = "Power Save - Standby"; Break}
+		16		{$xAvailability = "Power Cycle"; Break}
+		17		{$xAvailability = "Power Save - Warning"; Break}
 		Default	{$xAvailability = "Unknown"; Break}
+	}
+
+	#attempt to get Receive Side Scaling setting
+	$RSSEnabled = "N/A"
+	Try
+	{
+		#https://ios.developreference.com/article/10085450/How+do+I+enable+VRSS+(Virtual+Receive+Side+Scaling)+for+a+Windows+VM+without+relying+on+Enable-NetAdapterRSS%3F
+		$RSSEnabled = (Get-WmiObject -ComputerName $RemoteComputerName MSFT_NetAdapterRssSettingData -Namespace "root\StandardCimV2" -ea 0).Enabled
+
+		If($RSSEnabled)
+		{
+			$RSSEnabled = "Enabled"
+		}
+		ELse
+		{
+			$RSSEnabled = "Disabled"
+		}
+	}
+	
+	Catch
+	{
+		$RSSEnabled = "Not available on $Script:RunningOS"
 	}
 
 	$xIPAddress = New-Object System.Collections.ArrayList
@@ -2237,6 +2466,7 @@ Function OutputNicItem
 		}
 		$NicInformation.Add(@{ Data = "Availability"; Value = $xAvailability; }) > $Null
 		$NicInformation.Add(@{ Data = "Allow the computer to turn off this device to save power"; Value = $PowerSaving; }) > $Null
+		$NicInformation.Add(@{ Data = "Receive Side Scaling"; Value = $RSSEnabled; }) > $Null
 		$NicInformation.Add(@{ Data = "Physical Address"; Value = $Nic.macaddress; }) > $Null
 		If($xIPAddress.Count -gt 1)
 		{
@@ -2349,6 +2579,7 @@ Function OutputNicItem
 		Line 2 "Allow computer to turn "
 		Line 2 "off device to save power: " $PowerSaving
 		Line 2 "Physical Address`t: " $nic.macaddress
+		Line 2 "Receive Side Scaling`t: " $RSSEnabled
 		Line 2 "IP Address`t`t: " $xIPAddress[0]
 		$cnt = -1
 		ForEach($tmp in $xIPAddress)
@@ -2449,6 +2680,7 @@ Function OutputNicItem
 		$rowdata += @(,('Availability',($htmlsilver -bor $htmlBold),$xAvailability,$htmlwhite))
 		$rowdata += @(,('Allow the computer to turn off this device to save power',($htmlsilver -bor $htmlBold),$PowerSaving,$htmlwhite))
 		$rowdata += @(,('Physical Address',($htmlsilver -bor $htmlBold),$Nic.macaddress,$htmlwhite))
+		$rowdata += @(,('Receive Side Scaling',($htmlsilver -bor $htmlbold),$RSSEnabled,$htmlwhite))
 		$rowdata += @(,('IP Address',($htmlsilver -bor $htmlBold),$xIPAddress[0],$htmlwhite))
 		$cnt = -1
 		ForEach($tmp in $xIPAddress)
@@ -2821,7 +3053,7 @@ Function BuildDCDNSIPConfigTable
 						$obj | Add-Member -MemberType NoteProperty -Name DCIpAddress2 -Value ""
 					}
 					
-					$serverCount = if( $null -ne $nic.dnsserversearchorder ) { $nic.dnsserversearchorder.Length } else { 0 }
+					$serverCount = If( $null -ne $nic.dnsserversearchorder ) { $nic.dnsserversearchorder.Length } else { 0 }
 					If( $serverCount -gt 0 )
 					{
 						$obj | Add-Member -MemberType NoteProperty -Name DCDNS1 -Value $xnicdnsserversearchorder[0]
@@ -2919,7 +3151,7 @@ Function SetWordHashTable
 			'nb-'	{ 'Automatisk tabell 2'; Break }
 			'nl-'	{ 'Automatische inhoudsopgave 2'; Break }
 			'pt-'	{ 'Sumário Automático 2'; Break }
-			'sv-'	{ 'Automatisk innehållsförteckning2'; Break }
+			'sv-'	{ 'Automatisk innehållsförteckn2'; Break }
 			'zh-'	{ '自动目录 2'; Break }
 		}
 	)
@@ -3376,7 +3608,14 @@ Function SetupWord
 	{
 		Write-Warning "The Word object could not be created. You may need to repair your Word installation."
 		$ErrorActionPreference = $SaveEAPreference
-		Write-Error "`n`n`t`tThe Word object could not be created. You may need to repair your Word installation.`n`n`t`tScript cannot continue.`n`n"
+		Write-Error "
+		`n`n
+		`t`t
+		The Word object could not be created. You may need to repair your Word installation.
+		`n`n
+		`t`t
+		Script cannot continue.
+		`n`n"
 		Exit
 	}
 
@@ -3393,7 +3632,15 @@ Function SetupWord
 	If(!($Script:WordLanguageValue -gt -1))
 	{
 		$ErrorActionPreference = $SaveEAPreference
-		Write-Error "`n`n`t`tUnable to determine the Word language value.`n`n`t`tScript cannot continue.`n`n"
+		Write-Error "
+		`n`n
+		`t`t
+		Unable to determine the Word language value. You may need to repair your Word installation.
+		`n`n
+		`t`t
+		Script cannot continue.
+		`n`n
+		"
 		AbortScript
 	}
 	Write-Verbose "$(Get-Date): Word language value is $($Script:WordLanguageValue)"
@@ -3418,13 +3665,38 @@ Function SetupWord
 	ElseIf($Script:WordVersion -eq $wdWord2007)
 	{
 		$ErrorActionPreference = $SaveEAPreference
-		Write-Error "`n`n`t`tMicrosoft Word 2007 is no longer supported.`n`n`t`tScript will end.`n`n"
+		Write-Error "
+		`n`n
+		`t`t
+		Microsoft Word 2007 is no longer supported.`n`n`t`tScript will end.
+		`n`n
+		"
 		AbortScript
+	}
+	ElseIf($Script:WordVersion -eq 0)
+	{
+		Write-Error "
+		`n`n
+		`t`t
+		The Word Version is 0. You should run a full online repair of your Office installation.
+		`n`n
+		`t`t
+		Script cannot continue.
+		`n`n
+		"
+		Exit
 	}
 	Else
 	{
 		$ErrorActionPreference = $SaveEAPreference
-		Write-Error "`n`n`t`tYou are running an untested or unsupported version of Microsoft Word.`n`n`t`tScript will end.`n`n`t`tPlease send info on your version of Word to webster@carlwebster.com`n`n"
+		Write-Error "
+		`n`n
+		`t`t
+		You are running an untested or unsupported version of Microsoft Word.
+		`n`n
+		`t`tScript will end.`n`n`t`tPlease send info on your version of Word to webster@carlwebster.com
+		`n`n
+		"
 		AbortScript
 	}
 
@@ -3436,9 +3708,16 @@ Function SetupWord
 		
 		If([String]::IsNullOrEmpty($TmpName))
 		{
-			Write-Warning "`n`n`t`tCompany Name is blank so Cover Page will not show a Company Name."
-			Write-Warning "`n`t`tCheck HKCU:\Software\Microsoft\Office\Common\UserInfo for Company or CompanyName value."
-			Write-Warning "`n`t`tYou may want to use the -CompanyName parameter if you need a Company Name on the cover page.`n`n"
+			Write-Warning "
+			`n`n
+			`t`tCompany Name is blank so Cover Page will not show a Company Name."
+			Write-Warning "
+			`n
+			`t`tCheck HKCU:\Software\Microsoft\Office\Common\UserInfo for Company or CompanyName value."
+			Write-Warning "
+			`n
+			`t`tYou may want to use the -CompanyName parameter if you need a Company Name on the cover page.
+			`n`n"
 			$Script:CoName = $TmpName
 		}
 		Else
@@ -3571,7 +3850,15 @@ Function SetupWord
 		$ErrorActionPreference = $SaveEAPreference
 		Write-Verbose "$(Get-Date): Word language value $($Script:WordLanguageValue)"
 		Write-Verbose "$(Get-Date): Culture code $($Script:WordCultureCode)"
-		Write-Error "`n`n`t`tFor $($Script:WordProduct), $($CoverPage) is not a valid Cover Page option.`n`n`t`tScript cannot continue.`n`n"
+		Write-Error "
+		`n`n
+		`t`t
+		For $($Script:WordProduct), $($CoverPage) is not a valid Cover Page option.
+		`n`n
+		`t`t
+		Script cannot continue.
+		`n`n
+		"
 		AbortScript
 	}
 
@@ -3632,7 +3919,14 @@ Function SetupWord
 	{
 		Write-Verbose "$(Get-Date): "
 		$ErrorActionPreference = $SaveEAPreference
-		Write-Error "`n`n`t`tAn empty Word document could not be created.`n`n`t`tScript cannot continue.`n`n"
+		Write-Error "
+		`n`n
+		`t`t
+		An empty Word document could not be created. You may need to repair your Word installation.
+		`n`n
+		`t`t
+		Script cannot continue.
+		`n`n"
 		AbortScript
 	}
 
@@ -3641,7 +3935,14 @@ Function SetupWord
 	{
 		Write-Verbose "$(Get-Date): "
 		$ErrorActionPreference = $SaveEAPreference
-		Write-Error "`n`n`t`tAn unknown error happened selecting the entire Word document for default formatting options.`n`n`t`tScript cannot continue.`n`n"
+		Write-Error "
+		`n`n
+		`t`t
+		An unknown error happened selecting the entire Word document for default formatting options.
+		`n`n
+		`t`t
+		Script cannot continue.
+		`n`n"
 		AbortScript
 	}
 
@@ -3848,10 +4149,10 @@ Function Get-RegistryValue
 	}
 
 	$val = $null
-	if( $registry )
+	If( $registry )
 	{
 		$key = $registry.OpenSubKey( $path2 )
-		if( $key )
+		If( $key )
 		{
 			$val = $key.GetValue( $name )
 			$key.Close()
@@ -3925,7 +4226,7 @@ function lx
 
 	$str = $args -join ''
 
-	if( $nonewline )
+	If( $nonewline )
 	{
 		$null = $global:Output.Append( $str )
 	}
@@ -4138,11 +4439,11 @@ Function WriteHTMLLine
 	## willing to update all the call sites, you can easily re-instate the fixes. They have only been
 	## commented out with '##' below.
 
-	## if( [String]::IsNullOrEmpty( $fontName ) )
+	## If( [String]::IsNullOrEmpty( $fontName ) )
 	## {
 	##	$fontName = 'Calibri'
 	## }
-	## if( $fontSize -le 0 )
+	## If( $fontSize -le 0 )
 	## {
 	##	$fontSize = 1
 	## }
@@ -4165,10 +4466,10 @@ Function WriteHTMLLine
 
 		## ## build the HTML output string
 ##		$HTMLBody = ''
-##		if( $ital ) { $HTMLBody += '<i>' }
-##		if( $bold ) { $HTMLBody += '<b>' } 
-		if( $ital ) { $null = $sb.Append( '<i>' ) }
-		if( $bold ) { $null = $sb.Append( '<b>' ) } 
+##		If( $ital ) { $HTMLBody += '<i>' }
+##		If( $bold ) { $HTMLBody += '<b>' } 
+		If( $ital ) { $null = $sb.Append( '<i>' ) }
+		If( $bold ) { $null = $sb.Append( '<b>' ) } 
 
 		switch( $style )
 		{
@@ -4182,7 +4483,7 @@ Function WriteHTMLLine
 		## $HTMLBody += $HTMLOpen
 		$null = $sb.Append( $HTMLOpen )
 
-		## if($HTMLClose -eq '')
+		## If($HTMLClose -eq '')
 		## {
 		##	$HTMLBody += "<br><font face='" + $fontName + "' " + "color='" + $color + "' size='"  + $fontSize + "'>"
 		## }
@@ -4202,21 +4503,21 @@ Function WriteHTMLLine
 		$null = $sb.Append( ( '&nbsp;&nbsp;&nbsp;&nbsp;' * $tabs ) + $name + $value )
 
 		## $HTMLBody += '</font>'
-##		if( $HTMLClose -eq '' ) { $HTMLBody += '<br>'     }
+##		If( $HTMLClose -eq '' ) { $HTMLBody += '<br>'     }
 ##		else                    { $HTMLBody += $HTMLClose }
 
-##		if( $ital ) { $HTMLBody += '</i>' }
-##		if( $bold ) { $HTMLBody += '</b>' } 
+##		If( $ital ) { $HTMLBody += '</i>' }
+##		If( $bold ) { $HTMLBody += '</b>' } 
 
-##		if( $HTMLClose -eq '' ) { $HTMLBody += '<br />' }
+##		If( $HTMLClose -eq '' ) { $HTMLBody += '<br />' }
 
-		if( $HTMLClose -eq '' ) { $null = $sb.Append( '<br>' )     }
+		If( $HTMLClose -eq '' ) { $null = $sb.Append( '<br>' )     }
 		else                    { $null = $sb.Append( $HTMLClose ) }
 
-		if( $ital ) { $null = $sb.Append( '</i>' ) }
-		if( $bold ) { $null = $sb.Append( '</b>' ) } 
+		If( $ital ) { $null = $sb.Append( '</i>' ) }
+		If( $bold ) { $null = $sb.Append( '</b>' ) } 
 
-		if( $HTMLClose -eq '' ) { $null = $sb.Append( '<br />' ) }
+		If( $HTMLClose -eq '' ) { $null = $sb.Append( '<br />' ) }
 	}
 	##$HTMLBody += $crlf
 	$null = $sb.AppendLine( '' )
@@ -4250,18 +4551,18 @@ Function AddHTMLTable
 	## cells. Using normal strings is too slow.
 
 	#V3.00
-	## if( $ExtraSpecialVerbose )
+	## If( $ExtraSpecialVerbose )
 	## {
 	##	$global:rowInfo1 = $rowInfo
 	## }
 <#
-	if( $SuperVerbose )
+	If( $SuperVerbose )
 	{
 		wv "AddHTMLTable: fontName '$fontName', fontsize $fontSize, colCount $colCount, rowCount $rowCount"
-		if( $null -ne $rowInfo -and $rowInfo.Count -gt 0 )
+		If( $null -ne $rowInfo -and $rowInfo.Count -gt 0 )
 		{
 			wv "AddHTMLTable: rowInfo has $( $rowInfo.Count ) elements"
-			if( $ExtraSpecialVerbose )
+			If( $ExtraSpecialVerbose )
 			{
 				wv "AddHTMLTable: rowInfo length $( $rowInfo.Length )"
 				for( $ii = 0; $ii -lt $rowInfo.Length; $ii++ )
@@ -4280,7 +4581,7 @@ Function AddHTMLTable
 		{
 			wv "AddHTMLTable: rowInfo is empty"
 		}
-		if( $null -ne $fixedInfo -and $fixedInfo.Count -gt 0 )
+		If( $null -ne $fixedInfo -and $fixedInfo.Count -gt 0 )
 		{
 			wv "AddHTMLTable: fixedInfo has $( $fixedInfo.Count ) elements"
 		}
@@ -4294,11 +4595,11 @@ Function AddHTMLTable
 	##$htmlbody = ''
 	[System.Text.StringBuilder] $sb = New-Object System.Text.StringBuilder( 8192 )
 
-	if( $rowInfo -and $rowInfo.Length -lt $rowCount )
+	If( $rowInfo -and $rowInfo.Length -lt $rowCount )
 	{
 ##		$oldCount = $rowCount
 		$rowCount = $rowInfo.Length
-##		if( $SuperVerbose )
+##		If( $SuperVerbose )
 ##		{
 ##			wv "AddHTMLTable: updated rowCount to $rowCount from $oldCount, based on rowInfo.Length"
 ##		}
@@ -4314,14 +4615,14 @@ Function AddHTMLTable
 		## each row consists of tuples: an item of text followed by an item of formatting data
 <#		
 		$row = $rowInfo[ $rowCountIndex ]
-		if( $ExtraSpecialVerbose )
+		If( $ExtraSpecialVerbose )
 		{
 			wv "!!!!! AddHTMLTable: rowCountIndex = $rowCountIndex, row.Length = $( $row.Length ), row gettype = $( $row.GetType().FullName )"
 			wv "!!!!! AddHTMLTable: colCount $colCount"
 			wv "!!!!! AddHTMLTable: row[0].Length $( $row[0].Length )"
 			wv "!!!!! AddHTMLTable: row[0].GetType $( $row[0].GetType().FullName )"
 			$subRow = $row
-			if( $subRow -is [Array] -and $subRow[ 0 ] -is [Array] )
+			If( $subRow -is [Array] -and $subRow[ 0 ] -is [Array] )
 			{
 				$subRow = $subRow[ 0 ]
 				wv "!!!!! AddHTMLTable: deref subRow.Length $( $subRow.Length ), subRow.GetType $( $subRow.GetType().FullName )"
@@ -4331,8 +4632,8 @@ Function AddHTMLTable
 			{
 				$item = $subRow[ $columnIndex ]
 				wv "!!!!! AddHTMLTable: item.GetType $( $item.GetType().FullName )"
-				## if( !( $item -is [String] ) -and $item -is [Array] )
-##				if( $item -is [Array] -and $item[ 0 ] -is [Array] )				
+				## If( !( $item -is [String] ) -and $item -is [Array] )
+##				If( $item -is [Array] -and $item[ 0 ] -is [Array] )				
 ##				{
 ##					$item = $item[ 0 ]
 ##					wv "!!!!! AddHTMLTable: dereferenced item.GetType $( $item.GetType().FullName )"
@@ -4347,7 +4648,7 @@ Function AddHTMLTable
 		$row = $rowInfo[ $rowCountIndex ]
 
 		$subRow = $row
-		if( $subRow -is [Array] -and $subRow[ 0 ] -is [Array] )
+		If( $subRow -is [Array] -and $subRow[ 0 ] -is [Array] )
 		{
 			$subRow = $subRow[ 0 ]
 			## wv "***** AddHTMLTable: deref rowCountIndex $rowCountIndex, subRow.Length $( $subRow.Length ), subRow.GetType $( $subRow.GetType().FullName )"
@@ -4356,21 +4657,21 @@ Function AddHTMLTable
 		$subRowLength = $subRow.Length
 		for( $columnIndex = 0; $columnIndex -lt $colCount; $columnIndex += 2 )
 		{
-			$item = if( $columnIndex -lt $subRowLength ) { $subRow[ $columnIndex ] } else { 0 }
-			## if( !( $item -is [String] ) -and $item -is [Array] )
-##			if( $item -is [Array] -and $item[ 0 ] -is [Array] )
+			$item = If( $columnIndex -lt $subRowLength ) { $subRow[ $columnIndex ] } else { 0 }
+			## If( !( $item -is [String] ) -and $item -is [Array] )
+##			If( $item -is [Array] -and $item[ 0 ] -is [Array] )
 ##			{
 ##				$item = $item[ 0 ]
 ##			}
 
-			$text   = if( $item ) { $item.ToString() } else { '' }
-			$format = if( ( $columnIndex + 1 ) -lt $subRowLength ) { $subRow[ $columnIndex + 1 ] } else { 0 }
+			$text   = If( $item ) { $item.ToString() } else { '' }
+			$format = If( ( $columnIndex + 1 ) -lt $subRowLength ) { $subRow[ $columnIndex + 1 ] } else { 0 }
 			## item, text, and format ALWAYS have values, even if empty values
 			$color  = $global:htmlColor[ $format -band 0xffffc ]
 			[Bool] $bold = $format -band $htmlBold
 			[Bool] $ital = $format -band $htmlitalics
 <#			
-			if( $ExtraSpecialVerbose )
+			If( $ExtraSpecialVerbose )
 			{
 				wv "***** columnIndex $columnIndex, subRow.Length $( $subRow.Length ), item GetType $( $item.GetType().FullName ), item '$item'"
 				wv "***** format $format, color $color, text '$text'"
@@ -4378,7 +4679,7 @@ Function AddHTMLTable
 			}
 #>
 
-			if( $null -eq $fixedInfo -or $fixedInfo.Length -eq 0 )
+			If( $null -eq $fixedInfo -or $fixedInfo.Length -eq 0 )
 			{
 				$null = $sb.Append( "<td style=""background-color:$( $color )""><font face='$( $fontName )' size='$( $fontSize )'>" )
 				##$htmlbody += "<td style=""background-color:$( $color )""><font face='$( $fontName )' size='$( $fontSize )'>"
@@ -4389,12 +4690,12 @@ Function AddHTMLTable
 				##$htmlbody += "<td style=""width:$( $fixedInfo[ $columnIndex / 2 ] ); background-color:$( $color )""><font face='$( $fontName )' size='$( $fontSize )'>"
 			}
 
-			##if( $bold ) { $htmlbody += '<b>' }
-			##if( $ital ) { $htmlbody += '<i>' }
-			if( $bold ) { $null = $sb.Append( '<b>' ) }
-			if( $ital ) { $null = $sb.Append( '<i>' ) }
+			##If( $bold ) { $htmlbody += '<b>' }
+			##If( $ital ) { $htmlbody += '<i>' }
+			If( $bold ) { $null = $sb.Append( '<b>' ) }
+			If( $ital ) { $null = $sb.Append( '<i>' ) }
 
-			if( $text -eq ' ' -or $text.length -eq 0)
+			If( $text -eq ' ' -or $text.length -eq 0)
 			{
 				##$htmlbody += '&nbsp;&nbsp;&nbsp;'
 				$null = $sb.Append( '&nbsp;&nbsp;&nbsp;' )
@@ -4403,7 +4704,7 @@ Function AddHTMLTable
 			{
 				for ($inx = 0; $inx -lt $text.length; $inx++ )
 				{
-					if( $text[ $inx ] -eq ' ' )
+					If( $text[ $inx ] -eq ' ' )
 					{
 						##$htmlbody += '&nbsp;'
 						$null = $sb.Append( '&nbsp;' )
@@ -4417,10 +4718,10 @@ Function AddHTMLTable
 				$null = $sb.Append( $text )
 			}
 
-##			if( $bold ) { $htmlbody += '</b>' }
-##			if( $ital ) { $htmlbody += '</i>' }
-			if( $bold ) { $null = $sb.Append( '</b>' ) }
-			if( $ital ) { $null = $sb.Append( '</i>' ) }
+##			If( $bold ) { $htmlbody += '</b>' }
+##			If( $ital ) { $htmlbody += '</i>' }
+			If( $bold ) { $null = $sb.Append( '</b>' ) }
+			If( $ital ) { $null = $sb.Append( '</i>' ) }
 
 			$null = $sb.AppendLine( '</font></td>' )
 ##			$htmlbody += '</font></td>'
@@ -4432,7 +4733,7 @@ Function AddHTMLTable
 ##		$htmlbody += $crlf
 	}
 
-##	if( $ExtraSpecialVerbose )
+##	If( $ExtraSpecialVerbose )
 ##	{
 ##		$global:rowInfo = $rowInfo
 ##		wv "!!!!! AddHTMLTable: HTML = '$htmlbody'"
@@ -4578,11 +4879,11 @@ Function FormatHTMLTable
 	## FIXME - the help text for this function is wacky wrong - MBS
 	## FIXME - Use StringBuilder - MBS - this only builds the table header - benefit relatively small
 <#
-	if( $SuperVerbose )
+	If( $SuperVerbose )
 	{
 		wv "FormatHTMLTable: fontname '$fontname', size $fontSize, tableheader '$tableheader'"
 		wv "FormatHTMLTable: noborder $noborder, noheadcols $noheadcols"
-		if( $rowarray -and $rowarray.count -gt 0 )
+		If( $rowarray -and $rowarray.count -gt 0 )
 		{
 			wv "FormatHTMLTable: rowarray has $( $rowarray.count ) elements"
 		}
@@ -4590,7 +4891,7 @@ Function FormatHTMLTable
 		{
 			wv "FormatHTMLTable: rowarray is empty"
 		}
-		if( $columnarray -and $columnarray.count -gt 0 )
+		If( $columnarray -and $columnarray.count -gt 0 )
 		{
 			wv "FormatHTMLTable: columnarray has $( $columnarray.count ) elements"
 		}
@@ -4598,7 +4899,7 @@ Function FormatHTMLTable
 		{
 			wv "FormatHTMLTable: columnarray is empty"
 		}
-		if( $fixedwidth -and $fixedwidth.count -gt 0 )
+		If( $fixedwidth -and $fixedwidth.count -gt 0 )
 		{
 			wv "FormatHTMLTable: fixedwidth has $( $fixedwidth.count ) elements"
 		}
@@ -4639,7 +4940,7 @@ Function FormatHTMLTable
 	}
 	$HTMLBody += $crlf
 
-	if( $columnArray -and $columnArray.Length -gt 0 )
+	If( $columnArray -and $columnArray.Length -gt 0 )
 	{
 		$HTMLBody += '<tr>' + $crlf
 
@@ -4651,7 +4952,7 @@ Function FormatHTMLTable
 			[Bool] $bold = $val -band $htmlBold
 			[Bool] $ital = $val -band $htmlitalics
 
-			if( $null -eq $fixedWidth -or $fixedWidth.Length -eq 0 )
+			If( $null -eq $fixedWidth -or $fixedWidth.Length -eq 0 )
 			{
 				$HTMLBody += "<td style=""background-color:$($tmp)""><font face='$($fontName)' size='$($fontSize)'>"
 			}
@@ -4660,13 +4961,13 @@ Function FormatHTMLTable
 				$HTMLBody += "<td style=""width:$($fixedWidth[$columnIndex/2]); background-color:$($tmp)""><font face='$($fontName)' size='$($fontSize)'>"
 			}
 
-			if( $bold ) { $HTMLBody += '<b>' }
-			if( $ital ) { $HTMLBody += '<i>' }
+			If( $bold ) { $HTMLBody += '<b>' }
+			If( $ital ) { $HTMLBody += '<i>' }
 
 			$array = $columnArray[ $columnIndex ]
-			if( $array )
+			If( $array )
 			{
-				if( $array -eq ' ' -or $array.Length -eq 0 )
+				If( $array -eq ' ' -or $array.Length -eq 0 )
 				{
 					$HTMLBody += '&nbsp;&nbsp;&nbsp;'
 				}
@@ -4674,7 +4975,7 @@ Function FormatHTMLTable
 				{
 					for( $i = 0; $i -lt $array.Length; $i += 2 )
 					{
-						if( $array[ $i ] -eq ' ' )
+						If( $array[ $i ] -eq ' ' )
 						{
 							$HTMLBody += '&nbsp;'
 						}
@@ -4691,8 +4992,8 @@ Function FormatHTMLTable
 				$HTMLBody += '&nbsp;&nbsp;&nbsp;'
 			}
 			
-			if( $bold ) { $HTMLBody += '</b>' }
-			if( $ital ) { $HTMLBody += '</i>' }
+			If( $bold ) { $HTMLBody += '</b>' }
+			If( $ital ) { $HTMLBody += '</i>' }
 		}
 
 		$HTMLBody += '</font></td>'
@@ -4709,7 +5010,7 @@ Function FormatHTMLTable
 	If( $rowArray )
 	{
 <#
-		if( $ExtraSpecialVerbose )
+		If( $ExtraSpecialVerbose )
 		{
 			wv "***** FormatHTMLTable: rowarray length $( $rowArray.Length )"
 			for( $ii = 0; $ii -lt $rowArray.Length; $ii++ )
@@ -5169,7 +5470,7 @@ Function SetWordCellFormat
 		# Font size
 		[Parameter()] [ValidateNotNullOrEmpty()] [int] $Size = 0,
 		# Cell background color
-		[Parameter()] [AllowNull()] $BackgroundColor = $Null,
+		[Parameter()] [AllowNull()] [int]$BackgroundColor = $Null,
 		# Force solid background color
 		[Switch] $Solid,
 		[Switch] $Bold,
@@ -5795,7 +6096,7 @@ Function Get-ComputerCountByOS
 			}
 
 			$val = $objResult.Properties[ 'serviceprincipalname' ]
-			if( $null -ne $val -and $val.Count -gt 0 )
+			If( $null -ne $val -and $val.Count -gt 0 )
 			{
 				$ServicePrincipalName = $val.Item( 0 )
 			}
@@ -5806,13 +6107,13 @@ Function Get-ComputerCountByOS
 
 			$UserAccountControl = $objResult.Properties[ 'useraccountcontrol' ].Item( 0 )
 			$Enabled = $True
-			if( ( $UserAccountControl -bor 0x0002 ) -eq $UserAccountControl )
+			If( ( $UserAccountControl -bor 0x0002 ) -eq $UserAccountControl )
 			{
 				$Enabled = $False
 			}
 
 			$val = $objResult.Properties[ 'info' ]
-			if( $null -ne $val -and $val.Count -gt 0 )
+			If( $null -ne $val -and $val.Count -gt 0 )
 			{
 				$notes = $val.Item( 0 )
 				$notes = $notes -replace "`r`n", "|"
@@ -6471,21 +6772,6 @@ Function SetFilenames
 {
 	Param([string]$OutputFileName)
 	
-	If($Folder -eq "")
-	{
-		$Script:pwdpath = $pwd.Path
-	}
-	Else
-	{
-		$Script:pwdpath = $Folder
-	}
-
-	If($Script:pwdpath.EndsWith("\"))
-	{
-		#remove the trailing \
-		$Script:pwdpath = $Script:pwdpath.SubString(0, ($Script:pwdpath.Length - 1))
-	}
-
 	If($MSWord -or $PDF)
 	{
 		CheckWordPreReq
@@ -6703,7 +6989,15 @@ Function ProcessScriptSetup
 				If(!$?)
 				{
 					$ErrorActionPreference = $SaveEAPreference
-					Write-Error "`n`n`t`t$ComputerName is not a domain controller for $ADForest.`n`t`tScript cannot continue.`n`n"
+					Write-Error "
+					`n`n
+					`t`t
+					$ComputerName is not a domain controller for $ADForest.
+					`n`n
+					`t`t
+					Script cannot continue.
+					`n`n
+					"
 					Exit
 				}
 				Else
@@ -6722,7 +7016,15 @@ Function ProcessScriptSetup
 		{
 			Write-Verbose "$(Get-Date): Computer $ComputerName is offline"
 			$ErrorActionPreference = $SaveEAPreference
-			Write-Error "`n`n`t`tComputer $ComputerName is offline.`nScript cannot continue.`n`n"
+			Write-Error "
+			`n`n
+			`t`t
+			Computer $ComputerName is offline.
+			`n`n
+			`t`t
+			Script cannot continue.
+			`n`n
+			"
 			Exit
 		}
 	}
@@ -6738,7 +7040,15 @@ Function ProcessScriptSetup
 			If(!$?)
 			{
 				$ErrorActionPreference = $SaveEAPreference
-				Write-Error "`n`n`t`tCould not find a forest identified by: $ADForest.`nScript cannot continue.`n`n"
+				Write-Error "
+				`n`n
+				`t`t
+				Could not find a forest identified by: $ADForest.
+				`n`n
+				`t`t
+				Script cannot continue.
+				`n`n
+				"
 				Exit
 			}
 		}
@@ -6749,7 +7059,18 @@ Function ProcessScriptSetup
 			If(!$?)
 			{
 				$ErrorActionPreference = $SaveEAPreference
-				Write-Error "`n`n`t`tCould not find a forest with the name of $ADForest.`n`n`t`tScript cannot continue.`n`n`t`tIs $ComputerName running Active Directory Web Services?"
+				Write-Error "
+				`n`n
+				`t`t
+				Could not find a forest with the name of $ADForest.
+				`n`n
+				`t`t
+				Script cannot continue.
+				`n`n
+				`t`t
+				Is $ComputerName running Active Directory Web Services?
+				`n`n
+				"
 				Exit
 			}
 		}
@@ -6768,7 +7089,15 @@ Function ProcessScriptSetup
 			If(!$?)
 			{
 				$ErrorActionPreference = $SaveEAPreference
-				Write-Error "`n`n`t`tCould not find a domain identified by: $ADDomain.`nScript cannot continue.`n`n"
+				Write-Error "
+				`n`n
+				`t`t
+				Could not find a domain identified by: $ADDomain.
+				`n`n
+				`t`t
+				Script cannot continue.
+				`n`n
+				"
 				Exit
 			}
 		}
@@ -6779,7 +7108,18 @@ Function ProcessScriptSetup
 			If(!$?)
 			{
 				$ErrorActionPreference = $SaveEAPreference
-				Write-Error "`n`n`t`tCould not find a domain with the name of $ADDomain.`n`n`t`tScript cannot continue.`n`n`t`tIs $ComputerName running Active Directory Web Services?"
+				Write-Error "
+				`n`n
+				`t`t
+				Could not find a domain with the name of $ADDomain.
+				`n`n
+				`t`t
+				Script cannot continue.
+				`n`n
+				`t`t
+				Is $ComputerName running Active Directory Web Services?
+				`n`n
+				"
 				Exit
 			}
 		}
@@ -6798,7 +7138,15 @@ Function ProcessScriptSetup
 			If(!$?)
 			{
 				$ErrorActionPreference = $SaveEAPreference
-				Write-Error "`n`n`t`tCould not find a forest identified by: $tmp.`nScript cannot continue.`n`n"
+				Write-Error "
+				`n`n
+				`t`t
+				Could not find a forest identified by: $tmp.
+				`n`n
+				`t`t
+				Script cannot continue.
+				`n`n
+				"
 				Exit
 			}
 		}
@@ -6809,7 +7157,18 @@ Function ProcessScriptSetup
 			If(!$?)
 			{
 				$ErrorActionPreference = $SaveEAPreference
-				Write-Error "`n`n`t`tCould not find a forest with the name of $tmp.`n`n`t`tScript cannot continue.`n`n`t`tIs $ComputerName running Active Directory Web Services?"
+				Write-Error "
+				`n`n
+				`t`t
+				Could not find a forest with the name of $tmp.
+				`n`n
+				`t`t
+				Script cannot continue.
+				`n`n
+				`t`t
+				Is $ComputerName running Active Directory Web Services?
+				`n`n
+				"
 				Exit
 			}
 		}
@@ -7259,7 +7618,7 @@ Function ProcessForestInformation
 				[Object] $object
 			)
 
-			if( $object -and $object -is [Array] )
+			If( $object -and $object -is [Array] )
 			{
 				$object.Count
 			}
@@ -7477,7 +7836,7 @@ Function ProcessAllDCsInTheForest
 			$ServerOS = $Results.OperatingSystem
 			#https://blogs.msmvps.com/russel/2017/03/16/how-to-tell-if-youre-running-on-windows-server-core/
 			$tmp = Get-RegistryValue "HKLM:\software\microsoft\windows nt\currentversion" "installationtype" $DCName
-			if( $null -eq $tmp -and $error.Count -gt 0 -and $error[ 0 ].Exception.HResult -eq -2146233087 )
+			If( $null -eq $tmp -and $error.Count -gt 0 -and $error[ 0 ].Exception.HResult -eq -2146233087 )
 			{
 				$ServerCore = 'n/a'
 			}
@@ -8064,9 +8423,9 @@ Function ProcessADOptionalFeatures
 				#V3.00 - pre-allocate rowdata
 				## $rowdata = @()
 				$rowsRequired = 1
-				if( $Enabled -eq 'Yes' -and $EnabledScopes )
+				If( $Enabled -eq 'Yes' -and $EnabledScopes )
 				{
-					if( $EnabledScopes -is [Array] )
+					If( $EnabledScopes -is [Array] )
 					{
 						$rowsRequired += $EnabledScopes.Count
 					}
@@ -8375,7 +8734,7 @@ Function GetSiteLinkOptionText
 
 	## https://msdn.microsoft.com/en-us/library/cc223552.aspx
 
-	if( [String]::IsNullOrEmpty( $siteLinkOption ) )
+	If( [String]::IsNullOrEmpty( $siteLinkOption ) )
 	{
 		return 'Change Notification is Disabled'
 	}
@@ -9159,7 +9518,7 @@ Function ProcessSiteInformation
 								#V3.00 - pre-allocate rowdata
 								## $rowdata = @()
 								$rowCt   = 1
-								if( $Results -is [Array] )
+								If( $Results -is [Array] )
 								{
 									$rowCt = $Results.Count
 								}
@@ -9309,14 +9668,15 @@ Function ProcessDomains
 	"15292" = "Exchange 2013 SP1/CU4";
 	"15300" = "Exchange 2013 CU5";
 	"15303" = "Exchange 2013 CU6";
-	"15312" = "Exchange 2013 CU7 through CU 21"; #updated in 2.20
-	"15317" = "Exchange 2016";
+	"15312" = "Exchange 2013 CU7 through CU23"; #updated in 2.20, updated in 2.24
+	"15317" = "Exchange 2016 Preview and RTM"; #updated in 2.24
 	"15323" = "Exchange 2016 CU1";
 	"15325" = "Exchange 2016 CU2";
 	"15326" = "Exchange 2016 CU3/CU4/CU5"; #added in 2.16
 	"15330" = "Exchange 2016 CU6"; #added in 2.16
-	"15332" = "Exchange 2016 CU7 through CU11"; #added in 2.16 and updated in 2.20, updated in 2.22
-	"17000" = "Exchange 2019 RTM"; #added in 2.22
+	"15332" = "Exchange 2016 CU7 through CU15"; #added in 2.16 and updated in 2.20, updated in 2.22, updated in 2.24
+	"17000" = "Exchange 2019 RTM/CU1"; #added in 2.22, updated in 2.24
+	"17001" = "Exchange 2019 CU2-CU4"; #added in 2.24
 	}
 
 	ForEach($Domain in $Script:Domains)
@@ -9325,7 +9685,7 @@ Function ProcessDomains
 
 		$DomainInfo = Get-ADDomain -Identity $Domain -EA 0
 
-		if( !$? )
+		If( !$? )
 		{
 			$txt = "Error retrieving domain data for domain $($Domain)"
 			Write-Warning $txt
@@ -9345,7 +9705,7 @@ Function ProcessDomains
 			continue
 		}
 
-		if( $null -eq $DomainInfo )
+		If( $null -eq $DomainInfo )
 		{
 			$txt = "No Domain data was retrieved for domain $($Domain)"
 			Write-Warning $txt
@@ -11246,7 +11606,7 @@ Function OutputTimeServerRegistryKeys
 	#HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\W32Time\TimeProviders\VMICTimeProvider Enabled
 	
 	$AnnounceFlags = Get-RegistryValue "HKLM:\SYSTEM\CurrentControlSet\Services\W32Time\Config" "AnnounceFlags" $DCName
-	if( $null -eq $AnnounceFlags -and $error.Count -gt 0 -and $error[ 0 ].Exception.HResult -eq -2146233087 )
+	If( $null -eq $AnnounceFlags -and $error.Count -gt 0 -and $error[ 0 ].Exception.HResult -eq -2146233087 )
 	{
 		## DCName can't be contacted
 		$AnnounceFlags = 'n/a'
@@ -11425,7 +11785,7 @@ Function OutputADFileLocations
 	#HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters	SysVol
 	
 	$DSADatabaseFile = Get-RegistryValue "HKLM:\SYSTEM\CurrentControlSet\Services\NTDS\Parameters" "DSA Database file" $DCName
-	if( $null -eq $DSADatabaseFile -and $error.Count -gt 0 -and $error[ 0 ].Exception.HResult -eq -2146233087 )
+	If( $null -eq $DSADatabaseFile -and $error.Count -gt 0 -and $error[ 0 ].Exception.HResult -eq -2146233087 )
 	{
 		$DSADatabaseFile = ''
 		$DatabaseLogFilesPath = ''
@@ -11437,7 +11797,7 @@ Function OutputADFileLocations
 		$SysVol = Get-RegistryValue "HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters" "SysVol" $DCName
 	}
 
-	if( $DSADatabaseFile -and $DSADatabaseFile.Length -gt 0 )
+	If( $DSADatabaseFile -and $DSADatabaseFile.Length -gt 0 )
 	{
 		$DITRemotePath = $DSADatabaseFile.Replace(":", "$")
 		$DITFile = "\\$DCName\$DITRemotePath"
@@ -12177,7 +12537,7 @@ Function ProcessGroupInformation
 		$Groups = $Null
 		$Groups = Get-ADGroup -Filter * -Server $Domain -Properties Name, GroupCategory, GroupType -EA 0 | Sort-Object Name
 
-		if( !$? )
+		If( !$? )
 		{
 			$txt = "Could not retrieve Group data for domain $Domain, $( $error[ 0 ] )"
 			Write-Warning $txt
@@ -12197,7 +12557,7 @@ Function ProcessGroupInformation
 			continue ## go to next domain
 		}
 
-		if( $null -eq $Groups )
+		If( $null -eq $Groups )
 		{
 			$txt = "No Group data was retrieved for domain $($Domain)"
 			Write-Warning $txt
@@ -13946,7 +14306,7 @@ Function ProcessGPOsByDomain
 			continue
 		}
 
-		if( $null -eq $DomainInfo )
+		If( $null -eq $DomainInfo )
 		{
 			$txt = "No Domain data was retrieved for domain $($Domain)"
 			If($MSWORD -or $PDF)
@@ -14250,7 +14610,7 @@ Function ProcessgGPOsByOUOld
 				continue
 			}
 
-			if( $null -eq $OUInfo )
+			If( $null -eq $OUInfo )
 			{
 				$txt = "No OU data was retrieved for domain $($Domain)"
 				If($MSWORD -or $PDF)
@@ -14596,7 +14956,7 @@ Function ProcessgGPOsByOUNew
 				{
 					## $obj = New-Object -TypeName PSObject
 					$GPOType = ''
-					if(!($LinkedGPOs -contains $item))
+					If(!($LinkedGPOs -contains $item))
 					{
 						$GPOType = 'Inherited'
 					}
@@ -14856,9 +15216,9 @@ Function GetTsAttributes
 	Process
 	{
 		$u = [ADSI] ( 'LDAP://' + $distinguishedName )
-		if( $u )
+		If( $u )
 		{
-			if( $u.psbase.InvokeGet( 'userParameters' ) )
+			If( $u.psbase.InvokeGet( 'userParameters' ) )
 			{
 				$o = @{
 					$TsHomeDrive      = $u.psbase.InvokeGet( $TsHomeDrive )
@@ -14912,7 +15272,7 @@ function getDSUsers
 		### normally set by the "Default Domain Policy".
 		###
 
-		if( $null -ne $MaxPasswordAge -and $MaxPasswordAge -gt 0 )
+		If( $null -ne $MaxPasswordAge -and $MaxPasswordAge -gt 0 )
 		{
 			### Cache the value so that it only has to be retrieved once, converted
 			### to an int64 once, and converted to days once. Win-win-win.
@@ -15004,7 +15364,7 @@ function getDSUsers
     $ADSearcher.Filter      = '(&(objectcategory=person)(objectclass=user))' ## all user objects
     $ADSearcher.SearchScope = 'subtree'
 
-    if( $ADPropertyList ) 
+    If( $ADPropertyList ) 
     {
         foreach( $ADProperty in $ADPropertyList ) 
         {
@@ -15026,14 +15386,14 @@ function getDSUsers
         Write-Warning "search failed, $( $error[ 0 ] )"
     }
 
-    if( $ctUsers -eq 0 )
+    If( $ctUsers -eq 0 )
     {
         Write-Verbose "$(Get-Date): `t`tNo users found, exiting"
 
         return
     }
 
-    if( $ctUsers -gt 50000 )
+    If( $ctUsers -gt 50000 )
     {
         Write-Verbose "$(Get-Date): `t`t`t******************************************************************************************************"
         Write-Verbose "$(Get-Date): `t`t`tThere are $ctUsers user accounts to process. Building user lists will take a long time. Be patient."
@@ -15085,26 +15445,26 @@ function getDSUsers
     foreach( $objResult in $colResults ) 
     {
         $ctIndex++
-        if( ( $ctIndex % 5000 ) -eq 0 )
+        If( ( $ctIndex % 5000 ) -eq 0 )
         {
             Write-Verbose "$(Get-Date): about to process user $ctIndex of $ctUsers"
         }
 
-        $distinguishedname  = if( $null -ne ( $obj = $objResult.Properties[ 'distinguishedname' ] ) -and $obj.Count -gt 0 ) 
+        $distinguishedname  = If( $null -ne ( $obj = $objResult.Properties[ 'distinguishedname' ] ) -and $obj.Count -gt 0 ) 
                             { $obj.Item( 0 ) } else { $null }
-        $useraccountcontrol = if( $null -ne ( $obj = $objResult.Properties[ 'useraccountcontrol' ] ) -and $obj.Count -gt 0 ) 
+        $useraccountcontrol = If( $null -ne ( $obj = $objResult.Properties[ 'useraccountcontrol' ] ) -and $obj.Count -gt 0 ) 
                             { $obj.Item( 0 ) } else { $null }
-        $samaccountname     = if( $null -ne ( $obj = $objResult.Properties[ 'samaccountname' ] ) -and $obj.Count -gt 0 ) 
+        $samaccountname     = If( $null -ne ( $obj = $objResult.Properties[ 'samaccountname' ] ) -and $obj.Count -gt 0 ) 
                             { $obj.Item( 0 ) } else { $null }
 
         $Unknown = $false
-        if( $null -eq $useraccountcontrol )
+        If( $null -eq $useraccountcontrol )
         {
             $Unknown = $true
             $ctUsersUnknown++
         }
 
-        if( $useraccountcontrol -band $ADS_UF_ACCOUNTDISABLE )
+        If( $useraccountcontrol -band $ADS_UF_ACCOUNTDISABLE )
         {
             $Enabled = $false
             $ctUsersDisabled++
@@ -15116,78 +15476,78 @@ function getDSUsers
         }
 
         $passwordNeverExpires = $false
-        if( $userAccountControl -band $ADS_UF_DONT_EXPIRE_PASSWD )
+        If( $userAccountControl -band $ADS_UF_DONT_EXPIRE_PASSWD )
         {
             $passwordNeverExpires = $true
             $ctPasswordNeverExpires++
-            if( $Enabled )
+            If( $Enabled )
             {
                 $ctActivePasswordNeverExpires++
             }
         }
 
         $passwordNotRequired = $false
-        if( $userAccountControl -band $ADS_UF_PASSWD_NOTREQD )
+        If( $userAccountControl -band $ADS_UF_PASSWD_NOTREQD )
         {
             $passwordNotRequired = $true
             $ctPasswordNotRequired++
-            if( $Enabled )
+            If( $Enabled )
             {
                 $ctActivePasswordNotRequired++
             }
         }
 
         $LockedOut = $false
-        if( $useraccountcontrol -band $ADS_UF_LOCKOUT )
+        If( $useraccountcontrol -band $ADS_UF_LOCKOUT )
         {
             $LockedOut = $true
             $ctUsersLockedOut++
         }
 
         $cannotChangePassword = $false
-        if( $useraccountcontrol -band $ADS_UF_PASSWD_CANT_CHANGE )
+        If( $useraccountcontrol -band $ADS_UF_PASSWD_CANT_CHANGE )
         {
             $cannotChangePassword = $true
             $ctCannotChangePassword++
-            if( $Enabled )
+            If( $Enabled )
             {
                 $ctActiveCannotChangePassword++
             }
         }
 
 		$passwordExpired = $false
-		if( $passwordNeverExpires -eq $false )
+		If( $passwordNeverExpires -eq $false )
 		{
-			if( $useraccountcontrol -band $ADS_UF_PASSWORD_EXPIRED )
+			If( $useraccountcontrol -band $ADS_UF_PASSWORD_EXPIRED )
 			{
 				$passwordExpired = $true
 			}
 			else
 			{
-				$pls = if( $null -ne ( $obj = $objResult.Properties[ 'pwdlastset' ] ) -and $obj.Count -gt 0 ) 
+				$pls = If( $null -ne ( $obj = $objResult.Properties[ 'pwdlastset' ] ) -and $obj.Count -gt 0 ) 
 					{ $obj.Item( 0 ) } else { $null }
 				$date = [DateTime] $pls
 				$passwordLastSet = $date.AddYears( 1600 ).ToLocalTime()
 				$passwordExpires = $passwordLastSet.AddDays( $script:MaxPasswordAge )
-				if( $now -gt $passwordExpires )
+				If( $now -gt $passwordExpires )
 				{
 					$passwordExpired = $true
 				}
 				## write-verbose "***** sam $samaccountname, lastSet $($passwordLastSet), expires $($passwordExpires), expired $passwordexpired"
 			}
-			if( $passwordExpired )
+			If( $passwordExpired )
 			{
 				$ctPasswordExpired++
-				if( $Enabled )
+				If( $Enabled )
 				{
 					$ctActivePasswordExpired++
 				}
 			}
 		}
 
-        $primaryGroupID = if( $null -ne ( $obj = $objResult.Properties[ 'primarygroupid' ] ) -and $obj.Count -gt 0 ) 
+        $primaryGroupID = If( $null -ne ( $obj = $objResult.Properties[ 'primarygroupid' ] ) -and $obj.Count -gt 0 ) 
                         { $obj.Item( 0 ) } else { $null }
-        if( $WellKnownPrimaryGroupIDs.ContainsKey( $primaryGroupID ) )
+        If( $WellKnownPrimaryGroupIDs.ContainsKey( $primaryGroupID ) )
         {
             $primaryGroup = $WellKnownPrimaryGroupIDs[ $primaryGroupID ]
         }
@@ -15195,41 +15555,41 @@ function getDSUsers
         {
             $primaryGroup = 'RID:' + $primaryGroupID.ToString()
         }
-        if( $primaryGroupID -ne 513 )
+        If( $primaryGroupID -ne 513 )
         {
             $ctPrimaryGroup++
         }
 
-        $lastlogontimestamp = if( $null -ne ( $obj = $objResult.Properties[ 'lastlogontimestamp' ] ) -and $obj.Count -gt 0 ) 
+        $lastlogontimestamp = If( $null -ne ( $obj = $objResult.Properties[ 'lastlogontimestamp' ] ) -and $obj.Count -gt 0 ) 
                             { $obj.Item( 0 ) } else { $null }
-        if( $null -eq $lastlogontimestamp )
+        If( $null -eq $lastlogontimestamp )
         {
             $ctNolastLogonTimestamp++
-            if( $Enabled )
+            If( $Enabled )
             {
                 $ctActiveNolastLogonTimestamp++
             }
         }
 
-        $hasSIDHistory = if( $null -ne ( $obj = $objResult.Properties[ 'sidhistory' ] ) -and $obj.Count -gt 0 ) 
+        $hasSIDHistory = If( $null -ne ( $obj = $objResult.Properties[ 'sidhistory' ] ) -and $obj.Count -gt 0 ) 
                         { $obj.Item( 0 ) } else { $null }
-        if( $null -ne $hasSIDHistory )
+        If( $null -ne $hasSIDHistory )
         {
             $ctHasSIDHistory++
         }
 
-        $homedrive = if( $null -ne ( $obj = $objResult.Properties[ 'homedrive' ] ) -and $obj.Count -gt 0 ) 
+        $homedrive = If( $null -ne ( $obj = $objResult.Properties[ 'homedrive' ] ) -and $obj.Count -gt 0 ) 
                     { $obj.Item( 0 ) } else { $null }
-        if( $null -ne $homedrive )
+        If( $null -ne $homedrive )
         {
             $ctHomeDrive++
         }
 
-        $homedirectory = if( $null -ne ( $obj = $objResult.Properties[ 'homedirectory' ] ) -and $obj.Count -gt 0 ) 
+        $homedirectory = If( $null -ne ( $obj = $objResult.Properties[ 'homedirectory' ] ) -and $obj.Count -gt 0 ) 
                         { $obj.Item( 0 ) } else { $null }
-        $profilepath   = if( $null -ne ( $obj = $objResult.Properties[ 'profilepath' ] ) -and $obj.Count -gt 0 ) 
+        $profilepath   = If( $null -ne ( $obj = $objResult.Properties[ 'profilepath' ] ) -and $obj.Count -gt 0 ) 
                         { $obj.Item( 0 ) } else { $null }
-        $scriptpath    = if( $null -ne ( $obj = $objResult.Properties[ 'scriptpath' ] ) -and $obj.Count -gt 0 ) 
+        $scriptpath    = If( $null -ne ( $obj = $objResult.Properties[ 'scriptpath' ] ) -and $obj.Count -gt 0 ) 
                         { $obj.Item( 0 ) } else { $null }
 
         ## RDSHomeDrive is left
@@ -15238,22 +15598,22 @@ function getDSUsers
         $r_profpath   = $null
         $r_allowlogon = $null
 
-        $userparameters = if( $null -ne ( $obj = $objResult.Properties[ 'userparameters' ] ) -and $obj.Count -gt 0 ) 
+        $userparameters = If( $null -ne ( $obj = $objResult.Properties[ 'userparameters' ] ) -and $obj.Count -gt 0 ) 
                         { $obj.Item( 0 ) } else { $null }
-        if( $null -ne $userparameters )
+        If( $null -ne $userparameters )
         {
             ## TS/RDS/Citrix values are only present if the userparameters attribute exists
             $o = GetTsAttributes $distinguishedname
-            if( $o )
+            If( $o )
             {
-                $r_homedrive  = if( $o.ContainsKey( $TsHomeDrive  ) ) { $o[ $TsHomeDrive ]  } else { $null }
-                $r_homedir    = if( $o.ContainsKey( $TsHomeDir    ) ) { $o[ $TsHomeDir ]    } else { $null }
-                $r_profpath   = if( $o.ContainsKey( $TsProfPath   ) ) { $o[ $TsProfPath ]   } else { $null }
-                $r_allowlogon = if( $o.ContainsKey( $TsAllowLogon ) ) { $o[ $TsAllowLogon ] } else { $null }
+                $r_homedrive  = If( $o.ContainsKey( $TsHomeDrive  ) ) { $o[ $TsHomeDrive ]  } else { $null }
+                $r_homedir    = If( $o.ContainsKey( $TsHomeDir    ) ) { $o[ $TsHomeDir ]    } else { $null }
+                $r_profpath   = If( $o.ContainsKey( $TsProfPath   ) ) { $o[ $TsProfPath ]   } else { $null }
+                $r_allowlogon = If( $o.ContainsKey( $TsAllowLogon ) ) { $o[ $TsAllowLogon ] } else { $null }
             }
         }
 
-        if( $null -ne $r_homedrive -and $r_homedrive -ne "" )
+        If( $null -ne $r_homedrive -and $r_homedrive -ne "" )
         {
             $ctRDSHomeDrive++
         }
@@ -15291,51 +15651,51 @@ function getDSUsers
         ##
 
         $null = $listUser.Add( $user )
-        if( -not $Enabled )
+        If( -not $Enabled )
         {
             $null = $listUsersDisabled.Add( $user )
         }
-        if( $Unknown )
+        If( $Unknown )
         {
             $null = $listUsersUnknown.Add( $user )
         }
-        if( $LockedOut )
+        If( $LockedOut )
         {
             $null = $listUsersLockedOut.Add( $user )
         }
-        if( $passwordExpired )
+        If( $passwordExpired )
         {
             $null = $listPasswordExpired.Add( $user )
         }
-        if( $passwordNeverExpires )
+        If( $passwordNeverExpires )
         {
             $null = $listPasswordNeverExpires.Add( $user )
         }
-        if( $passwordNotRequired )
+        If( $passwordNotRequired )
         {
             $null = $listPasswordNotRequired.Add( $user )
         }
-        if( $cannotChangePassword )
+        If( $cannotChangePassword )
         {
             $null = $listCannotChangePassword.Add( $user )
         }
-        if( $null -eq $lastlogontimestamp )
+        If( $null -eq $lastlogontimestamp )
         {
             $null = $listNolastLogonTimestamp.Add( $user )
         }
-        if( $null -ne $hasSIDHistory )
+        If( $null -ne $hasSIDHistory )
         {
             $null = $listHasSIDHistory.Add( $user )
         }
-        if( $null -ne $homedrive )
+        If( $null -ne $homedrive )
         {
             $null = $listHomeDrive.Add( $user )
         }
-        if( $primaryGroupID -ne 513 )
+        If( $primaryGroupID -ne 513 )
         {
             $null = $listPrimaryGroup.Add( $user )
         }
-        if( $null -ne $r_homedrive -and $r_homedrive -ne "")
+        If( $null -ne $r_homedrive -and $r_homedrive -ne "")
         {
             $null = $listRDSHomeDrive.Add( $user )
         }
@@ -15422,7 +15782,7 @@ function getDSUsers
     [String] $pctActiveCannotChangePassword = $fs -f ( ( $ctActiveCannotChangePassword / $ctActiveUsers ) * 100 )
     [String] $pctActiveNoLastLogonTimestamp = $fs -f ( ( $ctActiveNoLastLogonTimestamp / $ctActiveUsers ) * 100 )
 
-    if( $Text )
+    If( $Text )
     {
         lx 0 'All Users'
         lx 1 'Total Users                 ' $strUsers
@@ -15441,7 +15801,7 @@ function getDSUsers
         lx 0
         lx 1 '* Unknown users are user accounts with no UserAccountControl property.'
         lx 1 '  This should not occur.'
-        if( $Script:DARights -eq $false )
+        If( $Script:DARights -eq $false )
         {
             lx 1 "  You should re-run the script with Domain Admin rights in $TrustedDomain." ## -options $htmlBold
         }
@@ -15812,7 +16172,7 @@ function getDSUsers
 		$Script:selection.InsertNewPage()
 	}
 
-	if($IncludeUserInfo -eq $True)
+	If($IncludeUserInfo -eq $True)
 	{
 		If($ctUsersDisabled -gt 0)
 		{
@@ -15905,7 +16265,7 @@ Function ProcessMiscDataByDomain
 
 		$DomainInfo = Get-ADDomain -Identity $Domain -EA 0 
 
-		if( !$? )
+		If( !$? )
 		{
 			$txt = "Error retrieving domain data for domain $Domain"
 			Write-Warning $txt
@@ -15925,7 +16285,7 @@ Function ProcessMiscDataByDomain
 			continue
 		}
 
-		if( $null -eq $DomainInfo )
+		If( $null -eq $DomainInfo )
 		{
 			$txt = "No Domain data was retrieved for domain $Domain"
 			If($MSWORD -or $PDF)
@@ -16045,7 +16405,7 @@ Function OutputUserInfo
 	{
 		#V3.00 pre-allocate rowdata
 		## $rowdata = @()
-		if( $Users -and $Users.Length -gt 0 )
+		If( $Users -and $Users.Length -gt 0 )
 		{
 			$arrayLength = $Users.Length
 		}
@@ -16155,7 +16515,7 @@ Function OutputHDUserInfo
 	{
 		#V3.00 pre-allocate rowdata
 		## $rowdata = @()
-		if( $Users -and $Users.Length -gt 0 )
+		If( $Users -and $Users.Length -gt 0 )
 		{
 			$arrayLength = $Users.Length
 		}
@@ -16265,7 +16625,7 @@ Function OutputPGUserInfo
 	{
 		#V3.00 pre-allocate rowdata
 		## $rowdata = @()
-		if( $Users -and $Users.Length -gt 0 )
+		If( $Users -and $Users.Length -gt 0 )
 		{
 			$arrayLength = $Users.Length
 		}
@@ -16314,7 +16674,7 @@ Function OutputRDSHDUserInfo
 	Write-Verbose "$(Get-Date): `t`t`t`tOutput $($title)"
 	$Users = $Users | Sort-Object samAccountName
 	
-	if( $Users -and $Users.Length -gt 0 )
+	If( $Users -and $Users.Length -gt 0 )
 	{
 		$arrayLength = $Users.Length
 	}
@@ -16425,7 +16785,7 @@ Function OutputRDSHDUserInfo
 #region DCDNSInfo
 Function ProcessDCDNSInfo
 {
-	if( $DCDNSInfo )
+	If( $DCDNSInfo )
 	{
 		## Domain Controller DNS IP Configuration
 		Write-Verbose "$(Get-Date): Create Domain Controller DNS IP Configuration"
@@ -16434,7 +16794,7 @@ Function ProcessDCDNSInfo
 		## sort by site then by DC
 		$xDCDNSIPInfo = @( $Script:DCDNSIPInfo | Sort-Object DCSite, DCName )
 
-		if( $HTML )
+		If( $HTML )
 		{
 			WriteHTMLLine 1 0 "///&nbsp;&nbsp;Domain Controller DNS IP Configuration&nbsp;&nbsp;\\\"
 			#V3.00 pre-allocate rowdata
@@ -16469,7 +16829,7 @@ Function ProcessDCDNSInfo
 				$XXXrowIndx++
 			}
 <#
-			if( $ExtraSpecialVerbose )
+			If( $ExtraSpecialVerbose )
 			{
 				wv "***** ProcessDCDNSInfo: rowdata length $( $XXXrowdata.Length )"
 				for( $ii = 0; $ii -lt $XXXrowdata.Length; $ii++ )
@@ -16497,7 +16857,7 @@ Function ProcessDCDNSInfo
 			return
 		}
 
-		if( $Text )
+		If( $Text )
 		{
 			Line 0 '///  Domain Controller DNS IP Configuration  \\\'
 			Line 0 ''
@@ -16584,13 +16944,13 @@ Function ProcessTimeServerInfo
 	#sort by DC
 	$xTimeServerInfo = $Script:TimeServerInfo | Sort-Object DCName
 	
-	if( $HTML )
+	If( $HTML )
 	{
 		WriteHTMLLine 1 0 "///&nbsp;&nbsp;Domain Controller Time Server Configuration&nbsp;&nbsp;\\\"
 		#V3.00 pre-allocate rowdata
 		## $rowdata = @()
 		$rowCt = 1
-		if( $xTimeServerInfo -is [Array] )
+		If( $xTimeServerInfo -is [Array] )
 		{
 			$rowCt = $xTimeServerInfo.Count
 		}
@@ -16629,7 +16989,7 @@ Function ProcessTimeServerInfo
 		FormatHTMLTable -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth '500'
 		WriteHTMLLine 0 0 ''
 	}
-	elseif( $Text )
+	elseIf( $Text )
 	{
 		Line 0 "///  Domain Controller Time Server Configuration  \\\"
 		Line 0 ""
@@ -16903,26 +17263,24 @@ Function ProcessDocumentOutput
 	#email output file if requested
 	If($GotFile -and ![System.String]::IsNullOrEmpty( $SmtpServer ))
 	{
+		$emailattachments = @()
 		If($MSWord)
 		{
-			$emailAttachment = $Script:WordFileName
-			SendEmail $emailAttachment
+			$emailAttachments += $Script:WordFileName
 		}
 		If($PDF)
 		{
-			$emailAttachment = $Script:PDFFileName
-			SendEmail $emailAttachment
+			$emailAttachments += $Script:PDFFileName
 		}
 		If($Text)
 		{
-			$emailAttachment = $Script:TextFileName
-			SendEmail $emailAttachment
+			$emailAttachments += $Script:TextFileName
 		}
 		If($HTML)
 		{
-			$emailAttachment = $Script:HTMLFileName
-			SendEmail $emailAttachment
+			$emailAttachments += $Script:HTMLFileName
 		}
+		SendEmail $emailAttachments
 	}
 }
 #endregion
@@ -16965,7 +17323,7 @@ Function ProcessScriptEnd
 
 	If($ScriptInfo)
 	{
-		$SIFile = "$($pwd.Path)\ADInventoryScriptInfo_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
+		$SIFile = "$Script:pwdpath\ADInventoryScriptInfo_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
 		Out-File -FilePath $SIFile -InputObject "" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "Add DateTime   : $AddDateTime" 4>$Null
 		If($MSWORD -or $PDF)
