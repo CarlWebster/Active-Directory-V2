@@ -957,10 +957,12 @@ Param(
 	[parameter(Mandatory=$False)] 
 	[Alias("SI")]
 	[Switch]$ScriptInfo=$False,
-	
-	[parameter(Mandatory=$False)] 
-	[array]$Section="All",
-	
+
+	[Parameter( Mandatory = $False )]
+	[ValidateSet( 'Forest', 'Sites', 'Domains', 'OUs',
+		'Groups', 'GPOs', 'Misc', 'All' )]
+	[String[]] $Section = 'All',
+
 	[parameter(Mandatory=$False )] 
 	[Switch]$Services=$False,
 	
@@ -1035,6 +1037,16 @@ Param(
 #	Update each of the Output*UserInfo Functions so that the first parameter is Object[] instead of
 #		Object. If the array contained a single element, PowerShell was unrolling it, requiring 
 #		special handling. Using Object[] prevents the unrolling.
+#	August 2020
+#	Changed the $Section parameter to use ValidateSet().
+#	In FormatHTMLTable, only write a table header line if the tableheader length is greater than zero.
+#	In FormatHTMLTable, write </td> and </tr> in the proper places (previously, there weren't enough
+#	</td>'s being written). I think all HTML is now "legal".
+#	In FormatHTMLTable, make the docs accurate. Finally.
+#	FormatHTMLTable - fix the usage of $fixedWidth and $columnIndex for good (I hope).
+#	AddHTMLTable - match the usage of $fixedInfo and $columnIndex to that of FormatHTMLTable.
+#	AddHTMLTable - optimize usage of $fixedInfo.
+#	Further pre-calculated $rowArray rewrites.
 #
 #WEBSTER'S CHANGES for 3.00
 #
@@ -1130,6 +1142,7 @@ If($MaxDetails)
 	$Section			= "All"
 }
 
+<#
 $ValidSection = $False
 Switch ($Section)
 {
@@ -1168,6 +1181,7 @@ If($ValidSection -eq $False)
 	`n`n"
 	Exit
 }
+#>
 
 If($Folder -ne "")
 {
@@ -4607,6 +4621,8 @@ Function AddHTMLTable
 	}
 #>
 
+	$fwLength = if( $null -ne $fixedInfo ) { $fixedInfo.Count } else { 0 }
+
 	##$htmlbody = ''
 	[System.Text.StringBuilder] $sb = New-Object System.Text.StringBuilder( 8192 )
 
@@ -4694,7 +4710,7 @@ Function AddHTMLTable
 			}
 #>
 
-			If( $null -eq $fixedInfo -or $fixedInfo.Length -eq 0 )
+			If( $fwLength -eq 0 )
 			{
 				$null = $sb.Append( "<td style=""background-color:$( $color )""><font face='$( $fontName )' size='$( $fontSize )'>" )
 				##$htmlbody += "<td style=""background-color:$( $color )""><font face='$( $fontName )' size='$( $fontSize )'>"
@@ -4766,23 +4782,52 @@ Function AddHTMLTable
 
 <#
 .Synopsis
-	Format table for a HTML output document.
+	Formats table column headers for an HTML table.
 .DESCRIPTION
-	This Function formats a table for HTML from multiple arrays of strings.
+	This function formats table column headers for an HTML table. It requires 
+	AddHTMLTable to format the individual rows of the table.
+
 .PARAMETER noBorder
-	If set to $true, a table will be generated without a border (border = '0'). Otherwise the table will be generated
-	with a border (border = '1').
+	If set to $true, a table will be generated without a border (border = '0'). 
+	Otherwise the table will be generated with a border (border = '1').
+
 .PARAMETER noHeadCols
-	This parameter should be used when generating tables which do not have a separate array containing column headers
-	(columnArray is not specified). Set this parameter equal to the number of columns in the table.
+	This parameter should be used when generating tables which do not have a 
+	separate array containing column headers (columnArray is not specified). 
+
+	Set this parameter equal to the number of (header) columns in the table.
+
 .PARAMETER rowArray
 	This parameter contains the row data array for the table.
+
+	The total numbers of rows in the table is equal to $rowArray.Length + $tableHeader.Length.
+	$tableHeader.Length may be zero (the parameter can be $null).
+
+	Each entry in rowarray is ANOTHER array of tuples. The first element of the tuple is the 
+	contents of the cell, and the second element of the tuple is the color of the cell, then
+	they duplicate for every cell in the row.
+
 .PARAMETER columnArray
 	This parameter contains column header data for the table.
+
+	The total number of columns in the table is equal to $columnarray.Length or $null.
+
+	If $columnarray is $null, then there are no column headers, just the first line of the
+	table and noHeadCols is used to size the table.
+
+	Each entry in $columnarray organized as a set of two items. The first is the
+	data for the header cell. THe second is the color/italic/bold for the header cell. So
+	the total number of columns is ($columnArray.Length / 2) when $columnArray isn't $null.
+
+	I have no idea why it wasn't done identically to $rowarray.
+
 .PARAMETER fixedWidth
 	This parameter contains widths for columns in pixel format ("100px") to override auto column widths
 	The variable should contain a width for each column you wish to override the auto-size setting
 	For example: $fixedWidth = @("100px","110px","120px","130px","140px")
+
+	This is mapped to both rowArray and columnArray.
+
 .PARAMETER tableHeader
 	A string containing the header for the table (printed at the top of the table, left justified). The
 	default is a blank string.
@@ -4924,7 +4969,13 @@ Function FormatHTMLTable
 	}
 #>
 
-	$HTMLBody = "<b><font face='" + $fontname + "' size='" + ($fontsize + 1) + "'>" + $tableheader + "</font></b>" + $crlf
+	$HTMLBody = ''
+	if( $tableheader.Length -gt 0 )
+	{
+		$HTMLBody += "<b><font face='" + $fontname + "' size='" + ($fontsize + 1) + "'>" + $tableheader + "</font></b>" + $crlf
+	}
+
+	$fwSize = if( $null -eq $fixedWidth ) { 0 } else { $fixedWidth.Count }
 
 	If( $null -eq $columnArray -or $columnArray.Length -eq 0)
 	{
@@ -4935,13 +4986,13 @@ Function FormatHTMLTable
 		$NumCols = $columnArray.Length
 	}  # need to add one for the color attrib
 
-	If( $null -ne $rowArray )
+	If( $null -eq $rowArray )
 	{
-		$NumRows = $rowArray.length + 1
+		$NumRows = 1
 	}
 	Else
 	{
-		$NumRows = 1
+		$NumRows = $rowArray.length + 1
 	}
 
 	If( $noBorder )
@@ -4966,13 +5017,13 @@ Function FormatHTMLTable
 			[Bool] $bold = $val -band $htmlBold
 			[Bool] $ital = $val -band $htmlitalics
 
-			If( $null -eq $fixedWidth -or $fixedWidth.Length -eq 0 )
+			If( $fwSize -eq 0 )
 			{
 				$HTMLBody += "<td style=""background-color:$($tmp)""><font face='$($fontName)' size='$($fontSize)'>"
 			}
 			Else
 			{
-				$HTMLBody += "<td style=""width:$($fixedWidth[$columnIndex % 2]); background-color:$($tmp)""><font face='$($fontName)' size='$($fontSize)'>"
+				$HTMLBody += "<td style=""width:$($fixedWidth[$columnIndex / 2]); background-color:$($tmp)""><font face='$($fontName)' size='$($fontSize)'>"
 			}
 
 			If( $bold ) { $HTMLBody += '<b>' }
@@ -5008,13 +5059,13 @@ Function FormatHTMLTable
 			
 			If( $bold ) { $HTMLBody += '</b>' }
 			If( $ital ) { $HTMLBody += '</i>' }
+
+			$HTMLBody += '</font></td>'
+			$HTMLBody += $crlf
 		}
 
-		$HTMLBody += '</font></td>'
-		$HTMLBody += $crlf
+		$HTMLBody += '</tr>' + $crlf
 	}
-
-	$HTMLBody += '</tr>' + $crlf
 
 	#V3.00
 	Out-File -FilePath $Script:HTMLFileName -Append -InputObject $HTMLBody 4>$Null 
@@ -8962,45 +9013,100 @@ Function ProcessSiteInformation
 				}
 				If($HTML)
 				{
-					$columnHeaders = @("Name",$htmlsb,$SiteLink.Name,$htmlwhite)
-					If(![String]::IsNullOrEmpty($SiteLink.Description))
+					$columnHeaders = @(
+						'Name',         $htmlsb,
+						$SiteLink.Name, $htmlwhite
+					)
+					$rowsRequired = 0
+					$slDesc = ''
+					If( ![String]::IsNullOrEmpty( $SiteLink.Description ) )
 					{
-						$rowdata += @(,('Description',$htmlsb,$SiteLink.Description,$htmlwhite))
+						$slDesc = $SiteLink.Description
+						$rowsRequired = 1
 					}
-					If($SitesInLink -ne "")
+					if( $SitesInLink -eq '' )
 					{
-						$cnt = 0
-						ForEach($xSite in $SitesInLink)
-						{
-							$cnt++
-							
-							If($cnt -eq 1)
-							{
-								$rowdata += @(,('Sites in Link',$htmlsb,$xSite,$htmlwhite))
-							}
-							Else
-							{
-								$rowdata += @(,('',$htmlsb,$xSite,$htmlwhite))
-							}
-						}
+						$rowsRequired++
+					}
+					else
+					{
+						$rowsRequired += $SitesInLink.Count	
+					}
+					$rowsRequired += 5
+
+					$rowdata = New-Object System.Array[] $rowsRequired
+					$rowIndx = 0
+
+					if( $slDesc.Length -gt 0 )
+					{
+						$rowdata[ $rowIndx++ ] = @(
+							'Description', $htmlsb, 
+							$slDesc,       $htmlwhite
+						)
+					}
+
+					If( $SitesInLink -eq '' )
+					{
+						$rowdata[ $rowIndx++ ] = @(
+							'Sites in Link', $htmlsb,
+							'None',          $htmlwhite
+						)
 					}
 					Else
 					{
-						$rowdata += @(,('Sites in Link',$htmlsb,"None",$htmlwhite))
+						$cnt = 0
+						ForEach( $xSite in $SitesInLink )
+						{
+							$cnt++
+							
+							If( $cnt -eq 1 )
+							{
+								$rowdata[ $rowIndx++ ] = @(
+									'Sites in Link', $htmlsb,
+									$xSite,          $htmlwhite
+								)
+							}
+							Else
+							{
+								$rowdata[ $rowIndx++ ] = @(
+									'',     $htmlsb,
+									$xSite, $htmlwhite
+								)
+							}
+						}
 					}
-					$rowdata += @(,('Cost',$htmlsb,$SiteLink.Cost.ToString(),$htmlwhite))
-					$rowdata += @(,('Replication Interval',$htmlsb,$SiteLink.ReplInterval.ToString(),$htmlwhite))
-					$rowdata += @(,('Schedule',$htmlsb,$SiteLink.Schedule,$htmlwhite))
+
+					$rowdata[ $rowIndx++ ] = @(
+						'Cost',                    $htmlsb,
+						$SiteLink.Cost.ToString(), $htmlwhite
+					)
+					$rowdata[ $rowIndx++ ] = @(
+						'Replication Interval',            $htmlsb,
+						$SiteLink.ReplInterval.ToString(), $htmlwhite
+					)
+					$rowdata[ $rowIndx++ ] = @(
+						'Schedule',         $htmlsb,
+						$SiteLink.Schedule, $htmlwhite
+					)
 
 					$tmp = GetSiteLinkOptionText $SiteLink.Options
-					$rowdata += @(,('Options',$htmlsb,$tmp,$htmlwhite))
+					$rowdata[ $rowIndx++ ] = @(
+						'Options', $htmlsb,
+						$tmp,      $htmlwhite
+					)
 
-					$rowdata += @(,('Type',$htmlsb,$SiteLinkType,$htmlwhite))
-					$columnWidths = @("125","250")
+					$rowdata[ $rowIndx++ ] = @(
+						'Type',        $htmlsb,
+						$SiteLinkType, $htmlwhite
+					)
+
+					$columnWidths = @( '125', '250' )
+
 					FormatHTMLTable -rowArray $rowdata `
 						-columnArray $columnHeaders `
 						-fixedWidth $columnWidths `
-						-tablewidth "375"
+						-tablewidth '375'
+
 					WriteHTMLLine 0 0 ' '
 
 					$rowdata = $null
@@ -9072,16 +9178,17 @@ Function ProcessSiteInformation
 				}
 				If($HTML)
 				{
-					$rowdata = @()
+					$rowsRequired = $subnetArray.Count
+					$rowdata = New-Object System.Array[] $rowsRequired
+					$rowIndx = 0
 
 					ForEach($xSubnet in $subnetArray)
 					{
-						$rowdata += @(,($xSubnet,$htmlwhite))
+						$rowdata[ $rowIndx++ ] = @( $xSubnet, $htmlwhite)
 					}
 
 					$columnHeaders = @( 'Subnets', $htmlsb )
-					$msg = ""
-					FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
+					FormatHTMLTable -rowArray $rowdata -columnArray $columnHeaders
 					WriteHTMLLine 0 0 ''
 
 					$rowdata = $null
@@ -13865,12 +13972,12 @@ Function ProcessGPOsByDomain
 				#V3.00 - pre-allocate rowdata
 				## $rowdata = @()
 				$rowData  = New-Object System.Array[] $GPOArray.Count
-				$rowIndex = 0
+				$rowIndx = 0
 
 				ForEach($Item in $GPOArray)
 				{
-					$rowdata[ $rowIndex ] = @( $Item, $htmlwhite )
-					$rowIndex++
+					$rowdata[ $rowIndx ] = @( $Item, $htmlwhite )
+					$rowIndx++
 				}
 
 				$columnHeaders = @( 'GPO Name', $htmlsb )
