@@ -1,10 +1,15 @@
 #Original Script created April, 2014 by Carl Webster with a lot of help from Michael B. Smith Exchange MVP
-#Carl Webster is a Sr. Solutions Architect with Choice Solutions, LLC
+#Created by Carl Webster and Michael B. Smith
 #webster@carlwebster.com
 #@carlwebster on Twitter
-#http://www.CarlWebster.com
+#https://www.CarlWebster.com
+#
+#michael@smithcons.com
+#@essentialexch on Twitter
+#https://www.essential.exchange/blog/
 
-#Version 3.00 The Michael B. Smith Update
+#Version 3.00 2-Sep-2020
+#	The Michael B. Smith Update and is based on version 2.22 and updated with the changes made up to 2.26
 #	This is the "user/OU speedup" release. Significant efforts were spent to make the script run
 #	faster in environments where large numbers of users and OUs exist.
 #
@@ -23,11 +28,11 @@
 #		with
 #			'ms-RTC-SIP-PoolAddress'
 #			'ms-RTC-SIP-DomainName'
-#	Stop using a switch statement for HTML colors and use a pre-calculated HTML array (for speed).
+#	Stop using a Switch statement for HTML colors and use a pre-calculated HTML array (for speed).
 #	Rewrite Get-RDUserSetting to GetTsAttributes (for speed)
 #	Rewrite ProcessMiscDataByDomain into getDSUsers and a driver. Switch from using arraylists to List<T>.
 #		Avoid array/List copies during sort. Generate a single user object shared among all lists. Stop using
-#		Get-ADUser and switch to using .NET DirectoryServices. (For large environments, memory requirements
+#		Get-ADUser and Switch to using .NET DirectoryServices. (For large environments, memory requirements
 #		have plummeted, and speed greatly increased; for small environments, the changes are likely not 
 #		noticeable.) Ensure output formatting consistent among all types (Text/HTML/MSWord).
 #	Update ProcessGPOSsByDomain, ProcessGPOsByOUOld, and ProcessGPOsByOUNew to only request the specific
@@ -35,361 +40,65 @@
 #	Update OutputTimeServerRegistryKeys so that if a server isn't available, all 12 keys aren't requested.
 #		That is, detect server-down on the first key request and use default values for all keys.
 #	Update OutputADFileLocations for the same (don't retry if the server is known to be down)
-#	Update each of the Output*UserInfo functions so that the first parameter is Object[] instead of
+#	Update each of the Output*UserInfo Functions so that the first parameter is Object[] instead of
 #		Object. If the array contained a single element, PowerShell was unrolling it, requiring 
 #		special handling. Using Object[] prevents the unrolling.
+#	August 2020
+#	Changed the $Section parameter to use ValidateSet().
+#	In FormatHTMLTable, only write a table header line if the tableheader length is greater than zero.
+#	In FormatHTMLTable, write </td> and </tr> in the proper places (previously, there weren't enough
+#	</td>'s being written). I think all HTML is now "legal".
+#	In FormatHTMLTable, make the docs accurate. Finally.
+#	FormatHTMLTable - fix the usage of $fixedWidth and $columnIndex for good (I hope).
+#	AddHTMLTable - match the usage of $fixedInfo and $columnIndex to that of FormatHTMLTable.
+#	AddHTMLTable - optimize usage of $fixedInfo.
+#	Further pre-calculated $rowArray rewrites.
+#	Don't try too hard to analyze 'Server Core' yes or no. Was invalid check of $error array.
+#	Domain Admins HTML output was missing the "Domain" column. Added.
+#	All three output types were generating an error accessing TrustExtendedAttributes.TrustDirection. Fixed.
+#   $DomainInfo.PublicKeyRequiredPasswordRolling could be accessed when $null. Ensure that doesn't happen.
 #
 #WEBSTER'S CHANGES for 3.00
 #
-#	Fixed all WriteHTMLLine lines that were supposed to be in bold. Used MBS' updates.
-#	In Function OutputNicItem, change how $powerMgmt is retrieved
-#		Will now show "Not Supported" instead of "N/A" if the NIC driver does not support Power Management (i.e., XenServer)
-#	Removed invalid URLs from the code if I could not find the original article's new location
-#	Updated Function OutputNicItem with a $ComputerName parameter
-#		Update Function GetComputerWMIInfo to pass the computer name parameter to the OutputNicItem function
-#	Updated Function SendEmail with corrections made by MBS
-#
-#	You can now select multiple output formats. This required extensive code changes.
-#	HTML is now the default output format.
 #	Add checking for a Word version of 0, which indicates the Office installation needs repairing
 #	Add Receive Side Scaling setting to Function OutputNICItem
 #	Change color variables $wdColorGray15 and $wdColorGray05 from [long] to [int]
 #	Change location of the -Dev, -Log, and -ScriptInfo output files from the script folder to the -Folder location (Thanks to Guy Leech for the "suggestion")
-#	Fix Swedish Table of Contents (Thanks to Johan Kallio)
-#		From 
-#			'sv-'	{ 'Automatisk innehållsförteckning2'; Break }
-#		To
-#			'sv-'	{ 'Automatisk innehållsförteckn2'; Break }
-#	Reformatted the terminating Write-Error messages to make them more visible and readable in the console
-#	Update Function SendEmail to handle anonymous unauthenticated email
-#	Update Functions GetComputerWMIInfo and OutputNicInfo to fix two bugs in NIC Power Management settings
-#	Updated help text
-#	Updated the following Exchange Schema Versions:
-#		"15312" = "Exchange 2013 CU7 through CU23"
-#		"15317" = "Exchange 2016 Preview and RTM"
-#		"15332" = "Exchange 2016 CU7 through CU15"
-#		"17000" = "Exchange 2019 RTM/CU1"
-#		"17001" = "Exchange 2019 CU2-CU4"
-#
-#	Fixed issues with Word tables with later versions of PowerShell.
-#	Fixed issues with Word table formatting.
-
-#Version 2.26 8-May-2020
-#	Add checking for a Word version of 0, which indicates the Office installation needs repairing
-#	Add Receive Side Scaling setting to Function OutputNICItem
-#	Change color variables $wdColorGray15 and $wdColorGray05 from [long] to [int]
-#	Change location of the -Dev, -Log, and -ScriptInfo output files from the script folder to the -Folder location (Thanks to Guy Leech for the "suggestion")
+#	Change some Write-Error to Write-Warning
+#	Change some Write-Warning to Write-Host
 #	Change Text output to use [System.Text.StringBuilder]
 #		Updated Functions Line and SaveAndCloseTextDocument
-#	Reformatted the terminating Write-Error messages to make them more visible and readable in the console
-#	Update Function SetWordCellFormat to change parameter $BackgroundColor to [int]
-#	Update Functions GetComputerWMIInfo and OutputNicInfo to fix two bugs in NIC Power Management settings
-#
-
-#Version 2.25 21-Apr-2020
-#	Remove the SMTP parameterset and manually verify the parameters
-#	Reorder parameters
-#	Update Function SendEmail to handle anonymous unauthenticated email
-#		Update Help Text with examples
-#
-
-#Version 2.24 13-Feb-2020
+#	Fix Swedish Table of Contents (Thanks to Johan Kallio)
+#		From 
+#			'sv-'	{ 'Automatisk innehållsförteckning2'; Break }
+#		To
+#			'sv-'	{ 'Automatisk innehållsförteckn2'; Break }
+#	Fixed all WriteHTMLLine lines that were supposed to be in bold. Used MBS' updates.
+#	Fixed issues with the Domain Admins Privileged Group where the user type was assumed to be a User
+#		Added checking for the object type and handling Groups and Users
+#	Fixed issues with Word tables with later versions of PowerShell.
+#	Fixed issues with Word table formatting.
 #	Fixed several variable name typos
 #	General code cleanup
+#	HTML is now the default output format.
+#	In Function OutputNicItem, change how $powerMgmt is retrieved
+#		Will now show "Not Supported" instead of "N/A" if the NIC driver does not support Power Management (i.e., XenServer)
+#	Reformatted the terminating Write-Error messages to make them more visible and readable in the console
+#	Removed invalid URLs from the code if I could not find the original article's new location
+#	Remove the SMTP parameterset and manually verify the parameters
+#	Reorder parameters
+#	Updated Function OutputNicItem with a $ComputerName parameter
+#		Update Function GetComputerWMIInfo to pass the computer name parameter to the OutputNicItem Function
+#	Update Function SetWordCellFormat to change parameter $BackgroundColor to [int]
+#	Update Functions GetComputerWMIInfo and OutputNicInfo to fix two bugs in NIC Power Management settings
+#	Update Function SendEmail to handle anonymous unauthenticated email
+#		Update Help Text with examples
+#	Updated help text
+#	Updated Function SendEmail with corrections made by MBS
 #	Updated the following Exchange Schema Versions:
 #		"15312" = "Exchange 2013 CU7 through CU23"
 #		"15317" = "Exchange 2016 Preview and RTM"
 #		"15332" = "Exchange 2016 CU7 through CU15"
 #		"17000" = "Exchange 2019 RTM/CU1"
 #		"17001" = "Exchange 2019 CU2-CU4"
-#
-
-#Version 2.23 17-Dec-2019
-#	Fix Swedish Table of Contents (Thanks to Johan Kallio)
-#		From 
-#			'sv-'	{ 'Automatisk innehållsförteckning2'; Break }
-#		To
-#			'sv-'	{ 'Automatisk innehållsförteckn2'; Break }
-#	Updated help text
-#
-
-#Version 2.22 14-Feb-2019
-#	Added a line under the OU table stating how many OUs are not protected
-#	Added color $wdColorYellow
-#	Added Exchange schema version 17000 for Exchange 2019
-#	Added to the "Gathering user misc data" section, the following console message if there are more than 100,000 user accounts in AD:
-#		There are $($UsersCount) user accounts to process. The following 17 actions will take a long time. Be patient.
-#	Changed section heading "Domain trusts" to "Domain Trusts" to match the capitalization of other sections
-#	Changed several $Var -eq $Null to $Null -eq $Var and on Get-Process line for WinWord (thanks to MBS)
-#	Changed test for "No Certification Authority Root(s) were retrieved" by Michael B. Smith who contributed the original code
-#	For HTML and Text output, for Heading1 and Heading2 output, added "///  " and "  \\\" surrounding the heading text
-#		This will help for those of us who read reports that contain > 100,000 OUs and users
-#		and > 1,000 GPOs
-#	Removed "Preview" from Windows Server 2019 AD Schema version 88
-#	Remove unused variables
-#	Updated help text
-
-#Version 2.21 11-Nov-2018
-#	For HTML output, reverted the output Hardware and Service functions back to using $rowdata = @()
-#		Using $rowdata = New-Object System.Collections.ArrayList did not always work, which is weird
-
-#Version 2.20 28-Sep-2018
-#	Added Domain Functional Level of 7 for Windows Server 2016
-#	Added Forest Functional Level of 7 for Windows Server 2016
-#	Added Domain Schema version 88 for Server 2019 Preview
-#	Added to Domain Information:
-#		Last logon replication interval
-#		Public key required password rolling (2012+)
-#	Added to Forest Information, Domain Controllers:
-#		Operation System
-#		Server Core (Y/N)
-#	Changed "renamed" to "changed" as it was freaking people out thinking I was renaming their domain or computer
-#	Changed all but the Word and HTML arrays from "@() +=" to "New-Object System.Collections.ArrayList .Add()"
-#	Changed the code where I checked for Singletons and -is [array] to use @() around the cmdlets so the result
-#		is always an array. Thanks to fellow CTP Sam Jacobs for the tip. This reduced the code by almost 500 lines.
-#	Changed the functions getting the computer WMI hardware and service info to use 
-#		"New-Object System.Collections.ArrayList .Add()" for Word and HTML tables
-#	Changed the width of the Domain Controllers table to accommodate the new columns
-#	Change the width of the AD Schema Items table to match the other tables
-#	Remove all the duplicate $VarName = $Null from Function ProcessDomains
-#	Reorder Change Log so the most recent is on top and the oldest is at the bottom
-#	Reorder most of the domain properties to be in alphabetical order
-#	Reorder most of the forest properties to be in alphabetical order
-#	Updated Exchange schema version information
-
-#Version 2.19 5-Apr-2018
-#	Added Event Log information to each domain controller and an appendix
-#		If the script is run from an elevated PowerShell session by a user with Domain Admin rights
-#	Added Operating System information to Functions GetComputerWMIInfo and OutputComputerItem
-#	Code clean-up for most recommendations made by Visual Studio Code
-
-#Version 2.18 10-Mar-2018
-#	Added Log switch to create a transcript log
-
-#Version 2.17 8-Dec-2017
-#	Updated Function WriteHTMLLine with fixes from the script template
-
-#Version 2.16 4-Dec-2017
-#	Add checking for users with home drive set in Active Directory Users and Computers (ADUC)
-#		Added function OutputHDUserInfo
-#	Add checking for users with RDS home drive set in ADUC
-#		Added function from Jeff Hicks Get-RDUserSetting
-#		Added function OutputRDSHDUserInfo
-#	Add checking for users whose Primary Group is not Domain Users
-#		Added function OutputPGUserInfo
-#	Add "DC: " in fron tof the domain controller name, in text output, for domain controller information
-#	Add new parameter ADDomain to restrict report to a single domain in a multi-domain Forest
-#	Add schema extension checking for the following items and add to Forest section:
-#		'User-Account-Control', #Flags that control the behavior of a user account
-#		'msNPAllowDialin', #RAS Server
-#		'ms-Mcs-AdmPwd', #LAPS
-#		'ms-Mcs-AdmPwdExpirationTime', #LAPS
-#		'ms-SMS-Assignment-Site-Code', #SCCM
-#		'ms-SMS-Capabilities', #SCCM
-#		'msRTCSIP-UserRoutingGroupId', #Lync/SfB
-#		'msRTCSIP-MirrorBackEndServer' #Lync/SfB
-#		'ms-exch-schema-version-pt' #Exchange
-#	Add "Site: " in front of Site name when listing Subnets, Servers, and Connection Objects
-#	Remove several large blocks of code that had been commented out
-#	Revise how $LinkedGPOs and $InheritedGPOs variables are set to work around invalid property 
-#		name DisplayName when collection is empty
-#	Sort Enabled Scopes in AD Optional Features
-#	Text output changes to tabular data:
-#		Domain Controllers (in Forest section)
-#		AD Schema Items (in Forest section)
-#		Services
-#		Organizational Units
-#		Domain Admins
-#		Enterprise Admins
-#		Schema Admins
-#		Users with AdminCount=1
-#	Updated Exchange schema versions
-#	Updated help text
-#	When reporting on the domain controllers in the Forest, if unable to get data from a domain controller,
-#		instead of reporting "Unknown", use:
-#		Unable to retrieve Global Catalog status on <DCName>
-#		Unable to retrieve Read-only status on <DCName>
-#	When run for a single domain in a multi-domain forest
-#		Revise gathering list of domains
-#		Revise testing for $ComputerName 
-#		Revise variable $ADContext in Function ProcessAllDCsInTheForest
-
-#Version 2.15 26-Jun-2017
-#	Added new parameter MaxDetails:
-#		This is the same as using the following parameters:
-#			DCDNSInfo
-#			GPOInheritance
-#			HardWare
-#			IncludeUserInfo
-#			Services
-#	Fixed wrong loop variable for CA
-#	Removed code that made sure all Parameters were set to default values if for some reason they did exist or values were $Null
-#	Reordered the parameters in the help text and parameter list so they match and are grouped better
-#	Replaced _SetDocumentProperty function with Jim Moyle's Set-DocumentProperty function
-#	Updated Function ProcessScriptEnd for the new Cover Page properties and Parameters
-#	Updated Function ShowScriptOptions for the new Cover Page properties and Parameters
-#	Updated Function UpdateDocumentProperties for the new Cover Page properties and Parameters
-#	Updated help text
-
-#Version 2.14 released on 12-May-2017
-#	Add Certificate Authority Information section to Forest Information
-#		Check for the following CA related errors:
-#			Possible error: There are more than one Certification Authority Root(s)
-#			Error: Certification Authority Root(s) exist, but no Certification Authority Issuers(s) (also known as Enrollment Agents) exist
-#			Error: More Certification Authority Root(s) exist than there are Certification Authority Issuers(s) (also known as Enrollment Agents)
-#			Error: Certification Authority Issuers(s) (also known as Enrollment Agents) exist, but no Certification Authority Root(s) exist
-#	Change "Users with AdminCount=1 ($($AdminsCountStr) members):" to "Users with AdminCount=1 ($($AdminsCountStr) users):"
-#	Reorder the Forest Information section
-
-#Version 2.13 released on 13-Feb-2017
-#	Fixed French wording for Table of Contents 2
-
-#Version 2.12 released on 11-Nov-2016
-#	Add Chinese language support
-#	Add table for Time Server information if script is run from an elevated PowerShell session
-#	Remove "Appendix A" from DC DNS Info table
-
-#Version 2.11 released on 6-Nov-2016
-#	Fixed Domain Trust Attributes (thanks GT)
-#	Fixed several Write-Warning statements that had no message
-#	Fixed using -AddDateTime with -HTML
-#	Remove duplicate setting for $Script:Title
-#	Reworked the use of [gc]::Collect()
-
-#Version 2.10 released on 19-Oct-2016 (Happy Birthday Linz)
-#	Add a new parameter, IncludeUserInfo
-#		Add to the User Miscellaneous Data section, outputs a table with the SamAccountName
-#		and DistinguishedName of the users in the All Users counts
-#	Add to the Domain section, listing Fine Grained Password Policies
-#	Add to the Forest section, Tombstone Lifetime
-#	Changed the HTML header for AD Optional Features from a table header to a section header
-#	Changed "Site and Services" heading to "Sites and Services"
-#	Fixed formatting issues with HTML headings output
-#	The $AdminsCountStr variable was used, when it should not have been used, 
-#		when privileged groups had no members or members could not be retrieved
-#	Update Forest and Domain schema tables for the released Server 2016 product
-
-#Version 2.0 released on 26-Sep-2016
-#
-#	Added a parameter, GPOInheritance, to set whether to use the new GPOs by OU with linked and inherited GPOs
-#		By default, the script will use the original GPOs by OU with only directly linked GPOs
-#	Added a function, ElevatedSession, to test if the PowerShell session running the script is elevated
-#	Added a Section parameter to allow specific sections only to be in the report
-#	Added AD Database, logfile and SYSVOL locations along with AD Database size
-#	Added AD Optional Features
-#	Added an alias to the ComputerName parameter to ServerName
-#	Added checking the NIC's "Allow the computer to turn off this device to save power" setting
-#	Added requires line for the GroupPolicy module
-#	Added Text and HTML output
-#	Added Time Server information
-#	Change checking for both DA rights and an elevated session for the Time Server and AD file locations
-#		If the check fails, added a warning message as write-host with white foreground
-#	Change object created for DCDNSINFO to storing blank data for DNS properties
-#		HTML output would not display a row if any of the DNS values were blank or Null
-#	Fix test for domain admin rights for the user account
-#	Fix text and HTML output for the -Hardware parameter
-#	Fix the DC DNS Info table to handle two IP Addresses
-#	Fix the ProcessScriptSetup function
-#		Add checking for an elevated PowerShell session
-#		Add checking for DA rights and elevated session if using DCDNSINFO parameter
-#		Add checking for elevated session if using the Hardware and Services parameters
-#		Change the elevated session warning to write-host with a white foreground to make it stand out
-#		Fix where variables were not being set properly
-#	Fix the user name not being displayed in the warning message about not having domain admin rights
-#	If no ComputerName value is entered and $ComputerName –eq $Env:USERDNSDOMAIN then the script queries for 
-#		a domain controller that is also a global catalog server and will use that as the value for ComputerName
-#	Modified GPOs by OU to show if the GPO is Linked or Inherited
-#		This necessitated a change in the Word/PDF/HTML table format
-#	Modified GPOs by OU to use the Get-GPInheritance cmdlet to list all directly linked and inherited GPOs
-#	Organize script into functions and regions
-#	Replace Jeremy Saunder's Get-ComputerCountByOS function with his latest version
-#	The ADForest parameter is no longer mandatory. It will now default to the value in $Env:USERDNSDOMAIN
-#	The ComputerName parameter will also now default to the value in $Env:USERDNSDOMAIN
-#	Update forest and domain schema information for the latest updates for Exchange 2013/2016 and Server 2016 TP4/5
-#	Update help text
-#	Update Verbose messages for testing to see if -ComputerName is a domain controller
-#	Worked around Get-ADDomainController issue when run from a child domain
-
-#Version 1.21 25-Apr-2016
-#	Added -Dev parameter to create a text file of script errors
-#	Added -ScriptInfo (SI) parameter to create a text file of script information
-#	Added more script information to the console output when script starts
-#	Cleaned up some issues in the help text
-#	Fixed issues with using -Hardware that PoSH V5 complained about
-#
-#Version 1.20 22-Apr-2016
-#	Fixed numerous issues discovered with the latest update to PowerShell V5
-#	Color variables needed to be [long] and not [int] except for $wdColorBlack which is 0
-#	Changed from using arrays to populating data in tables to strings
-#	Fixed several incorrect variable names that kept PDFs from saving in Windows 10 and Office 2013
-#	Fixed the rest of the $Var -eq $Null to $Null -eq $Var
-#	Removed a couple of invalid $Table references
-#	Removed blocks of old commented out code
-#	Removed the 10 second pauses waiting for Word to save and close.
-#
-#Version 1.16 20-Apr-2016
-#	Replaced Function SaveandCloseDocumentandShutdownWord with same function all the other scripts use
-#
-#Version 1.15 8-Feb-2016
-#	Change to using a domain controllers FQDN when using Test-Connection, WMI and Services
-#		Those were not working in multiple domain forests when DNS Suffixes were not used
-#	For the DCDNSInfo table, added a Site column
-#		Sort by Site, domain controller name
-#		Change table font to 9 point to prevent wrapping of text
-#	For non-forest-root domains, do not print Enterprise Admin and Schema Admin <None>
-#		Those two groups do not exist in non-forest root domains
-#	Change tables for GPOs by OU to no lines
-#	Added specifying an optional output folder
-#	Added the option to email the output file
-#	Fixed several spacing and typo errors
-#	Fixed output to HTML not saving the file
-#
-#Version 1.14 26-Jan-2016
-#	Updated Exchange schema versions to include Exchange 2013 CU7/8/9 and Exchange 2016
-#		http://eightwone.com/references/schema-versions/
-#	Updated AD schema versions to include Server 2016 Technical Preview
-#		http://marc-lognoul.me/windows/windows-server-active-directory-schema-versions/
-#	Fixed typo in variable name that prevented the table for Site Links from being created
-#	Site Link table shows all possible site link options
-#		https://msdn.microsoft.com/en-us/library/cc223552.aspx
-#	GPOs by OU will now show the number of GPOs linked to an OU
-#	Added new parameter DCDNSInfo to gather each domain controller's IP address and DNS server settings
-#	Added Appendix A to show table of all domain controller's IP addresses and DNS server settings
-#	
-#Version 1.13 25-Nov-2015
-#	Updated help text and ReadMe for RSAT for Windows 10
-#	Updated help text with an additional example of running the script remotely
-#	Tested script on Windows 10 x64 and Word 2016 x64
-#Version 1.12 5-Oct-2015
-#	Add support for Word 2016
-#Version 1.11 8-Jul-2015
-#	Add in updated hardware inventory code
-#	Updated help text
-#Version 1.1 8-Aug-2014
-#	Cleanup the script's parameters section
-#	Code cleanup and standardization with the master template script
-#	Requires PowerShell V3 or later
-#	Removed support for Word 2007
-#	Word 2007 references in help text removed
-#	Cover page parameter now states only Word 2010 and 2013 are supported
-#	Most Word 2007 references in script removed:
-#		Function ValidateCoverPage
-#		Function SetupWord
-#		Function SaveandCloseDocumentandShutdownWord
-#	Function CheckWord2007SaveAsPDFInstalled removed
-#	If Word 2007 is detected, an error message is now given and the script is aborted
-#	Cleanup Word table code for the first row and background color
-#	Cleanup retrieving services and service startup type with Iain Brighton's optimization
-#	Add Iain Brighton's Word table functions
-#	Move Services table to new table functions
-#	Add numeric values for ForestMode and DomainMode
-#	Removed most of the [gc]::collect() as they are not needed
-#	Removed the CheckLoadedModule function
-#	Added a Requires activedirectory module statement#Version 1.02 5-Jun-2014
-#	Fixed the Enterprise Admins and Schema Admins privileged groups tables
-
-#Version 1.01 4-Jun-2014
-#	Added an AddDateTime parameter
-
-#Version 1.x script
-#originally released to the community on May 31, 2014
+#	You can now select multiple output formats. This required extensive code changes.
