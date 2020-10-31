@@ -16408,13 +16408,6 @@ Function ProcessScriptEnd
 		}
 	}
 	$ErrorActionPreference = $SaveEAPreference
-	
-	Write-Host "                                                                                    " -BackgroundColor Black -ForegroundColor White
-	Write-Host "               This FREE script was brought to you by Conversant Group              " -BackgroundColor Black -ForegroundColor White
-	Write-Host "We design, build, and manage infrastructure for a secure, dependable user experience" -BackgroundColor Black -ForegroundColor White
-	Write-Host "                       Visit our website conversantgroup.com                        " -BackgroundColor Black -ForegroundColor White
-	Write-Host "                                                                                    " -BackgroundColor Black -ForegroundColor White
-
 }
 #endregion
 
