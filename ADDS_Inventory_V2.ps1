@@ -10996,7 +10996,7 @@ Function ProcessDomainControllers
 			
 			If(!$Hardware)
 			{
-				If([String]::IsNullOrEmpty($DC.IPv4Address))
+                		If((@($DC.IPv4Address) | Where-Object { $null -ne $_ -and $_ -ne "" }).Count -eq 0)
 				{
 					$tmp = "<None>"
 				}
@@ -11006,13 +11006,13 @@ Function ProcessDomainControllers
 				}
 				$ScriptInformation += @{ Data = "IPv4 Address"; Value = $tmp; }
 
-				If([String]::IsNullOrEmpty($DC.IPv6Address))
+				If((@($DC.IPv6Address) | Where-Object { $null -ne $_ -and $_ -ne "" }).Count -eq 0)
 				{
 					$tmp = "<None>"
 				}
 				Else
 				{
-					$tmp = (@($DC.IPv6Address) -join ", ") # FIX: If IPv6 is disabled, it returns an array of empty strings. Joining them would cause a string of commas.
+					$tmp = (@($DC.IPv6Address) -join ", ")
 				}
 				$ScriptInformation += @{ Data = "IPv6 Address"; Value = $tmp; }
 			}
@@ -11125,7 +11125,7 @@ Function ProcessDomainControllers
 			If(!$Hardware)
 			{
 				Line 1 "IPv4 Address`t`t`t: " -NoNewLine
-				If([String]::IsNullOrEmpty($DC.IPv4Address))
+				If((@($DC.IPv4Address) | Where-Object { $null -ne $_ -and $_ -ne "" }).Count -eq 0)
 				{
 					Line 0 "<None>"
 				}
@@ -11134,7 +11134,7 @@ Function ProcessDomainControllers
 					Line 0 (@($DC.IPv4Address) -join ", ")
 				}
 				Line 1 "IPv6 Address`t`t`t: " -NoNewLine
-				If([String]::IsNullOrEmpty($DC.IPv6Address))
+				If((@($DC.IPv6Address) | Where-Object { $null -ne $_ -and $_ -ne "" }).Count -eq 0)
 				{
 					Line 0 "<None>"
 				}
@@ -11234,7 +11234,7 @@ Function ProcessDomainControllers
 			
 			If(!$Hardware)
 			{
-				If([String]::IsNullOrEmpty($DC.IPv4Address))
+				If((@($DC.IPv4Address) | Where-Object { $null -ne $_ -and $_ -ne "" }).Count -eq 0)
 				{
 					$tmp = "None"
 				}
@@ -11244,7 +11244,7 @@ Function ProcessDomainControllers
 				}
 				$rowdata += @(,('IPv4 Address',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
 
-				If([String]::IsNullOrEmpty($DC.IPv6Address))
+				If((@($DC.IPv6Address) | Where-Object { $null -ne $_ -and $_ -ne "" }).Count -eq 0)
 				{
 					$tmp = "None"
 				}
